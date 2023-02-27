@@ -23,4 +23,6 @@ export const loadConfig = (): Config => ({
   monitoringPort: +process.env.MONITORING_PORT || 0,
 
   database: loadDatabaseConfig(),
+
+  uniqueSdkRestUrl: process.env.UNIQUE_SDK_REST_URL,
 });

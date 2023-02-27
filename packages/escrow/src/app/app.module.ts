@@ -5,6 +5,7 @@ import { GlobalConfigModule } from "@app/common/modules/config";
 import { MonitoringModule } from "@app/common/modules/monitoring";
 import { CacheProviderModule } from "@app/common/modules/cache/cache-provider.module";
 import { DatabaseModule } from "@app/common/modules/database/database.module";
+import { sdkProvider } from "@app/common/modules/sdk/sdk.provider";
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { DatabaseModule } from "@app/common/modules/database/database.module";
     DatabaseModule.forEscrow(),
   ],
   providers: [
+    sdkProvider,
     AppService,
   ],
 })

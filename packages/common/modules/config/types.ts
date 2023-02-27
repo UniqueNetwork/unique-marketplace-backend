@@ -20,6 +20,8 @@ export type Config = {
 
   prefix?: string;
 
+  uniqueSdkRestUrl: string;
+
   database: PostgresConnectionOptions;
 };
 
