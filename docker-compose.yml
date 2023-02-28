@@ -1,0 +1,26 @@
+version: '3'
+
+networks:
+  market-network:
+    external: false
+
+services:
+  postgres:
+    image: postgres:14.2-alpine
+    container_name: market-database
+    networks:
+      - market-network
+    env_file:
+      - .env
+    environment:
+      - TZ=Europe/Moscow
+      - PGTZ=Europe/Moscow
+    ports:
+      - '5432:5432'
+    volumes:
+      - market-pgdata:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
+
+volumes:
+  market-pgdata:
+    external: false
