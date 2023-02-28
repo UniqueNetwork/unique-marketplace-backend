@@ -16,34 +16,27 @@ const migrations = [
 ];
 
 const imports: DynamicModule[] = [
-  TypeOrmModule.forRootAsync({
-    inject: [ ConfigService ],
-    useFactory: (configService: ConfigService<Config>): TypeOrmModuleOptions => {
-      return {
-        ... configService.get('database'),
-        entities,
-        migrations,
-      };
-    }
-  }),
   TypeOrmModule.forFeature(entities),
 ];
 
 export class DatabaseModule {
   static forEscrow(): DynamicModule {
     return {
-      imports,
-      module: DatabaseModule,
-      providers: [
-        MigrationsRunner,
-        {
-          provide: 'run-migrations',
-          inject: [MigrationsRunner],
-          useFactory: async (migrationsRunner: MigrationsRunner): Promise<void> => {
-            await migrationsRunner.checkMigrations();
-          },
-        },
+      imports: [
+        ... imports,
+        TypeOrmModule.forRootAsync({
+          inject: [ ConfigService ],
+          useFactory: (configService: ConfigService<Config>): TypeOrmModuleOptions => {
+            return {
+              ... configService.get('database'),
+              entities,
+              migrations,
+              migrationsRun: true, // todo fix
+            };
+          }
+        }),
       ],
+      module: DatabaseModule,
       exports: [
         TypeOrmModule,
       ],
@@ -52,7 +45,23 @@ export class DatabaseModule {
 
   static forMarket(): DynamicModule {
     return {
+      imports: [
+        ... imports,
+        TypeOrmModule.forRootAsync({
+          inject: [ ConfigService ],
+          useFactory: (configService: ConfigService<Config>): TypeOrmModuleOptions => {
+            return {
+              ... configService.get('database'),
+              entities,
+              migrations,
+            };
+          }
+        }),
+      ],
       module: DatabaseModule,
+      exports: [
+        TypeOrmModule,
+      ],
     }
   }
 }
