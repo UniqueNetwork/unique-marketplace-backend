@@ -1,11 +1,13 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, INestApplicationContext, INestMicroservice } from "@nestjs/common";
 import { ConfigService } from '@nestjs/config';
 import * as Sentry from '@sentry/node';
 import { Config } from '../config';
 import { SentryInterceptor } from './sentry.interceptor';
 import { SentryLogger } from './sentry.logger';
+import { NestApplication } from "@nestjs/core";
+import { NestMicroservice } from "@nestjs/microservices";
 
-export const initSentry = (app: INestApplication) => {
+export const initSentry = (app: INestApplication | INestMicroservice | INestApplicationContext) => {
   const config: ConfigService<Config> = app.get(ConfigService);
 
   const sentryDsnUrl = config.get('sentryDsnUrl');
@@ -19,6 +21,9 @@ export const initSentry = (app: INestApplication) => {
     normalizeDepth: 10,
   });
 
-  app.useGlobalInterceptors(new SentryInterceptor());
+
+  if (app instanceof NestApplication || app instanceof NestMicroservice) {
+    app.useGlobalInterceptors(new SentryInterceptor());
+  }
   app.useLogger(new SentryLogger());
 };
