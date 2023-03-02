@@ -25,4 +25,6 @@ export const loadConfig = (): Config => ({
   database: loadDatabaseConfig(),
 
   uniqueSdkRestUrl: process.env.UNIQUE_SDK_REST_URL,
+  uniqueRpcUrl: process.env.UNIQUE_RPC_URL,
+  walletPrivateKey: process.env.WALLET_PRIVATE_KEY,
 });
