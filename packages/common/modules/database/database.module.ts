@@ -4,10 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { Config } from '../config';
 import { SettingsTable1677511684518 } from './migrations/1677511684518-SettingsTable';
 import { SettingEntity } from './entities/setting.entity';
-import { DeployContractV1_1677512245943 } from './migrations/1677512245943-DeployContractV1';
+import { DeployContractV0_1677512245943 } from './migrations/1677512245943-DeployContractV0';
 
 const entities = [SettingEntity];
-const migrations = [SettingsTable1677511684518, DeployContractV1_1677512245943];
+const migrations = [SettingsTable1677511684518, DeployContractV0_1677512245943];
 
 const imports: DynamicModule[] = [TypeOrmModule.forFeature(entities)];
 

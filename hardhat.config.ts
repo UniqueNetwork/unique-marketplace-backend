@@ -33,5 +33,5 @@ const config: HardhatUserConfig = {
 export default config;
 
 task('build:version', 'Build a new contracts version')
-  .addParam('build', 'new version, example: 1.0.0', '0.0.0')
+  .addParam('build', 'new version, example: 1.0.0')
   .setAction(buildVersion);

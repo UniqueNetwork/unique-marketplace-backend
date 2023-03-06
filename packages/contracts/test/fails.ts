@@ -1,61 +1,61 @@
-import { expect } from "chai";
-import { Client } from "@unique-nft/sdk";
+import { expect } from 'chai';
+import { Client } from '@unique-nft/sdk';
 import {
   createSdk,
   deploy,
   getAccounts,
   getCollectionContract,
   getNetworkConfig,
-} from "./utils";
-import { Market } from "../typechain-types";
+} from './utils';
+import { Market } from '../../../typechain-types';
 
 const { collectionId, tokenId } = getNetworkConfig();
 
-describe("Market", function () {
+describe('Market', function () {
   let sdk: Client = createSdk();
 
-  it("put fail; collection not found", async () => {
+  it('put fail; collection not found', async () => {
     const market = await deploy();
 
     await expect(market.put(1000000, 1, 3, 1)).to.be.revertedWithCustomError(
       market,
-      "CollectionNotFound"
+      'CollectionNotFound'
     );
   });
 
-  it("put fail; collection not supported 721", async () => {
+  it('put fail; collection not supported 721', async () => {
     const market = await deploy();
 
     await expect(market.put(251, 1, 3, 1)).to.be.revertedWithCustomError(
       market,
-      "CollectionNotSupportedERC721"
+      'CollectionNotSupportedERC721'
     );
   });
 
-  it("put fail; token not found", async () => {
+  it('put fail; token not found', async () => {
     const market = await deploy();
 
     await expect(market.put(collectionId, 1000, 3, 1)).to.be.revertedWith(
-      "token not found"
+      'token not found'
     );
   });
-  it("put fail; user not owner of token", async () => {
+  it('put fail; user not owner of token', async () => {
     const market = await deploy();
 
     await expect(
       market.put(collectionId, 2, 3, 1)
-    ).to.be.revertedWithCustomError(market, "SellerIsNotOwner");
+    ).to.be.revertedWithCustomError(market, 'SellerIsNotOwner');
   });
 
-  it("approved fail; order not found", async () => {
+  it('approved fail; order not found', async () => {
     const market = await deploy();
 
     await expect(
       market.checkApproved(collectionId, tokenId)
-    ).to.revertedWithCustomError(market, "OrderNotFound");
+    ).to.revertedWithCustomError(market, 'OrderNotFound');
   });
 
-  it("approved fail; seller not owner of token", async () => {
+  it('approved fail; seller not owner of token', async () => {
     const { ownerAccount, otherAccount } = await getAccounts(
       sdk,
       collectionId,
@@ -78,10 +78,10 @@ describe("Market", function () {
 
     await expect(
       market.checkApproved(collectionId, tokenId)
-    ).to.revertedWithCustomError(market, "SellerIsNotOwner");
+    ).to.revertedWithCustomError(market, 'SellerIsNotOwner');
   });
 
-  it.skip("put fail; token is not approved", async () => {
+  it.skip('put fail; token is not approved', async () => {
     const { ownerAccount } = await getAccounts(sdk, collectionId, tokenId);
     const market = await deploy();
 
@@ -89,10 +89,10 @@ describe("Market", function () {
       market.connect(ownerAccount).put(collectionId, tokenId, 3, 1, {
         gasLimit: 10_000_000,
       })
-    ).to.be.revertedWithCustomError(market, "TokenIsNotApproved");
+    ).to.be.revertedWithCustomError(market, 'TokenIsNotApproved');
   });
 
-  it("buy fail; token is not approved", async () => {
+  it('buy fail; token is not approved', async () => {
     const { ownerAccount, otherAccount } = await getAccounts(
       sdk,
       collectionId,
@@ -111,11 +111,11 @@ describe("Market", function () {
         value: 20,
       })
     )
-      .to.be.revertedWithCustomError(market, "FailTransformToken")
-      .withArgs("ApprovedValueTooLow");
+      .to.be.revertedWithCustomError(market, 'FailTransformToken')
+      .withArgs('ApprovedValueTooLow');
   });
 
-  it("buy fail; too many amount requested", async () => {
+  it('buy fail; too many amount requested', async () => {
     const { ownerAccount, otherAccount } = await getAccounts(
       sdk,
       collectionId,
@@ -137,10 +137,10 @@ describe("Market", function () {
       market.connect(otherAccount).buy(collectionId, tokenId, 2, {
         value: buyPrice * 2,
       })
-    ).to.be.revertedWithCustomError(market, "TooManyAmountRequested");
+    ).to.be.revertedWithCustomError(market, 'TooManyAmountRequested');
   });
 
-  it("buy fail; not enough money", async () => {
+  it('buy fail; not enough money', async () => {
     const { ownerAccount, otherAccount } = await getAccounts(
       sdk,
       collectionId,
@@ -162,10 +162,10 @@ describe("Market", function () {
       market.connect(otherAccount).buy(collectionId, tokenId, 1, {
         value: buyPrice - 1,
       })
-    ).to.be.revertedWithCustomError(market, "NotEnoughError");
+    ).to.be.revertedWithCustomError(market, 'NotEnoughError');
   });
 
-  it("buy fail; not enough money for fee", async () => {
+  it('buy fail; not enough money for fee', async () => {
     const { ownerAccount, otherAccount } = await getAccounts(
       sdk,
       collectionId,
@@ -187,6 +187,6 @@ describe("Market", function () {
       market.connect(otherAccount).buy(collectionId, tokenId, 1, {
         value: buyPrice,
       })
-    ).to.be.revertedWithCustomError(market, "NotEnoughError");
+    ).to.be.revertedWithCustomError(market, 'NotEnoughError');
   });
 });

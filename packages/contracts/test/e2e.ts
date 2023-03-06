@@ -1,20 +1,20 @@
-import { expect } from "chai";
-import { BigNumber } from "ethers";
-import { Client } from "@unique-nft/sdk";
+import { expect } from 'chai';
+import { BigNumber } from 'ethers';
+import { Client } from '@unique-nft/sdk';
 import {
   createSdk,
   deploy,
   getAccounts,
   getCollectionContract,
   getNetworkConfig,
-} from "./utils";
-import { UniqueNFT } from "@unique-nft/solidity-interfaces";
-import { Market } from "../typechain-types";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+} from './utils';
+import { UniqueNFT } from '@unique-nft/solidity-interfaces';
+import { Market } from '../../../typechain-types';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 const { collectionId, tokenId } = getNetworkConfig();
 
-describe.only("e2e", function () {
+describe.only('e2e', function () {
   let sdk: Client = createSdk();
   let ownerAccount: SignerWithAddress;
   let otherAccount: SignerWithAddress;
@@ -32,7 +32,7 @@ describe.only("e2e", function () {
     expect(order.seller).to.be.eq(ownerAccount.address);
   }
 
-  it("prepare", async () => {
+  it('prepare', async () => {
     const accounts = await getAccounts(sdk, collectionId, tokenId);
     ownerAccount = accounts.ownerAccount;
     otherAccount = accounts.otherAccount;
@@ -42,16 +42,16 @@ describe.only("e2e", function () {
     market = await deploy(marketFee);
   });
 
-  it("approve", async () => {
+  it('approve', async () => {
     await expect(uniqueNFT.approve(market.address, tokenId)).to.emit(
       uniqueNFT,
-      "Approval"
+      'Approval'
     );
   });
 
   const tokenPrice = 100;
   const putAmount = 10;
-  it("put", async () => {
+  it('put', async () => {
     await expect(
       market
         .connect(ownerAccount)
@@ -59,8 +59,8 @@ describe.only("e2e", function () {
           gasLimit: 10_000_000,
         })
     )
-      .to.emit(market, "TokenIsUpForSale")
-      .withArgs("1", [
+      .to.emit(market, 'TokenIsUpForSale')
+      .withArgs('1', [
         collectionId,
         tokenId,
         tokenPrice,
@@ -69,14 +69,14 @@ describe.only("e2e", function () {
       ]);
   });
 
-  it("check approved", async () => {
+  it('check approved', async () => {
     await expect(
       market.connect(ownerAccount).checkApproved(collectionId, tokenId, {
         gasLimit: 10_000_000,
       })
     )
-      .to.emit(market, "TokenIsApproved")
-      .withArgs("1", [
+      .to.emit(market, 'TokenIsApproved')
+      .withArgs('1', [
         collectionId,
         tokenId,
         tokenPrice,
@@ -87,12 +87,12 @@ describe.only("e2e", function () {
 
   let ownerBalanceBefore: BigNumber;
   let otherBalanceBefore: BigNumber;
-  it("check balances before buy", async () => {
+  it('check balances before buy', async () => {
     ownerBalanceBefore = await ownerAccount.getBalance();
     otherBalanceBefore = await otherAccount.getBalance();
   });
 
-  it("check order before buy", async () => {
+  it('check order before buy', async () => {
     await expectOrder(putAmount);
   });
 
@@ -100,7 +100,7 @@ describe.only("e2e", function () {
   const buyTotalValue = tokenPrice * buyAmount;
   const feeValue = Math.floor((buyTotalValue * marketFee) / 100);
   let buyUsePrice: BigNumber;
-  it("buy", async () => {
+  it('buy', async () => {
     const { effectiveGasPrice, cumulativeGasUsed, events } = await (
       await market.connect(otherAccount).buy(collectionId, tokenId, buyAmount, {
         value: buyTotalValue + 10 + feeValue,
@@ -108,12 +108,12 @@ describe.only("e2e", function () {
       })
     ).wait();
 
-    const event = events?.find((log) => log.event === "TokenIsPurchased");
+    const event = events?.find((log) => log.event === 'TokenIsPurchased');
 
     expect(event).to.deep.include({
-      event: "TokenIsPurchased",
+      event: 'TokenIsPurchased',
       args: [
-        "1",
+        '1',
         [
           collectionId,
           tokenId,
@@ -128,11 +128,11 @@ describe.only("e2e", function () {
     buyUsePrice = effectiveGasPrice.mul(cumulativeGasUsed);
   });
 
-  it("check order after buy", async () => {
+  it('check order after buy', async () => {
     await expectOrder(putAmount - buyAmount);
   });
 
-  it("check balances after buy", async function () {
+  it('check balances after buy', async function () {
     const ownerBalanceAfter = await ownerAccount.getBalance();
     expect(ownerBalanceAfter.sub(ownerBalanceBefore)).eq(
       BigNumber.from(buyTotalValue)
@@ -147,7 +147,7 @@ describe.only("e2e", function () {
     expect(otherBalanceAfter).eq(newBalance);
   });
 
-  it("revoke remaining tokens", async () => {
+  it('revoke remaining tokens', async () => {
     // todo fail, сейчас не корректно работает с refungible токенами
     await (
       await market
@@ -175,7 +175,7 @@ describe.only("e2e", function () {
      */
   });
 
-  it("withdraw", async () => {
+  it('withdraw', async () => {
     await expect(market.withdraw(otherAccount.address)).to.changeEtherBalances(
       [otherAccount, market],
       [feeValue, -feeValue]
