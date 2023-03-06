@@ -1,4 +1,4 @@
-import { DynamicModule } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Config } from '../config';
@@ -11,49 +11,49 @@ const migrations = [SettingsTable1677511684518, DeployContractV0_1677512245943];
 
 const imports: DynamicModule[] = [TypeOrmModule.forFeature(entities)];
 
+function typeOrmModulesFactory(
+  appendOptions: Pick<
+    Partial<TypeOrmModuleOptions>,
+    'migrations' | 'migrationsRun'
+  > = {}
+) {
+  return [
+    TypeOrmModule.forFeature(entities),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (
+        configService: ConfigService<Config>
+      ): TypeOrmModuleOptions => {
+        return {
+          ...configService.get('database'),
+          entities,
+          ...appendOptions,
+        };
+      },
+    }),
+  ];
+}
+
+@Module({
+  exports: [TypeOrmModule],
+})
 export class DatabaseModule {
   static forEscrow(): DynamicModule {
     return {
+      module: DatabaseModule,
       imports: [
-        ...imports,
-        TypeOrmModule.forRootAsync({
-          inject: [ConfigService],
-          useFactory: (
-            configService: ConfigService<Config>
-          ): TypeOrmModuleOptions => {
-            return {
-              ...configService.get('database'),
-              entities,
-              migrations,
-              migrationsRun: true, // todo fix
-            };
-          },
+        ...typeOrmModulesFactory({
+          migrations,
+          migrationsRun: true,
         }),
       ],
-      module: DatabaseModule,
-      exports: [TypeOrmModule],
     };
   }
 
   static forMarket(): DynamicModule {
     return {
-      imports: [
-        ...imports,
-        TypeOrmModule.forRootAsync({
-          inject: [ConfigService],
-          useFactory: (
-            configService: ConfigService<Config>
-          ): TypeOrmModuleOptions => {
-            return {
-              ...configService.get('database'),
-              entities,
-              migrations,
-            };
-          },
-        }),
-      ],
       module: DatabaseModule,
-      exports: [TypeOrmModule],
+      imports: [...typeOrmModulesFactory()],
     };
   }
 }

@@ -6,6 +6,8 @@ import { MonitoringModule } from "@app/common/modules/monitoring";
 import { CacheProviderModule } from "@app/common/modules/cache/cache-provider.module";
 import { DatabaseModule } from "@app/common/modules/database/database.module";
 import { sdkProvider } from "@app/common/modules/sdk/sdk.provider";
+import { AppController } from "./app.controller";
+import { PgNotifyClientModule } from "@app/common/pg-transport/pg-notify-client.module";
 
 @Module({
   imports: [
@@ -13,6 +15,10 @@ import { sdkProvider } from "@app/common/modules/sdk/sdk.provider";
     MonitoringModule,
     CacheProviderModule,
     DatabaseModule.forEscrow(),
+    PgNotifyClientModule,
+  ],
+  controllers: [
+    AppController,
   ],
   providers: [
     sdkProvider,

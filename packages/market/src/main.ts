@@ -13,7 +13,7 @@ bootstrap(app, logger).catch((error: unknown) => {
 });
 
 /**
- * GracefulShutdown
+ * GracefulShutdown todo это все убрать надо, искаропки же шатдаун весь работает
  */
 async function gracefulShutdown(app): Promise<void> {
   if (app !== undefined) {
