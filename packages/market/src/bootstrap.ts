@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { useContainer } from 'class-validator';
 import swaggerInit from "./swagger";
 import {AppModule} from "./app.module";
+import { pgNotifyClient } from "@app/common/pg-transport/pg-notify-client.symbol";
 
 
 export default async function (app: INestApplication, logger: Logger) {
@@ -18,10 +19,11 @@ export default async function (app: INestApplication, logger: Logger) {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe());
   app.enableShutdownHooks();
+  // app.get(pgNotifyClient).emit('new-collection-added', {collectionId: 12}); // todo uncomment for debug
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const configService = app.get(ConfigService);
-  //Swagger
+  // Swagger
   await swaggerInit(app, configService);
 
   // Listener port

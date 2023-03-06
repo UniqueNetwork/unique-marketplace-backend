@@ -1,6 +1,12 @@
 import express from 'express';
 
-import { DynamicModule, INestApplication, Logger } from '@nestjs/common';
+import {
+  DynamicModule,
+  INestApplication,
+  INestApplicationContext,
+  INestMicroservice,
+  Logger
+} from "@nestjs/common";
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
@@ -14,7 +20,7 @@ import { NoopMetricsController } from './controllers/noop.metrics.controller';
 
 class MonitoringApp {}
 
-export const startMetricsServer = async (mainApp: INestApplication) => {
+export const startMetricsServer = async (mainApp: INestApplication | INestMicroservice | INestApplicationContext) => {
   const healthService = mainApp.get(HealthService);
   const prometheusHealthService = mainApp.get(PrometheusHealthService);
   const config = mainApp.get(ConfigService);
