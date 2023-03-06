@@ -14,7 +14,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 const { collectionId, tokenId } = getNetworkConfig();
 
-describe.only('e2e', function () {
+describe('e2e', function () {
   let sdk: Client = createSdk();
   let ownerAccount: SignerWithAddress;
   let otherAccount: SignerWithAddress;
@@ -60,7 +60,7 @@ describe.only('e2e', function () {
         })
     )
       .to.emit(market, 'TokenIsUpForSale')
-      .withArgs('1', [
+      .withArgs(1, [
         collectionId,
         tokenId,
         tokenPrice,
@@ -76,7 +76,7 @@ describe.only('e2e', function () {
       })
     )
       .to.emit(market, 'TokenIsApproved')
-      .withArgs('1', [
+      .withArgs(1, [
         collectionId,
         tokenId,
         tokenPrice,
@@ -113,7 +113,7 @@ describe.only('e2e', function () {
     expect(event).to.deep.include({
       event: 'TokenIsPurchased',
       args: [
-        '1',
+        1,
         [
           collectionId,
           tokenId,

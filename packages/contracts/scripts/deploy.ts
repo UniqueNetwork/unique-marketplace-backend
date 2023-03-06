@@ -22,7 +22,7 @@ export async function deployContract(version: number): Promise<string> {
     gasLimit: 1000000,
   });
 
-  const { target } = await market.waitForDeployment();
+  const { target } = await market.deployed();
 
   return target as string;
 }

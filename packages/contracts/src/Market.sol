@@ -9,7 +9,7 @@ import "./utils.sol";
 contract Market {
     using ERC165Checker for address;
 
-    string version = "1";
+    uint32 version = 1;
 
     bytes4 private InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private InterfaceId_ERC165 = 0x5755c3f2;
@@ -37,10 +37,10 @@ contract Market {
     error NotEnoughError();
     error FailTransformToken(string reason);
 
-    event TokenIsUpForSale(string version, Order item);
-    event TokenRevoke(string version, Order item);
-    event TokenIsApproved(string version, Order item);
-    event TokenIsPurchased(string version, Order item, uint256 salesAmount);
+    event TokenIsUpForSale(uint32 version, Order item);
+    event TokenRevoke(uint32 version, Order item);
+    event TokenIsApproved(uint32 version, Order item);
+    event TokenIsPurchased(uint32 version, Order item, uint256 salesAmount);
     event Log(string message);
 
     mapping(uint32 => mapping(uint32 => Order)) orders;
