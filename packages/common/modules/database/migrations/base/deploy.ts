@@ -19,8 +19,11 @@ export abstract class DeployContractBase implements MigrationInterface {
     );
 
     const repository = queryRunner.connection.getRepository(SettingEntity);
-    await this.updateSettings(repository, 'contractAddress', contractAddress);
-    await this.updateSettings(repository, 'contractVersion', `${this.version}`);
+    await this.updateSettings(
+      repository,
+      `contract_v${this.version}`,
+      contractAddress
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {

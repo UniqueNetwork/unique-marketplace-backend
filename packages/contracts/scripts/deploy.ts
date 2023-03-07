@@ -20,16 +20,14 @@ async function getContractSource(version: number) {
 }
 
 async function deployContractByEthers(
-  version: number,
-  feeValue: number,
   rpcUrl: string,
-  mnemonic: string
+  abi: Array<any>,
+  bytecode: string,
+  privateKey: string,
+  feeValue: number
 ): Promise<string> {
-  const { abi, bytecode } = await getContractSource(version);
-
-  const privateKey = getPrivateKeyFromMnemonic(mnemonic);
-
   const provider = ethers.getDefaultProvider(rpcUrl);
+
   const signer = new ethers.Wallet(privateKey, provider);
 
   const MarketFactory = new ethers.ContractFactory(abi, bytecode, signer);
@@ -49,15 +47,12 @@ function getPrivateKeyFromMnemonic(mnemonic: string): string {
 }
 
 async function deployContractByWeb3(
-  version: number,
-  feeValue: number,
   rpcUrl: string,
-  mnemonic: string
+  abi: Array<any>,
+  bytecode: string,
+  privateKey: string,
+  feeValue: number
 ): Promise<string> {
-  const { abi, bytecode } = await getContractSource(version);
-
-  const privateKey = getPrivateKeyFromMnemonic(mnemonic);
-
   const web3 = new Web3(rpcUrl);
 
   const incrementer = new web3.eth.Contract(abi);
@@ -82,19 +77,23 @@ async function deployContractByWeb3(
   return result.contractAddress as string;
 }
 
-export function deploy(
+export async function deploy(
   version: number,
   feeValue: number,
   rpcUrl: string,
   mnemonic: string,
   type: 'by-ethers' | 'by-web3'
 ) {
+  const { abi, bytecode } = await getContractSource(version);
+
+  const privateKey = getPrivateKeyFromMnemonic(mnemonic);
+
   if (type === 'by-web3') {
-    return deployContractByWeb3(version, feeValue, rpcUrl, mnemonic);
+    return deployContractByWeb3(rpcUrl, abi, bytecode, privateKey, feeValue);
   }
 
   if (type === 'by-ethers') {
-    return deployContractByEthers(version, feeValue, rpcUrl, mnemonic);
+    return deployContractByEthers(rpcUrl, abi, bytecode, privateKey, feeValue);
   }
 
   throw new Error('Invalid deploy type');

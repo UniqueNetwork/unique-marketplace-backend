@@ -9,8 +9,6 @@ import { DeployContractV0_1677512245943 } from './migrations/1677512245943-Deplo
 const entities = [SettingEntity];
 const migrations = [SettingsTable1677511684518, DeployContractV0_1677512245943];
 
-const imports: DynamicModule[] = [TypeOrmModule.forFeature(entities)];
-
 function typeOrmModulesFactory(
   appendOptions: Pick<
     Partial<TypeOrmModuleOptions>,
