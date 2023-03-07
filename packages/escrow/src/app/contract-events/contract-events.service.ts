@@ -10,7 +10,7 @@ import {
   LogEventObject,
   TokenIsUpForSaleEventObject,
   TokenRevokeEventObject,
-} from '../../../../../typechain-types/packages/contracts/src/Market';
+} from '@app/contracts/assemblies/0/market';
 
 interface ContractInfo {
   address: string;

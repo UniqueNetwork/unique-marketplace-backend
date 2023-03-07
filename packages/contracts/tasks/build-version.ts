@@ -5,6 +5,8 @@ const baseBuildPath = './packages/contracts/assemblies';
 
 const marketArtifactPath = 'packages/contracts/src/Market.sol/Market.json';
 
+const marketTypesPath = 'typechain-types/packages/contracts/src/Market.ts';
+
 export async function buildVersion(
   taskArguments: Record<string, string>,
   hre: HardhatRuntimeEnvironment
@@ -33,4 +35,11 @@ export async function buildVersion(
   );
 
   fs.writeFileSync(`${targetDir}/bytecode.txt`, market.bytecode);
+
+  const marketTypes = fs
+    .readFileSync(marketTypesPath)
+    .toString()
+    .replace('from "../../../common"', `from '../../scripts/common-types'`);
+
+  fs.writeFileSync(`${targetDir}/market.ts`, marketTypes);
 }

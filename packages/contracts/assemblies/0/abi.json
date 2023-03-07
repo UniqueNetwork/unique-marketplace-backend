@@ -84,9 +84,9 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "string",
+        "internalType": "uint32",
         "name": "version",
-        "type": "string"
+        "type": "uint32"
       },
       {
         "components": [
@@ -130,9 +130,9 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "string",
+        "internalType": "uint32",
         "name": "version",
-        "type": "string"
+        "type": "uint32"
       },
       {
         "components": [
@@ -182,9 +182,9 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "string",
+        "internalType": "uint32",
         "name": "version",
-        "type": "string"
+        "type": "uint32"
       },
       {
         "components": [
@@ -228,9 +228,9 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "string",
+        "internalType": "uint32",
         "name": "version",
-        "type": "string"
+        "type": "uint32"
       },
       {
         "components": [
@@ -443,6 +443,19 @@
     "name": "setPause",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
