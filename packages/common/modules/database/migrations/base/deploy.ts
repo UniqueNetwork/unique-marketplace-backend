@@ -1,13 +1,19 @@
 import { MigrationInterface, QueryRunner, Repository } from 'typeorm';
 import { SettingEntity } from '../../entities/setting.entity';
-import { deployContract } from '../../../../../contracts/scripts';
+import { loadConfig } from '../../../config';
+import { deployContractByWeb3 } from '../../../../../contracts/scripts';
 
 export abstract class DeployContractBase implements MigrationInterface {
   public abstract readonly version: number;
 
   public async up(queryRunner: QueryRunner): Promise<any> {
-    const contractAddress = await deployContract(this.version);
-    console.log('contractAddress', contractAddress);
+    const config = loadConfig();
+
+    const contractAddress = await deployContractByWeb3(
+      this.version,
+      config.uniqueRpcUrl,
+      config.walletPrivateKey
+    );
 
     const repository = queryRunner.connection.getRepository(SettingEntity);
     await this.updateSettings(repository, 'contractAddress', contractAddress);

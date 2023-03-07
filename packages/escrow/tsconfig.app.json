@@ -10,7 +10,9 @@
     "paths": {
       "@app/escrow": ["src/*"],
       "@app/common": ["packages/common/index.ts"],
-      "@app/common/*": ["packages/common/*"]
+      "@app/common/*": ["packages/common/*"],
+      "@app/contracts": ["packages/contracts"],
+      "@app/contracts/*": ["packages/contracts/*"]
     }
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
