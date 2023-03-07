@@ -7,12 +7,15 @@ import { SettingEntity } from './entities/setting.entity';
 import { DeployContractV0_1677512245943 } from './migrations/1677512245943-DeployContractV0';
 
 const entities = [SettingEntity];
-const migrations = [SettingsTable1677511684518, DeployContractV0_1677512245943];
+const migrations = [
+  SettingsTable1677511684518,
+  DeployContractV0_1677512245943,
+];
 
 function typeOrmModulesFactory(
   appendOptions: Pick<
     Partial<TypeOrmModuleOptions>,
-    'migrations' | 'migrationsRun'
+    'migrations' | 'migrationsRun' | 'migrationsTransactionMode'
   > = {}
 ) {
   return [
@@ -43,6 +46,7 @@ export class DatabaseModule {
         ...typeOrmModulesFactory({
           migrations,
           migrationsRun: true,
+          migrationsTransactionMode: "each",
         }),
       ],
     };
