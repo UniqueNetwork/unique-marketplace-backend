@@ -19,21 +19,22 @@ async function getContractSource(version: number) {
   };
 }
 
-export async function deployContractByEthers(
+async function deployContractByEthers(
   version: number,
-  uniqueRpcUrl: string,
+  feeValue: number,
+  rpcUrl: string,
   mnemonic: string
 ): Promise<string> {
   const { abi, bytecode } = await getContractSource(version);
 
   const privateKey = getPrivateKeyFromMnemonic(mnemonic);
 
-  const provider = ethers.getDefaultProvider(uniqueRpcUrl);
+  const provider = ethers.getDefaultProvider(rpcUrl);
   const signer = new ethers.Wallet(privateKey, provider);
 
   const MarketFactory = new ethers.ContractFactory(abi, bytecode, signer);
 
-  const market = await MarketFactory.deploy(10, {
+  const market = await MarketFactory.deploy(feeValue, {
     gasLimit: 1000000,
   });
 
@@ -47,22 +48,23 @@ function getPrivateKeyFromMnemonic(mnemonic: string): string {
   return wallet.privateKey;
 }
 
-export async function deployContractByWeb3(
+async function deployContractByWeb3(
   version: number,
-  uniqueRpcUrl: string,
+  feeValue: number,
+  rpcUrl: string,
   mnemonic: string
 ): Promise<string> {
   const { abi, bytecode } = await getContractSource(version);
 
   const privateKey = getPrivateKeyFromMnemonic(mnemonic);
 
-  const web3 = new Web3(uniqueRpcUrl);
+  const web3 = new Web3(rpcUrl);
 
   const incrementer = new web3.eth.Contract(abi);
 
   const incrementerTx = incrementer.deploy({
     data: bytecode,
-    arguments: [20],
+    arguments: [feeValue],
   });
 
   const tx = await web3.eth.accounts.signTransaction(
@@ -78,4 +80,22 @@ export async function deployContractByWeb3(
   );
 
   return result.contractAddress as string;
+}
+
+export function deploy(
+  version: number,
+  feeValue: number,
+  rpcUrl: string,
+  mnemonic: string,
+  type: 'by-ethers' | 'by-web3'
+) {
+  if (type === 'by-web3') {
+    return deployContractByWeb3(version, feeValue, rpcUrl, mnemonic);
+  }
+
+  if (type === 'by-ethers') {
+    return deployContractByEthers(version, feeValue, rpcUrl, mnemonic);
+  }
+
+  throw new Error('Invalid deploy type');
 }

@@ -1,18 +1,21 @@
 import { MigrationInterface, QueryRunner, Repository } from 'typeorm';
 import { SettingEntity } from '../../entities/setting.entity';
 import { loadConfig } from '../../../config';
-import { deployContractByWeb3 } from '../../../../../contracts/scripts';
+import { deploy } from '../../../../../contracts/scripts';
 
 export abstract class DeployContractBase implements MigrationInterface {
   public abstract readonly version: number;
+  public abstract readonly feeValue: number;
 
   public async up(queryRunner: QueryRunner): Promise<any> {
     const config = loadConfig();
 
-    const contractAddress = await deployContractByWeb3(
+    const contractAddress = await deploy(
       this.version,
+      this.feeValue,
       config.uniqueRpcUrl,
-      config.signer.seed
+      config.signer.seed,
+      'by-web3'
     );
 
     const repository = queryRunner.connection.getRepository(SettingEntity);
