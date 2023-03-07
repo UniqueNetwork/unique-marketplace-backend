@@ -14,8 +14,7 @@ export abstract class DeployContractBase implements MigrationInterface {
       this.version,
       this.feeValue,
       config.uniqueRpcUrl,
-      config.signer.seed,
-      'by-web3'
+      config.signer.seed
     );
 
     const repository = queryRunner.connection.getRepository(SettingEntity);
