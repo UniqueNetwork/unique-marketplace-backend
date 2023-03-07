@@ -9,7 +9,7 @@ import "./utils.sol";
 contract Market {
     using ERC165Checker for address;
 
-    uint32 version = 1;
+    uint32 public version = 1;
 
     bytes4 private InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private InterfaceId_ERC165 = 0x5755c3f2;
