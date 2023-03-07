@@ -22,7 +22,6 @@ export type Config = {
 
   uniqueSdkRestUrl: string;
   uniqueRpcUrl: string;
-  walletPrivateKey: string;
 
   database: PostgresConnectionOptions;
 };

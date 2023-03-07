@@ -4,12 +4,13 @@ import Web3 from 'web3';
 
 const assembliesBasePath = './packages/contracts/assemblies';
 
-async function getSource(version: number) {
+async function getContractSource(version: number) {
   const versionDir = `${assembliesBasePath}/${version}`;
-  const abiFilename = `${versionDir}/abi.json`;
-  const bytecodeFilename = `${versionDir}/bytecode.txt`;
 
+  const abiFilename = `${versionDir}/abi.json`;
   const abi = JSON.parse((await fs.readFile(abiFilename)).toString());
+
+  const bytecodeFilename = `${versionDir}/bytecode.txt`;
   const bytecode = (await fs.readFile(bytecodeFilename)).toString();
 
   return {
@@ -21,12 +22,14 @@ async function getSource(version: number) {
 export async function deployContractByEthers(
   version: number,
   uniqueRpcUrl: string,
-  walletPrivateKey: string
+  mnemonic: string
 ): Promise<string> {
-  const { abi, bytecode } = await getSource(version);
+  const { abi, bytecode } = await getContractSource(version);
+
+  const privateKey = getPrivateKeyFromMnemonic(mnemonic);
 
   const provider = ethers.getDefaultProvider(uniqueRpcUrl);
-  const signer = new ethers.Wallet(walletPrivateKey, provider);
+  const signer = new ethers.Wallet(privateKey, provider);
 
   const MarketFactory = new ethers.ContractFactory(abi, bytecode, signer);
 
@@ -39,12 +42,19 @@ export async function deployContractByEthers(
   return target as string;
 }
 
+function getPrivateKeyFromMnemonic(mnemonic: string): string {
+  const wallet = ethers.Wallet.fromMnemonic(mnemonic);
+  return wallet.privateKey;
+}
+
 export async function deployContractByWeb3(
   version: number,
   uniqueRpcUrl: string,
-  walletPrivateKey: string
+  mnemonic: string
 ): Promise<string> {
-  const { abi, bytecode } = await getSource(version);
+  const { abi, bytecode } = await getContractSource(version);
+
+  const privateKey = getPrivateKeyFromMnemonic(mnemonic);
 
   const web3 = new Web3(uniqueRpcUrl);
 
@@ -60,11 +70,12 @@ export async function deployContractByWeb3(
       data: incrementerTx.encodeABI(),
       gas: await incrementerTx.estimateGas(),
     },
-    walletPrivateKey
+    privateKey
   );
+
   const result = await web3.eth.sendSignedTransaction(
     tx.rawTransaction as string
   );
-  console.log('result', result);
+
   return result.contractAddress as string;
 }

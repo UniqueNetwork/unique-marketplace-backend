@@ -12,7 +12,7 @@ export abstract class DeployContractBase implements MigrationInterface {
     const contractAddress = await deployContractByWeb3(
       this.version,
       config.uniqueRpcUrl,
-      config.walletPrivateKey
+      config.signer.seed
     );
 
     const repository = queryRunner.connection.getRepository(SettingEntity);
