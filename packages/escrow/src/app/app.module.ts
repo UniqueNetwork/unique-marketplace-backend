@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 
 import { AppService } from './app.service';
-import { GlobalConfigModule } from "@app/common/modules/config";
-import { MonitoringModule } from "@app/common/modules/monitoring";
-import { CacheProviderModule } from "@app/common/modules/cache/cache-provider.module";
-import { DatabaseModule } from "@app/common/modules/database/database.module";
-import { sdkProvider } from "@app/common/modules/sdk/sdk.provider";
-import { AppController } from "./app.controller";
-import { PgNotifyClientModule } from "@app/common/pg-transport/pg-notify-client.module";
+import { GlobalConfigModule } from '@app/common/modules/config';
+import { MonitoringModule } from '@app/common/modules/monitoring';
+import { CacheProviderModule } from '@app/common/modules/cache/cache-provider.module';
+import { DatabaseModule } from '@app/common/modules/database/database.module';
+import { sdkProvider } from '@app/common/modules/sdk/sdk.provider';
+import { AppController } from './app.controller';
+import { PgNotifyClientModule } from '@app/common/pg-transport/pg-notify-client.module';
+import { ContractEventsModule } from './contract-events/contract-events.module';
 
 @Module({
   imports: [
@@ -16,13 +17,9 @@ import { PgNotifyClientModule } from "@app/common/pg-transport/pg-notify-client.
     CacheProviderModule,
     DatabaseModule.forEscrow(),
     PgNotifyClientModule,
+    ContractEventsModule,
   ],
-  controllers: [
-    AppController,
-  ],
-  providers: [
-    sdkProvider,
-    AppService,
-  ],
+  controllers: [AppController],
+  providers: [sdkProvider, AppService],
 })
 export class AppModule {}

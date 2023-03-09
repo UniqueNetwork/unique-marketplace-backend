@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 
 import { AppService } from './app.service';
-import { EventPattern, MessagePattern, Payload } from "@nestjs/microservices";
+import { EventPattern } from '@nestjs/microservices';
 
 @Controller()
 export class AppController {
@@ -13,7 +13,7 @@ export class AppController {
   }
 
   @EventPattern('new-collection-added')
-  async onAddCollection(data: { collectionId: number}) {
+  async onAddCollection(data: { collectionId: number }) {
     console.log('onAddCollection', data);
   }
 }

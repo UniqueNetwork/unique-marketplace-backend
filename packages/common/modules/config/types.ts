@@ -1,5 +1,5 @@
 import { CacheConfig } from './cache.config';
-import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
+import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 
 export type Config = {
   environment: string;
@@ -21,6 +21,7 @@ export type Config = {
   prefix?: string;
 
   uniqueSdkRestUrl: string;
+  uniqueRpcUrl: string;
 
   database: PostgresConnectionOptions;
 };
@@ -28,4 +29,3 @@ export type Config = {
 export type SignerConfig = {
   seed?: string;
 };
-

@@ -1,45 +1,42 @@
-import { DynamicModule, Module } from "@nestjs/common";
-import { TypeOrmModule, TypeOrmModuleOptions } from "@nestjs/typeorm";
-import { ConfigService } from "@nestjs/config";
-import { Config } from "../config";
-import { SettingsTable1677511684518 } from "./migrations/1677511684518-SettingsTable";
-import { SettingEntity } from "./entities/setting.entity";
-import { DeployContract1677512245943 } from "./migrations/1677512245943-DeployContract";
+import { DynamicModule, Module } from '@nestjs/common';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
+import { Config } from '../config';
+import { SettingsTable1677511684518 } from './migrations/1677511684518-SettingsTable';
+import { SettingEntity } from './entities/setting.entity';
+import { DeployContractV0_1677512245943 } from './migrations/1677512245943-DeployContractV0';
 
-const entities = [
-  SettingEntity
-];
+const entities = [SettingEntity];
 const migrations = [
   SettingsTable1677511684518,
-  DeployContract1677512245943
-];
-
-const imports: DynamicModule[] = [
-  TypeOrmModule.forFeature(entities)
+  DeployContractV0_1677512245943,
 ];
 
 function typeOrmModulesFactory(
-  appendOptions: Pick<Partial<TypeOrmModuleOptions>, "migrations" | "migrationsRun"> = {}
+  appendOptions: Pick<
+    Partial<TypeOrmModuleOptions>,
+    'migrations' | 'migrationsRun' | 'migrationsTransactionMode'
+  > = {}
 ) {
   return [
     TypeOrmModule.forFeature(entities),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService<Config>): TypeOrmModuleOptions => {
+      useFactory: (
+        configService: ConfigService<Config>
+      ): TypeOrmModuleOptions => {
         return {
-          ...configService.get("database"),
+          ...configService.get('database'),
           entities,
-          ...appendOptions
+          ...appendOptions,
         };
-      }
-    })
+      },
+    }),
   ];
 }
 
 @Module({
-  exports: [
-    TypeOrmModule
-  ]
+  exports: [TypeOrmModule],
 })
 export class DatabaseModule {
   static forEscrow(): DynamicModule {
@@ -48,18 +45,17 @@ export class DatabaseModule {
       imports: [
         ...typeOrmModulesFactory({
           migrations,
-          migrationsRun: true
-        })
-      ]
+          migrationsRun: true,
+          migrationsTransactionMode: "each",
+        }),
+      ],
     };
   }
 
   static forMarket(): DynamicModule {
     return {
       module: DatabaseModule,
-      imports: [
-        ...typeOrmModulesFactory()
-      ]
+      imports: [...typeOrmModulesFactory()],
     };
   }
 }
