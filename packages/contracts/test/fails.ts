@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Client } from '@unique-nft/sdk';
+import { Sdk } from '@unique-nft/sdk';
 import {
   createSdk,
   deploy,
@@ -12,7 +12,7 @@ import { Market } from '../../../typechain-types';
 const { collectionId, tokenId } = getNetworkConfig();
 
 describe('Market', function () {
-  let sdk: Client = createSdk();
+  let sdk: Sdk = createSdk();
 
   it('put fail; collection not found', async () => {
     const market = await deploy();

@@ -1,13 +1,13 @@
-import { ethers } from "hardhat";
-import { Address } from "@unique-nft/utils";
-import { UniqueNFTFactory } from "@unique-nft/solidity-interfaces";
-import { Sdk, Client } from "@unique-nft/sdk";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { network } from "hardhat";
-import { loadConfig } from "../scripts/config";
+import { ethers } from 'hardhat';
+import { Address } from '@unique-nft/utils';
+import { UniqueNFTFactory } from '@unique-nft/solidity-interfaces';
+import { Sdk } from '@unique-nft/sdk';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { network } from 'hardhat';
+import { loadConfig } from '../scripts/config';
 
 export function getNetworkConfig() {
-  type networks = "unq" | "opal";
+  type networks = 'unq' | 'opal';
   const networkName = network.name as networks;
 
   const appConfig = loadConfig();
@@ -29,7 +29,7 @@ export function createSdk() {
 }
 
 export async function deploy(fee: number = 10) {
-  const Market = await ethers.getContractFactory("Market");
+  const Market = await ethers.getContractFactory('Market');
   const market = await Market.deploy(fee);
 
   return market;
@@ -43,7 +43,7 @@ export async function getCollectionContract(owner: any, collectionId: number) {
 }
 
 export async function getAccounts(
-  sdk: Client,
+  sdk: Sdk,
   collectionId: number,
   tokenId: number
 ) {

@@ -1,4 +1,4 @@
-import { Client, ExtrinsicResultResponse, Room } from '@unique-nft/sdk';
+import { Sdk, ContractLog, ContractLogData, Room } from '@unique-nft/sdk';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SettingEntity } from '@app/common/modules/database/entities/setting.entity';
@@ -22,14 +22,13 @@ export class ContractEventsService implements OnModuleInit {
   private readonly contractsByVersions: Record<string, ContractInfo> = {};
   private readonly versionByAddress: Record<string, number> = {};
   constructor(
-    private readonly sdk: Client,
+    private readonly sdk: Sdk,
     @InjectRepository(SettingEntity)
     private settingEntityRepository: Repository<SettingEntity>
   ) {}
 
   async onModuleInit() {
     await this.loadAllContractVersions();
-    await this.subscribe();
   }
 
   private async loadAllContractVersions() {
@@ -41,31 +40,30 @@ export class ContractEventsService implements OnModuleInit {
       });
       if (contract) {
         const address = contract.value.toLowerCase();
+        console.log(`contract v${version} : ${address}`);
         this.contractsByVersions[version] = {
           address,
           abi: getContractAbi(version),
         };
         this.versionByAddress[address] = version;
+        await this.subscribe(address);
       }
       version++;
     } while (contract);
   }
 
-  private async subscribe() {
+  private async subscribe(contractAddress: string) {
     const client = this.sdk.subscriptions.connect();
-    client.subscribeEvents();
-    client.on('events', this.onEvent.bind(this));
+    client.subscribeContract({ address: contractAddress });
+    client.on('contract-logs', this.onContractLog.bind(this));
   }
 
-  onEvent(room: Room, event: any, extrinsic: ExtrinsicResultResponse<any>) {
-    // console.log('event', event);
-    if (event.section !== 'evm' || event.method !== 'Log') {
-      return;
-    }
-    event.data.map((log) => this.handleEventData(log));
+  onContractLog(room: Room, data: ContractLogData) {
+    const { log, extrinsic } = data;
+    this.handleEventData(log);
   }
 
-  handleEventData(log: any) {
+  handleEventData(log: ContractLog) {
     const { address } = log;
     const addressNormal = address.toLowerCase();
     if (!(addressNormal in this.versionByAddress)) {

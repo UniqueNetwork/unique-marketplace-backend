@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { Client } from '@unique-nft/sdk';
+import { Sdk } from '@unique-nft/sdk';
 import {
   createSdk,
   deploy,
@@ -15,7 +15,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 const { collectionId, tokenId } = getNetworkConfig();
 
 describe('e2e', function () {
-  let sdk: Client = createSdk();
+  let sdk: Sdk = createSdk();
   let ownerAccount: SignerWithAddress;
   let otherAccount: SignerWithAddress;
   let uniqueNFT: UniqueNFT;
