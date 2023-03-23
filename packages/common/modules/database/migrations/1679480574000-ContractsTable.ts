@@ -13,8 +13,8 @@ export class ContractsTable1677511684518 implements MigrationInterface {
             primaryKeyConstraintName: 'MARKET_CONTRACT_ADDRESS',
           },
           { name: 'version', type: 'integer', isUnique: true },
-          { name: 'createdAt', type: 'integer' },
-          { name: 'processedAt', type: 'integer' },
+          { name: 'created_at', type: 'integer' },
+          { name: 'processed_at', type: 'integer' },
         ],
       })
     );
