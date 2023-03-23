@@ -1,5 +1,11 @@
-import { Sdk, ContractLog, ContractLogData, Room } from '@unique-nft/sdk';
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  Sdk,
+  ContractLog,
+  ContractLogData,
+  Room,
+  Extrinsic,
+} from '@unique-nft/sdk';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SettingEntity } from '@app/common/modules/database/entities/setting.entity';
 import { Repository } from 'typeorm';
@@ -11,68 +17,83 @@ import {
   TokenIsUpForSaleEventObject,
   TokenRevokeEventObject,
 } from '@app/contracts/assemblies/0/market';
-
-interface ContractInfo {
-  address: string;
-  abi: Array<any>;
-}
+import { ContractEntity } from '@app/common/modules/database/entities/contract.entity';
+import { ContractService } from '@app/common/modules/database/services/contract.service';
 
 @Injectable()
 export class ContractEventsService implements OnModuleInit {
-  private readonly contractsByVersions: Record<string, ContractInfo> = {};
-  private readonly versionByAddress: Record<string, number> = {};
+  private readonly logger = new Logger(ContractEventsService.name);
+
+  private readonly abiByAddress: Record<string, any> = {};
+
   constructor(
     private readonly sdk: Sdk,
     @InjectRepository(SettingEntity)
-    private settingEntityRepository: Repository<SettingEntity>
+    private settingEntityRepository: Repository<SettingEntity>,
+    @Inject(ContractService)
+    private readonly contractService: ContractService
   ) {}
 
   async onModuleInit() {
-    await this.loadAllContractVersions();
+    await this.loadAllContracts();
   }
 
-  private async loadAllContractVersions() {
-    let contract;
-    let version = 0;
-    do {
-      contract = await this.settingEntityRepository.findOne({
-        where: { key: `contract_v${version}` },
+  private async loadAllContracts() {
+    const contracts = await this.contractService.getAll();
+    contracts.forEach((contract) => {
+      this.abiByAddress[contract.address] = getContractAbi(contract.version);
+
+      this.subscribe(contract);
+    });
+  }
+
+  private async subscribe(contract: ContractEntity) {
+    this.logger.log(`subscribe v${contract.version}:${contract.address}`);
+
+    const client = this.sdk.subscriptions.connect(null, {
+      reconnection: true,
+      autoConnect: true,
+    });
+
+    client.socket.on('connect', async () => {
+      this.logger.log(`reconnect v${contract.version}:${contract.address}`);
+      const processedAt = await this.contractService.getProcessedBlock(
+        contract.address
+      );
+      loadBlocks(processedAt);
+    });
+
+    function loadBlocks(fromBlock: number) {
+      client.subscribeContract({
+        address: contract.address,
+        fromBlock,
       });
-      if (contract) {
-        const address = contract.value.toLowerCase();
-        console.log(`contract v${version} : ${address}`);
-        this.contractsByVersions[version] = {
-          address,
-          abi: getContractAbi(version),
-        };
-        this.versionByAddress[address] = version;
-        await this.subscribe(address);
-      }
-      version++;
-    } while (contract);
-  }
+    }
 
-  private async subscribe(contractAddress: string) {
-    const client = this.sdk.subscriptions.connect();
-    client.subscribeContract({ address: contractAddress });
     client.on('contract-logs', this.onContractLog.bind(this));
+    client.socket.on('has-next', (room, data) => loadBlocks(data.nextId));
   }
 
-  onContractLog(room: Room, data: ContractLogData) {
+  async onContractLog(room: Room, data: ContractLogData) {
     const { log, extrinsic } = data;
-    this.handleEventData(log);
+    await this.handleEventData(log, extrinsic);
   }
 
-  handleEventData(log: ContractLog) {
+  async handleEventData(log: ContractLog, extrinsic: Extrinsic) {
     const { address } = log;
     const addressNormal = address.toLowerCase();
-    if (!(addressNormal in this.versionByAddress)) {
+
+    if (!(addressNormal in this.abiByAddress)) {
+      this.logger.error(`Not found abi for contract ${addressNormal}`);
       return;
     }
 
-    const version = this.versionByAddress[address];
+    await this.contractService.updateProcessedBlock(
+      addressNormal,
+      extrinsic.block.id
+    );
 
-    const { abi } = this.contractsByVersions[version];
+    const abi = this.abiByAddress[addressNormal];
 
     const contract = new ethers.utils.Interface(abi);
 
