@@ -52,10 +52,13 @@ export async function deploy(
     },
     privateKey
   );
-  const { contractAddress } = await web3.eth.sendSignedTransaction(
+  const { contractAddress, blockNumber } = await web3.eth.sendSignedTransaction(
     tx.rawTransaction as string
   );
-  return contractAddress;
+  return {
+    contractAddress,
+    blockNumber,
+  };
 
   /*
   const provider = ethers.getDefaultProvider(rpcUrl);

@@ -5,10 +5,14 @@ import { Config } from '../config';
 import { SettingsTable1677511684518 } from './migrations/1677511684518-SettingsTable';
 import { SettingEntity } from './entities/setting.entity';
 import { DeployContractV0_1677512245943 } from './migrations/1677512245943-DeployContractV0';
+import { ContractsTable1677511684518 } from './migrations/1679480574000-ContractsTable';
+import { ContractEntity } from './entities/contract.entity';
+import { ContractService } from './services/contract.service';
 
-const entities = [SettingEntity];
+const entities = [SettingEntity, ContractEntity];
 const migrations = [
   SettingsTable1677511684518,
+  ContractsTable1677511684518,
   DeployContractV0_1677512245943,
 ];
 
@@ -46,9 +50,11 @@ export class DatabaseModule {
         ...typeOrmModulesFactory({
           migrations,
           migrationsRun: true,
-          migrationsTransactionMode: "each",
+          migrationsTransactionMode: 'each',
         }),
       ],
+      providers: [ContractService],
+      exports: [ContractService],
     };
   }
 
