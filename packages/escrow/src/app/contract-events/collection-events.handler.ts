@@ -18,9 +18,11 @@ export class CollectionEventsHandler {
   }
 
   public async onEvent(room: Room, data: CollectionData) {
-    const { parsed } = data;
+    const { parsed, event } = data;
 
     const { collectionId, tokenId } = parsed;
+
+    const { method } = event;
 
     if (tokenId) {
       const offer = await this.offerService.find(collectionId, tokenId);
@@ -28,16 +30,20 @@ export class CollectionEventsHandler {
         return;
       }
 
-      if (parsed.event.method === 'ItemDestroyed') {
+      if (method === 'ItemDestroyed') {
         await this.deleteOffer(offer);
       }
 
-      if (parsed.event.method === 'Approved') {
+      if (method === 'Approved') {
         await this.runCheckApproved(offer);
       }
 
-      if (parsed.event.method === 'Transfer') {
+      if (method === 'Transfer') {
         await this.runCheckApproved(offer);
+      }
+    } else {
+      if (method === 'CollectionDestroyed') {
+        await this.deleteCollectionOffers(collectionId);
       }
     }
   }
@@ -71,5 +77,11 @@ export class CollectionEventsHandler {
     } catch (err) {
       console.log('err', err);
     }
+  }
+
+  private async deleteCollectionOffers(collectionId: number) {
+    const offers = await this.offerService.getAllByCollection(collectionId);
+    // todo delete all by one call in smart-contract
+    await Promise.all(offers.map((offer) => this.runCheckApproved(offer)));
   }
 }

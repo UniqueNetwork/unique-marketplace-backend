@@ -60,4 +60,12 @@ export class OfferService {
       },
     });
   }
+
+  async getAllByCollection(collectionId: number): Promise<OfferEntity[]> {
+    return this.offerEntityRepository.find({
+      where: {
+        collectionId,
+      },
+    });
+  }
 }
