@@ -4,11 +4,9 @@ import {
   ContractLogData,
   Room,
   Extrinsic,
+  SocketClient,
 } from '@unique-nft/sdk';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { SettingEntity } from '@app/common/modules/database/entities/setting.entity';
-import { Repository } from 'typeorm';
 import { getContractAbi } from '@app/contracts/scripts';
 import { ethers } from 'ethers';
 import { LogDescription } from '@ethersproject/abi/src.ts/interface';
@@ -19,43 +17,58 @@ import {
 } from '@app/contracts/assemblies/0/market';
 import { ContractEntity } from '@app/common/modules/database/entities/contract.entity';
 import { ContractService } from '@app/common/modules/database/services/contract.service';
+import { OfferService } from '@app/common/modules/database/services/offer.service';
+import { CollectionEventsHandler } from './collection-events.handler';
 
 @Injectable()
 export class ContractEventsService implements OnModuleInit {
   private readonly logger = new Logger(ContractEventsService.name);
 
+  private readonly client: SocketClient;
   private readonly abiByAddress: Record<string, any> = {};
 
   constructor(
     private readonly sdk: Sdk,
-    @InjectRepository(SettingEntity)
-    private settingEntityRepository: Repository<SettingEntity>,
     @Inject(ContractService)
-    private readonly contractService: ContractService
-  ) {}
+    private readonly contractService: ContractService,
+    @Inject(OfferService)
+    private readonly offerService: OfferService,
+    @Inject(CollectionEventsHandler)
+    private readonly collectionEventsHandler: CollectionEventsHandler
+  ) {
+    this.client = this.sdk.subscriptions.connect({
+      reconnection: true,
+      autoConnect: true,
+    });
 
-  async onModuleInit() {
-    await this.loadAllContracts();
+    this.client.on(
+      'collections',
+      this.collectionEventsHandler.onEvent.bind(this.collectionEventsHandler)
+    );
+    this.client.subscribeCollection();
   }
 
-  private async loadAllContracts() {
+  async onModuleInit() {
     const contracts = await this.contractService.getAll();
     contracts.forEach((contract) => {
       this.abiByAddress[contract.address] = getContractAbi(contract.version);
 
       this.subscribe(contract);
     });
+
+    this.collectionEventsHandler.init(this.abiByAddress);
   }
 
   private async subscribe(contract: ContractEntity) {
     this.logger.log(`subscribe v${contract.version}:${contract.address}`);
 
-    const client = this.sdk.subscriptions.connect(null, {
-      reconnection: true,
-      autoConnect: true,
-    });
+    const loadBlocks = (fromBlock: number) =>
+      this.client.subscribeContract({
+        address: contract.address,
+        fromBlock,
+      });
 
-    client.socket.on('connect', async () => {
+    this.client.socket.on('connect', async () => {
       this.logger.log(`reconnect v${contract.version}:${contract.address}`);
       const processedAt = await this.contractService.getProcessedBlock(
         contract.address
@@ -63,15 +76,8 @@ export class ContractEventsService implements OnModuleInit {
       loadBlocks(processedAt);
     });
 
-    function loadBlocks(fromBlock: number) {
-      client.subscribeContract({
-        address: contract.address,
-        fromBlock,
-      });
-    }
-
-    client.on('contract-logs', this.onContractLog.bind(this));
-    client.socket.on('has-next', (room, data) => loadBlocks(data.nextId));
+    this.client.on('contract-logs', this.onContractLog.bind(this));
+    this.client.on('has-next', (room, data) => loadBlocks(data.nextId));
   }
 
   async onContractLog(room: Room, data: ContractLogData) {
@@ -110,14 +116,14 @@ export class ContractEventsService implements OnModuleInit {
     if (eventName === 'TokenIsUpForSale') {
       const tokenUpArgs: TokenIsUpForSaleEventObject =
         args as unknown as TokenIsUpForSaleEventObject;
-      console.log('TokenIsUpForSale', tokenUpArgs);
+      await this.offerService.update(addressNormal, tokenUpArgs.item);
       return;
     }
 
     if (eventName === 'TokenRevoke') {
       const tokenRevokeArgs: TokenRevokeEventObject =
         args as unknown as TokenRevokeEventObject;
-      console.log('TokenRevoke', tokenRevokeArgs);
+      await this.offerService.update(addressNormal, tokenRevokeArgs.item);
       return;
     }
 

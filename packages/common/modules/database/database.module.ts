@@ -8,12 +8,16 @@ import { DeployContractV0_1677512245943 } from './migrations/1677512245943-Deplo
 import { ContractsTable1677511684518 } from './migrations/1679480574000-ContractsTable';
 import { ContractEntity } from './entities/contract.entity';
 import { ContractService } from './services/contract.service';
+import { OfferEntity } from './entities/offer.entity';
+import { OffersTable1679578453871 } from './migrations/1679578453871-OffersTable';
+import { OfferService } from './services/offer.service';
 
-const entities = [SettingEntity, ContractEntity];
+const entities = [SettingEntity, ContractEntity, OfferEntity];
 const migrations = [
   SettingsTable1677511684518,
   ContractsTable1677511684518,
   DeployContractV0_1677512245943,
+  OffersTable1679578453871,
 ];
 
 function typeOrmModulesFactory(
@@ -53,8 +57,8 @@ export class DatabaseModule {
           migrationsTransactionMode: 'each',
         }),
       ],
-      providers: [ContractService],
-      exports: [ContractService],
+      providers: [ContractService, OfferService],
+      exports: [ContractService, OfferService],
     };
   }
 
