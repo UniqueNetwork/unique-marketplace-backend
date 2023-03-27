@@ -5,14 +5,25 @@ import {
   deploy,
   getAccounts,
   getCollectionContract,
-  getNetworkConfig,
+  getCollectionData,
+  TokenData,
 } from './utils';
-import { Market } from '../../../typechain-types';
 
-const { collectionId, tokenId } = getNetworkConfig();
+describe('fails', function () {
+  let sdk: Sdk;
+  let collectionId: number;
+  let tokenId: number;
+  let rftToken: TokenData;
 
-describe('Market', function () {
-  let sdk: Sdk = createSdk();
+  it('prepare', async () => {
+    sdk = await createSdk();
+
+    const data = await getCollectionData(sdk);
+    collectionId = data.nft.collectionId;
+    tokenId = data.nft.tokenId;
+
+    rftToken = data.rft;
+  });
 
   it('put fail; collection not found', async () => {
     const market = await deploy();
@@ -26,10 +37,9 @@ describe('Market', function () {
   it('put fail; collection not supported 721', async () => {
     const market = await deploy();
 
-    await expect(market.put(251, 1, 3, 1)).to.be.revertedWithCustomError(
-      market,
-      'CollectionNotSupportedERC721'
-    );
+    await expect(
+      market.put(rftToken.collectionId, rftToken.tokenId, 3, 1)
+    ).to.be.revertedWithCustomError(market, 'CollectionNotSupportedERC721');
   });
 
   it('put fail; token not found', async () => {

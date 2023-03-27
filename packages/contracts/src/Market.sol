@@ -10,6 +10,7 @@ contract Market {
     using ERC165Checker for address;
 
     uint32 public version = 1;
+    uint32 private idCount = 1;
 
     bytes4 private InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private InterfaceId_ERC165 = 0x5755c3f2;
@@ -19,6 +20,7 @@ contract Market {
     Utils utils = new Utils();
 
     struct Order {
+        uint32 id;
         uint32 collectionId;
         uint32 tokenId;
         uint256 price;
@@ -156,6 +158,7 @@ contract Market {
         }
 
         Order memory order = Order(
+            0,
             collectionId,
             tokenId,
             price,
@@ -165,6 +168,7 @@ contract Market {
 
         isApproved(erc721, order);
 
+        order.id = idCount++;
         orders[collectionId][tokenId] = order;
 
         emit TokenIsUpForSale(version, order);

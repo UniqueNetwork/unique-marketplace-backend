@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { v4 as uuid } from 'uuid';
 import { OfferEntity } from '../entities/offer.entity';
 import { Market } from '../../../../contracts/assemblies/0/market';
 
@@ -31,6 +32,7 @@ export class OfferService {
       }
 
       offer = this.offerEntityRepository.create();
+      offer.id = uuid();
       offer.collectionId = order.collectionId;
       offer.tokenId = order.tokenId;
     } else {

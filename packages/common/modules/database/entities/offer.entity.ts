@@ -1,10 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
+import { Entity, Column, Index } from 'typeorm';
 
 @Entity({ name: 'offers' })
 @Index(['collectionId', 'tokenId'])
 export class OfferEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @Column('uuid', { primary: true, name: 'id' })
+  id: string;
 
   @Column({ name: 'collection_id' })
   collectionId: number;
