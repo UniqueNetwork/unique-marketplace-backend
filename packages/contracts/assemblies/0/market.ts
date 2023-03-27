@@ -30,6 +30,7 @@ import type {
 
 export declare namespace Market {
   export type OrderStruct = {
+    id: PromiseOrValue<BigNumberish>;
     collectionId: PromiseOrValue<BigNumberish>;
     tokenId: PromiseOrValue<BigNumberish>;
     price: PromiseOrValue<BigNumberish>;
@@ -40,10 +41,12 @@ export declare namespace Market {
   export type OrderStructOutput = [
     number,
     number,
+    number,
     BigNumber,
     number,
     string
   ] & {
+    id: number;
     collectionId: number;
     tokenId: number;
     price: BigNumber;

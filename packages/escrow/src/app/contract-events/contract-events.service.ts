@@ -1,9 +1,9 @@
 import {
-  Sdk,
   ContractLog,
   ContractLogData,
-  Room,
   Extrinsic,
+  Room,
+  Sdk,
   SocketClient,
 } from '@unique-nft/sdk';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
@@ -19,6 +19,7 @@ import { ContractEntity } from '@app/common/modules/database/entities/contract.e
 import { ContractService } from '@app/common/modules/database/services/contract.service';
 import { OfferService } from '@app/common/modules/database/services/offer.service';
 import { CollectionEventsHandler } from './collection-events.handler';
+import { OfferStatus } from '@app/common/modules/types';
 
 @Injectable()
 export class ContractEventsService implements OnModuleInit {
@@ -116,14 +117,28 @@ export class ContractEventsService implements OnModuleInit {
     if (eventName === 'TokenIsUpForSale') {
       const tokenUpArgs: TokenIsUpForSaleEventObject =
         args as unknown as TokenIsUpForSaleEventObject;
-      await this.offerService.update(addressNormal, tokenUpArgs.item);
+      await this.offerService.update(
+        addressNormal,
+        tokenUpArgs.item,
+        OfferStatus.Opened
+      );
       return;
     }
 
     if (eventName === 'TokenRevoke') {
       const tokenRevokeArgs: TokenRevokeEventObject =
         args as unknown as TokenRevokeEventObject;
-      await this.offerService.update(addressNormal, tokenRevokeArgs.item);
+
+      const offerStatus =
+        tokenRevokeArgs.item.amount === 0
+          ? OfferStatus.Canceled
+          : OfferStatus.Opened;
+
+      await this.offerService.update(
+        addressNormal,
+        tokenRevokeArgs.item,
+        offerStatus
+      );
       return;
     }
 

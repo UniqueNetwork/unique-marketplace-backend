@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 import { OfferEntity } from '../entities/offer.entity';
 import { Market } from '../../../../contracts/assemblies/0/market';
+import { OfferStatus } from '../../types';
 
 @Injectable()
 export class OfferService {
@@ -12,13 +13,17 @@ export class OfferService {
     private offerEntityRepository: Repository<OfferEntity>
   ) {}
 
-  async delete(id: number) {
+  async delete(id: string) {
     await this.offerEntityRepository.delete({
       id,
     });
   }
 
-  async update(contractAddress: string, order: Market.OrderStructOutput) {
+  async update(
+    contractAddress: string,
+    order: Market.OrderStructOutput,
+    status: OfferStatus
+  ) {
     let offer = await this.offerEntityRepository.findOne({
       where: {
         collectionId: order.collectionId,
@@ -33,15 +38,12 @@ export class OfferService {
 
       offer = this.offerEntityRepository.create();
       offer.id = uuid();
+      offer.offerId = order.id;
       offer.collectionId = order.collectionId;
       offer.tokenId = order.tokenId;
+      offer.status = OfferStatus.Opened;
     } else {
-      if (order.amount === 0) {
-        await this.offerEntityRepository.delete({
-          id: offer.id,
-        });
-        return;
-      }
+      offer.status = status;
     }
 
     offer.price = order.price.toBigInt();
