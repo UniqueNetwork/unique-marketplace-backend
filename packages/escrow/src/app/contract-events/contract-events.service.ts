@@ -2,8 +2,7 @@ import { Sdk, SocketClient } from '@unique-nft/sdk';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getContractAbi } from '@app/contracts/scripts';
 import { ContractEntity, ContractService } from '@app/common/modules/database';
-import { CollectionEventsHandler } from './collection-events.handler';
-import { ContractEventsHandler } from './contract-events.handler';
+import { CollectionEventsHandler, ContractEventsHandler } from './handlers';
 
 @Injectable()
 export class ContractEventsService implements OnModuleInit {
