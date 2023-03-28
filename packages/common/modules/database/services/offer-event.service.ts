@@ -15,14 +15,14 @@ export class OfferEventService {
     offerId: string,
     eventType: OfferEventType,
     blockNumber: number,
-    addressFrom: string
+    address: string
   ): Promise<OfferEventEntity> {
     const event = this.offerEventEntityRepository.create();
 
     event.offerId = offerId;
     event.eventType = eventType;
     event.blockNumber = blockNumber;
-    event.addressFrom = addressFrom;
+    event.address = address;
 
     await this.offerEventEntityRepository.save(event);
 

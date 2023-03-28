@@ -1,5 +1,6 @@
-import { Entity, Column, Index } from 'typeorm';
+import { Entity, Column, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { OfferStatus } from '../../types';
+import { ContractEntity } from './contract.entity';
 
 @Entity({ name: 'offers' })
 @Index(['orderId'])
@@ -24,8 +25,11 @@ export class OfferEntity {
   @Column({ name: 'price', type: 'bigint' })
   price: bigint;
 
-  @Column({ name: 'contract_address', type: 'varchar' })
-  contractAddress: string;
+  @JoinColumn({
+    name: 'contract_address',
+  })
+  @ManyToOne(() => ContractEntity)
+  contract: ContractEntity;
 
   @Column({ type: 'varchar' })
   status: OfferStatus;

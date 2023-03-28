@@ -19,6 +19,16 @@ export class OffersTable1679578453871 implements MigrationInterface {
           },
           { name: 'seller', type: 'varchar' },
         ],
+        foreignKeys: [
+          {
+            referencedTableName: 'contracts',
+            columnNames: ['contract_address'],
+            referencedColumnNames: ['address'],
+            deferrable: 'INITIALLY DEFERRED',
+            onDelete: 'CASCADE',
+            name: 'FK_OFFERS_TO_CONTRACTS',
+          },
+        ],
         indices: [
           {
             name: 'OrderId',

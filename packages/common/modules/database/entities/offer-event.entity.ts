@@ -15,6 +15,6 @@ export class OfferEventEntity {
   @Column({ name: 'block_number' })
   blockNumber: number;
 
-  @Column({ name: 'address_from', type: 'varchar' })
-  addressFrom: string;
+  @Column({ name: 'address', type: 'varchar' })
+  address: string;
 }

@@ -54,14 +54,14 @@ export class CollectionEventsHandler {
   }
 
   private async runCheckApproved(offer: OfferEntity) {
-    const abi = this.abiByAddress[offer.contractAddress];
+    const abi = this.abiByAddress[offer.contract.address];
 
     try {
       // todo update accounts package and use signer.address
       // @ts-ignore
       const address = this.sdk.options.signer.getAddress();
       const contract = await this.sdk.evm.contractConnect(
-        offer.contractAddress,
+        offer.contract.address,
         abi
       );
       const result = await contract.send.submitWaitResult({

@@ -10,6 +10,14 @@ export class ContractService {
     private contractEntityRepository: Repository<ContractEntity>
   ) {}
 
+  public get(address: string): Promise<ContractEntity | null> {
+    return this.contractEntityRepository.findOne({
+      where: {
+        address,
+      },
+    });
+  }
+
   public getAll(): Promise<ContractEntity[]> {
     return this.contractEntityRepository.find();
   }

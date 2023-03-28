@@ -40,6 +40,12 @@ export class ContractEventsHandler {
       return;
     }
 
+    const contractEntity = await this.contractService.get(addressNormal);
+    if (!contractEntity) {
+      this.logger.error(`Not found ContractEntity ${addressNormal}`);
+      return;
+    }
+
     await this.contractService.updateProcessedBlock(
       addressNormal,
       extrinsic.block.id
@@ -65,7 +71,7 @@ export class ContractEventsHandler {
         args as unknown as TokenIsUpForSaleEventObject;
 
       await this.offerService.update(
-        addressNormal,
+        contractEntity,
         tokenUpArgs.item,
         OfferStatus.Opened
       );
@@ -82,7 +88,7 @@ export class ContractEventsHandler {
           : OfferStatus.Opened;
 
       await this.offerService.update(
-        addressNormal,
+        contractEntity,
         tokenRevokeArgs.item,
         offerStatus
       );
@@ -99,7 +105,7 @@ export class ContractEventsHandler {
           : OfferStatus.Opened;
 
       await this.offerService.update(
-        addressNormal,
+        contractEntity,
         tokenIsPurchasedArgs.item,
         offerStatus
       );

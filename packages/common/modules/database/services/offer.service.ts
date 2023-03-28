@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
-import { OfferEntity } from '../entities';
+import { ContractEntity, OfferEntity } from '../entities';
 import { Market } from '@app/contracts/assemblies/0/market';
 import { OfferStatus } from '../../types';
 
@@ -20,7 +20,7 @@ export class OfferService {
   }
 
   async update(
-    contractAddress: string,
+    contract: ContractEntity,
     order: Market.OrderStructOutput,
     status: OfferStatus
   ) {
@@ -48,7 +48,7 @@ export class OfferService {
 
     offer.price = order.price.toBigInt();
     offer.amount = order.amount;
-    offer.contractAddress = contractAddress;
+    offer.contract = contract;
 
     await this.offerEntityRepository.save(offer);
   }
@@ -62,6 +62,7 @@ export class OfferService {
         collectionId,
         tokenId,
       },
+      relations: ['contract'],
     });
   }
 

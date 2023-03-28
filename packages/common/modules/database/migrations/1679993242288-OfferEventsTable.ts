@@ -13,7 +13,7 @@ export class OfferEventsTable1679993242288 implements MigrationInterface {
             type: 'varchar',
           },
           { name: 'block_number', type: 'integer' },
-          { name: 'address_from', type: 'varchar' },
+          { name: 'address', type: 'varchar' },
         ],
       })
     );
