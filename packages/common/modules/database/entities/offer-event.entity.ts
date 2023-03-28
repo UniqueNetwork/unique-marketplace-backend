@@ -9,7 +9,7 @@ export class OfferEventEntity {
   @Column({ name: 'offer_id' })
   offerId: string;
 
-  @Column({ name: 'event_type', type: 'enum', enum: OfferEventType })
+  @Column({ name: 'event_type', type: 'varchar' })
   eventType: OfferEventType;
 
   @Column({ name: 'block_number' })

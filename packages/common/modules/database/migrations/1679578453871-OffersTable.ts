@@ -1,5 +1,4 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
-import { OfferStatus } from '../../types';
 
 export class OffersTable1679578453871 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
@@ -8,7 +7,7 @@ export class OffersTable1679578453871 implements MigrationInterface {
         name: 'offers',
         columns: [
           { name: 'id', type: 'uuid', isPrimary: true },
-          { name: 'offer_id', type: 'integer' },
+          { name: 'order_id', type: 'integer' },
           { name: 'collection_id', type: 'integer' },
           { name: 'token_id', type: 'integer' },
           { name: 'price', type: 'bigint' },
@@ -16,19 +15,14 @@ export class OffersTable1679578453871 implements MigrationInterface {
           { name: 'contract_address', type: 'varchar' },
           {
             name: 'status',
-            type: 'enum',
-            enum: [
-              OfferStatus.Opened,
-              OfferStatus.Canceled,
-              OfferStatus.Completed,
-            ],
+            type: 'varchar',
           },
           { name: 'seller', type: 'varchar' },
         ],
         indices: [
           {
-            name: 'OfferId',
-            columnNames: ['offer_id'],
+            name: 'OrderId',
+            columnNames: ['order_id'],
           },
           {
             name: 'CollectionId',

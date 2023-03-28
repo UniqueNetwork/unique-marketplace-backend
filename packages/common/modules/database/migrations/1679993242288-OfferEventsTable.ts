@@ -1,5 +1,4 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
-import { OfferEventType } from '../../types';
 
 export class OfferEventsTable1679993242288 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
@@ -11,12 +10,7 @@ export class OfferEventsTable1679993242288 implements MigrationInterface {
           { name: 'offer_id', type: 'varchar' },
           {
             name: 'event_type',
-            type: 'enum',
-            enum: [
-              OfferEventType.Open,
-              OfferEventType.Cancel,
-              OfferEventType.Buy,
-            ],
+            type: 'varchar',
           },
           { name: 'block_number', type: 'integer' },
           { name: 'address_from', type: 'varchar' },

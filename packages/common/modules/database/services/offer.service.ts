@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
-import { OfferEntity } from '../entities/offer.entity';
-import { Market } from '../../../../contracts/assemblies/0/market';
+import { OfferEntity } from '../entities';
+import { Market } from '@app/contracts/assemblies/0/market';
 import { OfferStatus } from '../../types';
 
 @Injectable()
@@ -26,7 +26,7 @@ export class OfferService {
   ) {
     let offer = await this.offerEntityRepository.findOne({
       where: {
-        offerId: order.id,
+        orderId: order.id,
       },
     });
 
@@ -37,7 +37,7 @@ export class OfferService {
 
       offer = this.offerEntityRepository.create();
       offer.id = uuid();
-      offer.offerId = order.id;
+      offer.orderId = order.id;
       offer.collectionId = order.collectionId;
       offer.tokenId = order.tokenId;
       offer.seller = order.seller;
