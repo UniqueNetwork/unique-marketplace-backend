@@ -1,13 +1,23 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  JoinColumn,
+  ManyToOne,
+} from 'typeorm';
 import { OfferEventType } from '../../types';
+import { OfferEntity } from './offer.entity';
 
 @Entity({ name: 'offer-events' })
 export class OfferEventEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'offer_id' })
-  offerId: string;
+  @JoinColumn({
+    name: 'offer_id',
+  })
+  @ManyToOne(() => OfferEntity)
+  offer: OfferEntity;
 
   @Column({ name: 'event_type', type: 'varchar' })
   eventType: OfferEventType;

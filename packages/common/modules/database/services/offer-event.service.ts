@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { OfferEventEntity } from '../entities';
+import { OfferEntity, OfferEventEntity } from '../entities';
 import { OfferEventType } from '../../types';
 
 @Injectable()
@@ -12,14 +12,14 @@ export class OfferEventService {
   ) {}
 
   public async create(
-    offerId: string,
+    offer: OfferEntity,
     eventType: OfferEventType,
     blockNumber: number,
     address: string
   ): Promise<OfferEventEntity> {
     const event = this.offerEventEntityRepository.create();
 
-    event.offerId = offerId;
+    event.offer = offer;
     event.eventType = eventType;
     event.blockNumber = blockNumber;
     event.address = address;
