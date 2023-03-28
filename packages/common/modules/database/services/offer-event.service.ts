@@ -15,7 +15,8 @@ export class OfferEventService {
     offer: OfferEntity,
     eventType: OfferEventType,
     blockNumber: number,
-    address: string
+    address: string,
+    amount: number | bigint
   ): Promise<OfferEventEntity> {
     const event = this.offerEventEntityRepository.create();
 

@@ -40,7 +40,7 @@ contract Market {
     error FailTransformToken(string reason);
 
     event TokenIsUpForSale(uint32 version, Order item);
-    event TokenRevoke(uint32 version, Order item);
+    event TokenRevoke(uint32 version, Order item, uint256 amount);
     event TokenIsApproved(uint32 version, Order item);
     event TokenIsPurchased(uint32 version, Order item, uint256 salesAmount);
     event Log(string message);
@@ -218,7 +218,7 @@ contract Market {
             orders[collectionId][tokenId] = order;
         }
 
-        emit TokenRevoke(version, order);
+        emit TokenRevoke(version, order, amount);
     }
 
     // ################################################################

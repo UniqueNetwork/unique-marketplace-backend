@@ -120,7 +120,8 @@ export class ContractEventsHandler {
         offer,
         OfferEventType.Open,
         extrinsic.block.id,
-        extrinsic.signer
+        extrinsic.signer,
+        tokenUpArgs.item.amount
       );
     }
   }
@@ -150,11 +151,17 @@ export class ContractEventsHandler {
     );
 
     if (offer) {
+      const eventType =
+        tokenRevokeArgs.item.amount === 0
+          ? OfferEventType.Cancel
+          : OfferEventType.Revoke;
+
       await this.offerEventService.create(
         offer,
-        OfferEventType.Open,
+        eventType,
         extrinsic.block.id,
-        extrinsic.signer
+        extrinsic.signer,
+        tokenRevokeArgs.amount.toBigInt()
       );
     }
   }
@@ -178,9 +185,10 @@ export class ContractEventsHandler {
     if (offer) {
       await this.offerEventService.create(
         offer,
-        OfferEventType.Open,
+        OfferEventType.Buy,
         extrinsic.block.id,
-        extrinsic.signer
+        extrinsic.signer,
+        tokenIsPurchasedArgs.salesAmount.toBigInt()
       );
     }
   }

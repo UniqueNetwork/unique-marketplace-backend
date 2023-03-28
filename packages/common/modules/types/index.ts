@@ -6,6 +6,7 @@ export enum OfferStatus {
 
 export enum OfferEventType {
   Open = 'Open',
+  Revoke = 'Revoke',
   Cancel = 'Cancel',
   Buy = 'Buy',
 }

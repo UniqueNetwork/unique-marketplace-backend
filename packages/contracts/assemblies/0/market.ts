@@ -147,7 +147,7 @@ export interface MarketInterface extends utils.Interface {
     "TokenIsApproved(uint32,tuple)": EventFragment;
     "TokenIsPurchased(uint32,tuple,uint256)": EventFragment;
     "TokenIsUpForSale(uint32,tuple)": EventFragment;
-    "TokenRevoke(uint32,tuple)": EventFragment;
+    "TokenRevoke(uint32,tuple,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Log"): EventFragment;
@@ -203,9 +203,10 @@ export type TokenIsUpForSaleEventFilter =
 export interface TokenRevokeEventObject {
   version: number;
   item: Market.OrderStructOutput;
+  amount: BigNumber;
 }
 export type TokenRevokeEvent = TypedEvent<
-  [number, Market.OrderStructOutput],
+  [number, Market.OrderStructOutput, BigNumber],
   TokenRevokeEventObject
 >;
 
@@ -422,11 +423,16 @@ export interface Market extends BaseContract {
     ): TokenIsUpForSaleEventFilter;
     TokenIsUpForSale(version?: null, item?: null): TokenIsUpForSaleEventFilter;
 
-    "TokenRevoke(uint32,tuple)"(
+    "TokenRevoke(uint32,tuple,uint256)"(
       version?: null,
-      item?: null
+      item?: null,
+      amount?: null
     ): TokenRevokeEventFilter;
-    TokenRevoke(version?: null, item?: null): TokenRevokeEventFilter;
+    TokenRevoke(
+      version?: null,
+      item?: null,
+      amount?: null
+    ): TokenRevokeEventFilter;
   };
 
   estimateGas: {

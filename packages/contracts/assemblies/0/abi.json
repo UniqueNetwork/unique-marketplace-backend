@@ -284,6 +284,12 @@
         "internalType": "struct Market.Order",
         "name": "item",
         "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
     "name": "TokenRevoke",
