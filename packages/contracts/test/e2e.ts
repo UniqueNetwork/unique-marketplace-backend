@@ -71,8 +71,8 @@ describe('e2e', function () {
         1,
         collectionId,
         tokenId,
-        tokenPrice,
         putAmount,
+        tokenPrice,
         ownerAccount.address,
       ]);
   });
@@ -88,8 +88,8 @@ describe('e2e', function () {
         1,
         collectionId,
         tokenId,
-        tokenPrice,
         putAmount,
+        tokenPrice,
         ownerAccount.address,
       ]);
   });
@@ -127,8 +127,8 @@ describe('e2e', function () {
           1,
           collectionId,
           tokenId,
-          BigNumber.from(tokenPrice),
           putAmount - buyAmount,
+          BigNumber.from(tokenPrice),
           ownerAccount.address,
         ],
         BigNumber.from(buyAmount),

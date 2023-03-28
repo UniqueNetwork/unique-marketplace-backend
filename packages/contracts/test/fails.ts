@@ -121,7 +121,7 @@ describe('fails', function () {
         value: 20,
       })
     )
-      .to.be.revertedWithCustomError(market, 'FailTransformToken')
+      .to.be.revertedWithCustomError(market, 'FailTransferToken')
       .withArgs('ApprovedValueTooLow');
   });
 
@@ -172,7 +172,7 @@ describe('fails', function () {
       market.connect(otherAccount).buy(collectionId, tokenId, 1, {
         value: buyPrice - 1,
       })
-    ).to.be.revertedWithCustomError(market, 'NotEnoughError');
+    ).to.be.revertedWithCustomError(market, 'NotEnoughMoneyError');
   });
 
   it('buy fail; not enough money for fee', async () => {
@@ -197,6 +197,6 @@ describe('fails', function () {
       market.connect(otherAccount).buy(collectionId, tokenId, 1, {
         value: buyPrice,
       })
-    ).to.be.revertedWithCustomError(market, 'NotEnoughError');
+    ).to.be.revertedWithCustomError(market, 'NotEnoughMoneyError');
   });
 });
