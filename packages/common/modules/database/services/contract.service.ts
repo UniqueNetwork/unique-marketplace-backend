@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ContractEntity } from '../entities/contract.entity';
 import { LessThan, Repository } from 'typeorm';
+import { ContractEntity } from '../entities';
 
 @Injectable()
 export class ContractService {

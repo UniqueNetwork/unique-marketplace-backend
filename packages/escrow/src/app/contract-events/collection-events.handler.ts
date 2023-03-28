@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { OfferService } from '@app/common/modules/database/services/offer.service';
 import { CollectionData, Room, Sdk } from '@unique-nft/sdk';
-import { OfferEntity } from '@app/common/modules/database/entities/offer.entity';
+import { OfferService, OfferEntity } from '@app/common/modules/database';
 
 @Injectable()
 export class CollectionEventsHandler {

@@ -3,3 +3,9 @@ export enum OfferStatus {
   Canceled = 'Canceled',
   Completed = 'Completed',
 }
+
+export enum OfferEventType {
+  Open = 'Open',
+  Cancel = 'Cancel',
+  Buy = 'Buy',
+}

@@ -23,6 +23,21 @@ export class OffersTable1679578453871 implements MigrationInterface {
               OfferStatus.Completed,
             ],
           },
+          { name: 'seller', type: 'varchar' },
+        ],
+        indices: [
+          {
+            name: 'OfferId',
+            columnNames: ['offer_id'],
+          },
+          {
+            name: 'CollectionId',
+            columnNames: ['collection_id'],
+          },
+          {
+            name: 'CollectionId_TokenId',
+            columnNames: ['collection_id', 'token_id'],
+          },
         ],
       })
     );

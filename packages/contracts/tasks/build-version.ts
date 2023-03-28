@@ -36,10 +36,20 @@ export async function buildVersion(
 
   fs.writeFileSync(`${targetDir}/bytecode.txt`, market.bytecode);
 
-  const marketTypes = fs
+  let marketTypes = fs
     .readFileSync(marketTypesPath)
     .toString()
     .replace('from "../../../common"', `from '../../scripts/common-types'`);
+
+  const eventReg = /getEvent\(\w+: "(?<name>\w+)"\)/g;
+  const eventsRes = marketTypes.matchAll(eventReg);
+  const events = [];
+  for (const event of eventsRes) {
+    events.push(`"${event.groups?.name}"`);
+  }
+  marketTypes = `${marketTypes}
+
+export type MarketEventNames = ${events.join(' | ')}`;
 
   fs.writeFileSync(`${targetDir}/market.ts`, marketTypes);
 }

@@ -2,6 +2,8 @@ import { Entity, Column, Index } from 'typeorm';
 import { OfferStatus } from '../../types';
 
 @Entity({ name: 'offers' })
+@Index(['offerId'])
+@Index(['collectionId'])
 @Index(['collectionId', 'tokenId'])
 export class OfferEntity {
   @Column('uuid', { primary: true, name: 'id' })
@@ -27,4 +29,7 @@ export class OfferEntity {
 
   @Column({ type: 'enum', enum: OfferStatus })
   status: OfferStatus;
+
+  @Column({ type: 'varchar' })
+  seller: string;
 }

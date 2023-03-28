@@ -537,3 +537,6 @@ export interface Market extends BaseContract {
     ): Promise<PopulatedTransaction>;
   };
 }
+
+
+export type MarketEventNames = "Log" | "TokenIsApproved" | "TokenIsPurchased" | "TokenIsUpForSale" | "TokenRevoke"

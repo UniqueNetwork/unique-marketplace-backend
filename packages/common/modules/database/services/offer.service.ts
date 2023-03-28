@@ -26,8 +26,7 @@ export class OfferService {
   ) {
     let offer = await this.offerEntityRepository.findOne({
       where: {
-        collectionId: order.collectionId,
-        tokenId: order.tokenId,
+        offerId: order.id,
       },
     });
 
@@ -41,6 +40,7 @@ export class OfferService {
       offer.offerId = order.id;
       offer.collectionId = order.collectionId;
       offer.tokenId = order.tokenId;
+      offer.seller = order.seller;
       offer.status = OfferStatus.Opened;
     } else {
       offer.status = status;
