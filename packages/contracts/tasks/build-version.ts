@@ -45,11 +45,15 @@ export async function buildVersion(
   const eventsRes = marketTypes.matchAll(eventReg);
   const events = [];
   for (const event of eventsRes) {
-    events.push(`"${event.groups?.name}"`);
+    const eventName = event.groups?.name;
+    if (eventName && eventName !== 'Log') {
+      events.push(`"${eventName}"`);
+    }
   }
   marketTypes = `${marketTypes}
 
-export type MarketEventNames = ${events.join(' | ')}`;
+export type MarketEventNames = ${events.join(' | ')};
+`;
 
   fs.writeFileSync(`${targetDir}/market.ts`, marketTypes);
 }

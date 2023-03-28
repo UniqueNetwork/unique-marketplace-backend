@@ -23,7 +23,7 @@ export class OfferService {
     contract: ContractEntity,
     order: Market.OrderStructOutput,
     status: OfferStatus
-  ) {
+  ): Promise<OfferEntity | null> {
     let offer = await this.offerEntityRepository.findOne({
       where: {
         orderId: order.id,
@@ -32,7 +32,7 @@ export class OfferService {
 
     if (!offer) {
       if (order.amount === 0) {
-        return;
+        return null;
       }
 
       offer = this.offerEntityRepository.create();
@@ -51,6 +51,8 @@ export class OfferService {
     offer.contract = contract;
 
     await this.offerEntityRepository.save(offer);
+
+    return offer;
   }
 
   async find(

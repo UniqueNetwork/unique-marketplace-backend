@@ -539,4 +539,4 @@ export interface Market extends BaseContract {
 }
 
 
-export type MarketEventNames = "Log" | "TokenIsApproved" | "TokenIsPurchased" | "TokenIsUpForSale" | "TokenRevoke"
+export type MarketEventNames = "TokenIsApproved" | "TokenIsPurchased" | "TokenIsUpForSale" | "TokenRevoke";
