@@ -56,26 +56,20 @@ export class CollectionEventsHandler {
   private async runCheckApproved(offer: OfferEntity) {
     const abi = this.abiByAddress[offer.contract.address];
 
-    try {
-      // todo update accounts package and use signer.address
-      // @ts-ignore
-      const address = this.sdk.options.signer.getAddress();
-      const contract = await this.sdk.evm.contractConnect(
-        offer.contract.address,
-        abi
-      );
-      const result = await contract.send.submitWaitResult({
-        address,
-        funcName: 'checkApproved',
-        args: {
-          collectionId: offer.collectionId,
-          tokenId: offer.tokenId,
-        },
-      });
-      console.log('result', JSON.stringify(result, null, 2));
-    } catch (err) {
-      console.log('err', err);
-    }
+    const address = this.sdk.options.signer.address;
+    const contract = await this.sdk.evm.contractConnect(
+      offer.contract.address,
+      abi
+    );
+    const result = await contract.send.submitWaitResult({
+      address,
+      funcName: 'checkApproved',
+      args: {
+        collectionId: offer.collectionId,
+        tokenId: offer.tokenId,
+      },
+    });
+    console.log('result', JSON.stringify(result, null, 2));
   }
 
   private async deleteCollectionOffers(collectionId: number) {

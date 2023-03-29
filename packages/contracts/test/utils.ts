@@ -36,6 +36,7 @@ export interface TokenData {
 interface TestData {
   nft: TokenData;
   rft: TokenData;
+  fungibleId: number;
 }
 
 export async function getCollectionData(sdk: Sdk): Promise<TestData> {
@@ -50,72 +51,94 @@ export async function getCollectionData(sdk: Sdk): Promise<TestData> {
   } else {
     const [account1] = await ethers.getSigners();
 
-    const nftCollectionId = await createCollection(sdk, address, 'NFT');
-    const nftTokenId = await createToken(
-      sdk,
-      address,
-      nftCollectionId,
-      account1.address
-    );
-
-    const rftCollectionId = await createCollection(sdk, address, 'ReFungible');
-    const rftTokenId = await createToken(
-      sdk,
-      address,
-      nftCollectionId,
-      account1.address
-    );
-
     const data = {
-      nft: {
-        collectionId: nftCollectionId,
-        tokenId: nftTokenId,
-      },
-      rft: {
-        collectionId: rftCollectionId,
-        tokenId: rftTokenId,
-      },
+      nft: await createNft(sdk, address, account1.address),
+      rft: await createRft(sdk, address, account1.address),
+      fungibleId: await createFungible(sdk, address),
     };
     fs.writeFileSync(filename, JSON.stringify(data, null, 2));
     return data;
   }
 }
 
-export async function createCollection(
+async function createNft(
   sdk: Sdk,
   address: string,
-  mode: 'NFT' | 'ReFungible' = 'NFT'
-): Promise<number> {
-  const result = await sdk.collections.create.submitWaitResult({
+  owner: string
+): Promise<TokenData> {
+  const collectionRes = await sdk.collections.create.submitWaitResult({
     address,
     name: 'test',
     description: 'test description',
     tokenPrefix: 'TEST',
-    mode,
   });
-  const collectionId = result.parsed?.collectionId;
+  const collectionId = collectionRes.parsed?.collectionId;
   if (!collectionId) {
     throw new Error('fail create collection');
   }
-  return collectionId;
-}
 
-export async function createToken(
-  sdk: Sdk,
-  address: string,
-  collectionId: number,
-  owner: string
-): Promise<number> {
-  const result = await sdk.tokens.create.submitWaitResult({
+  const tokenRes = await sdk.tokens.create.submitWaitResult({
     address,
     collectionId,
     owner,
   });
-  const tokenId = result.parsed?.tokenId;
+  const tokenId = tokenRes.parsed?.tokenId;
   if (!tokenId) {
     throw new Error('fail create token');
   }
-  return tokenId;
+
+  return {
+    collectionId,
+    tokenId,
+  };
+}
+
+async function createRft(
+  sdk: Sdk,
+  address: string,
+  owner: string
+): Promise<TokenData> {
+  const collectionRes = await sdk.refungible.createCollection.submitWaitResult({
+    address,
+    name: 'test',
+    description: 'test description',
+    tokenPrefix: 'TEST',
+  });
+  const collectionId = collectionRes.parsed?.collectionId;
+  if (!collectionId) {
+    throw new Error('fail create rft collection');
+  }
+
+  const tokenRes = await sdk.refungible.createToken.submitWaitResult({
+    address,
+    collectionId,
+    owner,
+    amount: 100,
+  });
+  const tokenId = tokenRes.parsed?.tokenId;
+  if (!tokenId) {
+    throw new Error('fail create rft token');
+  }
+
+  return {
+    collectionId,
+    tokenId,
+  };
+}
+
+async function createFungible(sdk: Sdk, address: string): Promise<number> {
+  const collectionRes = await sdk.fungible.createCollection.submitWaitResult({
+    address,
+    name: 'test',
+    description: 'test description',
+    tokenPrefix: 'TEST',
+    decimals: 10,
+  });
+  const collectionId = collectionRes.parsed?.collectionId;
+  if (!collectionId) {
+    throw new Error('fail create collection');
+  }
+  return collectionId;
 }
 
 export async function deploy(fee: number = 10) {
