@@ -9,23 +9,36 @@ import "./utils.sol";
 contract Market {
     using ERC165Checker for address;
 
-    uint32 public version = 1;
-
-    bytes4 private InterfaceId_ERC721 = 0x80ac58cd;
-    bytes4 private InterfaceId_ERC165 = 0x5755c3f2;
-
-    CollectionHelpers collectionHelpers =
-        CollectionHelpers(0x6C4E9fE1AE37a41E93CEE429e8E1881aBdcbb54F);
-    Utils utils = new Utils();
-
     struct Order {
-        uint32 collectionId;
-        uint32 tokenId;
-        uint256 price;
-        uint32 amount;
-        address payable seller;
+      uint32 id;
+      uint32 collectionId;
+      uint32 tokenId;
+      uint32 amount;
+      uint256 price;
+      address payable seller;
     }
 
+    uint32 public constant version = 1;
+    bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
+    bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
+    CollectionHelpers private constant collectionHelpers =
+        CollectionHelpers(0x6C4E9fE1AE37a41E93CEE429e8E1881aBdcbb54F);
+    Utils private utils = new Utils();
+
+    mapping(uint32 => mapping(uint32 => Order)) orders;
+    uint32 private idCount = 1;
+    uint32 public marketFee;
+    address selfAddress;
+    address ownerAddress;
+    bool marketPause;
+
+    event TokenIsUpForSale(uint32 version, Order item);
+    event TokenRevoke(uint32 version, Order item, uint256 amount);
+    event TokenIsApproved(uint32 version, Order item);
+    event TokenIsPurchased(uint32 version, Order item, uint256 salesAmount);
+    event Log(string message);
+
+    error InvalidArgument(string info);
     error InvalidMarketFee();
     error SellerIsNotOwner();
     error TokenIsAlreadyOnSale();
@@ -34,21 +47,18 @@ contract Market {
     error CollectionNotSupportedERC721();
     error OrderNotFound();
     error TooManyAmountRequested();
-    error NotEnoughError();
-    error FailTransformToken(string reason);
+    error NotEnoughMoneyError();
+    error FailTransferToken(string reason);
 
-    event TokenIsUpForSale(uint32 version, Order item);
-    event TokenRevoke(uint32 version, Order item);
-    event TokenIsApproved(uint32 version, Order item);
-    event TokenIsPurchased(uint32 version, Order item, uint256 salesAmount);
-    event Log(string message);
+    modifier onlyOwner() {
+      require(msg.sender == ownerAddress, "Only owner can");
+      _;
+    }
 
-    mapping(uint32 => mapping(uint32 => Order)) orders;
-
-    uint32 public marketFee;
-    address selfAddress;
-    address ownerAddress;
-    bool marketPause;
+    modifier onlyNonPause() {
+      require(!marketPause, "Market on hold");
+      _;
+    }
 
     constructor(uint32 fee) {
         marketFee = fee;
@@ -58,16 +68,6 @@ contract Market {
 
         ownerAddress = msg.sender;
         selfAddress = address(this);
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == ownerAddress, "Only owner can");
-        _;
-    }
-
-    modifier onlyNonPause() {
-        require(!marketPause, "Market on hold");
-        _;
     }
 
     function getErc721(uint32 collectionId) private view returns (IERC721) {
@@ -148,23 +148,32 @@ contract Market {
         uint256 price,
         uint32 amount
     ) public onlyNonPause {
-        IERC721 erc721 = getErc721(collectionId);
-        onlyTokenOwner(erc721, tokenId, msg.sender);
-
+        if (price == 0) {
+          revert InvalidArgument("price must not be zero");
+        }
+        if (amount == 0) {
+          revert InvalidArgument("amount must not be zero");
+        }
         if (orders[collectionId][tokenId].price > 0) {
             revert TokenIsAlreadyOnSale();
         }
 
+        IERC721 erc721 = getErc721(collectionId);
+
+        onlyTokenOwner(erc721, tokenId, msg.sender);
+
         Order memory order = Order(
+            0,
             collectionId,
             tokenId,
-            price,
             amount,
+            price,
             payable(msg.sender)
         );
 
         isApproved(erc721, order);
 
+        order.id = idCount++;
         orders[collectionId][tokenId] = order;
 
         emit TokenIsUpForSale(version, order);
@@ -194,6 +203,10 @@ contract Market {
         uint32 tokenId,
         uint32 amount
     ) external {
+        if (amount == 0) {
+          revert InvalidArgument("amount must not be zero");
+        }
+
         IERC721 erc721 = getErc721(collectionId);
         onlyTokenOwner(erc721, tokenId, msg.sender);
 
@@ -214,7 +227,7 @@ contract Market {
             orders[collectionId][tokenId] = order;
         }
 
-        emit TokenRevoke(version, order);
+        emit TokenRevoke(version, order, amount);
     }
 
     // ################################################################
@@ -245,6 +258,10 @@ contract Market {
         uint32 tokenId,
         uint32 amount
     ) public payable onlyNonPause {
+        if (amount == 0) {
+          revert InvalidArgument("amount must not be zero");
+        }
+
         Order memory order = orders[collectionId][tokenId];
         if (order.price == 0) {
             revert OrderNotFound();
@@ -258,7 +275,7 @@ contract Market {
         uint256 feeValue = (totalValue * marketFee) / 100;
         uint256 totalValueWithFee = totalValue + feeValue;
         if (msg.value < totalValueWithFee) {
-            revert NotEnoughError();
+            revert NotEnoughMoneyError();
         }
 
         IERC721 erc721 = getErc721(order.collectionId);
@@ -275,9 +292,9 @@ contract Market {
         try
             erc721.transferFrom(order.seller, msg.sender, order.tokenId)
         {} catch Error(string memory reason) {
-            revert FailTransformToken(reason);
+            revert FailTransferToken(reason);
         } catch {
-            revert FailTransformToken("without reason");
+            revert FailTransferToken("without reason");
         }
 
         order.seller.transfer(totalValue);

@@ -30,6 +30,7 @@ import type {
 
 export declare namespace Market {
   export type OrderStruct = {
+    id: PromiseOrValue<BigNumberish>;
     collectionId: PromiseOrValue<BigNumberish>;
     tokenId: PromiseOrValue<BigNumberish>;
     price: PromiseOrValue<BigNumberish>;
@@ -40,10 +41,12 @@ export declare namespace Market {
   export type OrderStructOutput = [
     number,
     number,
+    number,
     BigNumber,
     number,
     string
   ] & {
+    id: number;
     collectionId: number;
     tokenId: number;
     price: BigNumber;
@@ -144,7 +147,7 @@ export interface MarketInterface extends utils.Interface {
     "TokenIsApproved(uint32,tuple)": EventFragment;
     "TokenIsPurchased(uint32,tuple,uint256)": EventFragment;
     "TokenIsUpForSale(uint32,tuple)": EventFragment;
-    "TokenRevoke(uint32,tuple)": EventFragment;
+    "TokenRevoke(uint32,tuple,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Log"): EventFragment;
@@ -200,9 +203,10 @@ export type TokenIsUpForSaleEventFilter =
 export interface TokenRevokeEventObject {
   version: number;
   item: Market.OrderStructOutput;
+  amount: BigNumber;
 }
 export type TokenRevokeEvent = TypedEvent<
-  [number, Market.OrderStructOutput],
+  [number, Market.OrderStructOutput, BigNumber],
   TokenRevokeEventObject
 >;
 
@@ -419,11 +423,16 @@ export interface Market extends BaseContract {
     ): TokenIsUpForSaleEventFilter;
     TokenIsUpForSale(version?: null, item?: null): TokenIsUpForSaleEventFilter;
 
-    "TokenRevoke(uint32,tuple)"(
+    "TokenRevoke(uint32,tuple,uint256)"(
       version?: null,
-      item?: null
+      item?: null,
+      amount?: null
     ): TokenRevokeEventFilter;
-    TokenRevoke(version?: null, item?: null): TokenRevokeEventFilter;
+    TokenRevoke(
+      version?: null,
+      item?: null,
+      amount?: null
+    ): TokenRevokeEventFilter;
   };
 
   estimateGas: {
@@ -534,3 +543,6 @@ export interface Market extends BaseContract {
     ): Promise<PopulatedTransaction>;
   };
 }
+
+
+export type MarketEventNames = "TokenIsApproved" | "TokenIsPurchased" | "TokenIsUpForSale" | "TokenRevoke";

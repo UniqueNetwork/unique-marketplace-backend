@@ -1,31 +1,144 @@
 import { ethers } from 'hardhat';
 import { Address } from '@unique-nft/utils';
+import { KeyringAccount, KeyringProvider } from '@unique-nft/accounts/keyring';
 import { UniqueNFTFactory } from '@unique-nft/solidity-interfaces';
 import { Sdk } from '@unique-nft/sdk';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { network } from 'hardhat';
-import { loadConfig } from '../scripts/config';
+import { loadConfig } from '../scripts';
+import * as fs from 'fs';
 
-export function getNetworkConfig() {
-  type networks = 'unq' | 'opal';
-  const networkName = network.name as networks;
-
-  const appConfig = loadConfig();
-  if (!appConfig[networkName]) {
-    console.error(`Invalid network name: "${networkName}"`);
-    process.exit(-1);
-  }
-
-  return appConfig[networkName];
-}
-
-export function createSdk() {
+export async function createSdk() {
   const appConfig = loadConfig();
 
+  const account = await getKeyringAccount();
   const sdk = new Sdk({
     baseUrl: appConfig.sdkBaseUrl,
+    signer: {
+      get address(): string {
+        return account.getAddress();
+      },
+      sign(tx) {
+        // @ts-ignore
+        return account.sign(tx);
+      },
+    },
   });
   return sdk;
+}
+
+const dataPath = 'dist/packages/contracts/tests';
+fs.mkdirSync(dataPath, { recursive: true });
+
+export interface TokenData {
+  collectionId: number;
+  tokenId: number;
+}
+interface TestData {
+  nft: TokenData;
+  rft: TokenData;
+  fungibleId: number;
+}
+
+export async function getCollectionData(sdk: Sdk): Promise<TestData> {
+  const keyringAccount = await getKeyringAccount();
+  const address = keyringAccount.getAddress();
+
+  const filename = `${dataPath}/collection.json`;
+
+  if (fs.existsSync(filename)) {
+    const dataStr = fs.readFileSync(filename).toString();
+    return JSON.parse(dataStr);
+  } else {
+    const [account1] = await ethers.getSigners();
+
+    const data = {
+      nft: await createNft(sdk, address, account1.address),
+      rft: await createRft(sdk, address, account1.address),
+      fungibleId: await createFungible(sdk, address),
+    };
+    fs.writeFileSync(filename, JSON.stringify(data, null, 2));
+    return data;
+  }
+}
+
+async function createNft(
+  sdk: Sdk,
+  address: string,
+  owner: string
+): Promise<TokenData> {
+  const collectionRes = await sdk.collections.create.submitWaitResult({
+    address,
+    name: 'test',
+    description: 'test description',
+    tokenPrefix: 'TEST',
+  });
+  const collectionId = collectionRes.parsed?.collectionId;
+  if (!collectionId) {
+    throw new Error('fail create collection');
+  }
+
+  const tokenRes = await sdk.tokens.create.submitWaitResult({
+    address,
+    collectionId,
+    owner,
+  });
+  const tokenId = tokenRes.parsed?.tokenId;
+  if (!tokenId) {
+    throw new Error('fail create token');
+  }
+
+  return {
+    collectionId,
+    tokenId,
+  };
+}
+
+async function createRft(
+  sdk: Sdk,
+  address: string,
+  owner: string
+): Promise<TokenData> {
+  const collectionRes = await sdk.refungible.createCollection.submitWaitResult({
+    address,
+    name: 'test',
+    description: 'test description',
+    tokenPrefix: 'TEST',
+  });
+  const collectionId = collectionRes.parsed?.collectionId;
+  if (!collectionId) {
+    throw new Error('fail create rft collection');
+  }
+
+  const tokenRes = await sdk.refungible.createToken.submitWaitResult({
+    address,
+    collectionId,
+    owner,
+    amount: 100,
+  });
+  const tokenId = tokenRes.parsed?.tokenId;
+  if (!tokenId) {
+    throw new Error('fail create rft token');
+  }
+
+  return {
+    collectionId,
+    tokenId,
+  };
+}
+
+async function createFungible(sdk: Sdk, address: string): Promise<number> {
+  const collectionRes = await sdk.fungible.createCollection.submitWaitResult({
+    address,
+    name: 'test',
+    description: 'test description',
+    tokenPrefix: 'TEST',
+    decimals: 10,
+  });
+  const collectionId = collectionRes.parsed?.collectionId;
+  if (!collectionId) {
+    throw new Error('fail create collection');
+  }
+  return collectionId;
 }
 
 export async function deploy(fee: number = 10) {
@@ -40,6 +153,12 @@ export async function getCollectionContract(owner: any, collectionId: number) {
   const uniqueNFT = await UniqueNFTFactory(collectionAddress, owner);
 
   return uniqueNFT;
+}
+
+export function getKeyringAccount(): Promise<KeyringAccount> {
+  const seed = process.env.SOL_SIGNER_SEED!;
+
+  return KeyringProvider.fromMnemonic(seed);
 }
 
 export async function getAccounts(

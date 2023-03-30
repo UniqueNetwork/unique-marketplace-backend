@@ -92,6 +92,11 @@
         "components": [
           {
             "internalType": "uint32",
+            "name": "id",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
             "name": "collectionId",
             "type": "uint32"
           },
@@ -136,6 +141,11 @@
       },
       {
         "components": [
+          {
+            "internalType": "uint32",
+            "name": "id",
+            "type": "uint32"
+          },
           {
             "internalType": "uint32",
             "name": "collectionId",
@@ -190,6 +200,11 @@
         "components": [
           {
             "internalType": "uint32",
+            "name": "id",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
             "name": "collectionId",
             "type": "uint32"
           },
@@ -236,6 +251,11 @@
         "components": [
           {
             "internalType": "uint32",
+            "name": "id",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
             "name": "collectionId",
             "type": "uint32"
           },
@@ -264,6 +284,12 @@
         "internalType": "struct Market.Order",
         "name": "item",
         "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
     "name": "TokenRevoke",
@@ -327,6 +353,11 @@
     "outputs": [
       {
         "components": [
+          {
+            "internalType": "uint32",
+            "name": "id",
+            "type": "uint32"
+          },
           {
             "internalType": "uint32",
             "name": "collectionId",
