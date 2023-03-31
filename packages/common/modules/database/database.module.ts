@@ -40,8 +40,10 @@ function typeOrmModulesFactory(
       useFactory: (
         configService: ConfigService<Config>
       ): TypeOrmModuleOptions => {
+        const databaseConfig = configService.get('database');
+        console.log('databaseConfig', databaseConfig);
         return {
-          ...configService.get('database'),
+          ...databaseConfig,
           entities,
           ...appendOptions,
         };
