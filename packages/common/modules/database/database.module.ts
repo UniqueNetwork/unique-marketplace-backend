@@ -1,4 +1,4 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Global, Module } from '@nestjs/common';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Config } from '../config';
@@ -54,7 +54,7 @@ function typeOrmModulesFactory(
   exports: [TypeOrmModule],
 })
 export class DatabaseModule {
-  static forEscrow(): DynamicModule {
+  static forRoot(): DynamicModule {
     return {
       module: DatabaseModule,
       imports: [
@@ -64,6 +64,14 @@ export class DatabaseModule {
           migrationsTransactionMode: 'each',
         }),
       ],
+      providers: [ContractService, OfferService, OfferEventService],
+    };
+  }
+
+  static forEscrow(): DynamicModule {
+    return {
+      module: DatabaseModule,
+      imports: [TypeOrmModule.forFeature(entities)],
       providers: [ContractService, OfferService, OfferEventService],
       exports: [ContractService, OfferService, OfferEventService],
     };

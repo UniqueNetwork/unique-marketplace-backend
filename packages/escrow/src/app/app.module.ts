@@ -15,7 +15,7 @@ import { ContractEventsModule } from './contract-events/contract-events.module';
     GlobalConfigModule,
     MonitoringModule,
     CacheProviderModule,
-    DatabaseModule.forEscrow(),
+    DatabaseModule.forRoot(),
     PgNotifyClientModule,
     ContractEventsModule,
   ],
