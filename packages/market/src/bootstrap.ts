@@ -28,8 +28,8 @@ export default async function (app: INestApplication, logger: Logger) {
 
   // Listener port
 
-  await app.listen(configService.get('app.port'), () => {
-    logger.log(`API application on port: ${yellow(configService.get('app.port'))}`);
+  await app.listen(configService.get('port'), () => {
+    logger.log(`API application on port: ${yellow(configService.get('port'))}`);
     logger.log(`API application ${green('version:')} ${yellow(configService.get('app.version'))} ${green('started!')}`);
   });
   return app;
