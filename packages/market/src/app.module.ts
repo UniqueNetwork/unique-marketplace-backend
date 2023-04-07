@@ -6,6 +6,8 @@ import { GlobalConfigModule } from '@app/common/modules/config';
 import { DatabaseModule } from '@app/common/modules/database/database.module';
 import { OffersModule } from './offers/offers.module';
 import { SettingsModule } from './settings/settings.module';
+import { CollectionsModule } from './collections/collections.module';
+import { TokensModule } from './tokens/tokens.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { SettingsModule } from './settings/settings.module';
     DatabaseModule.forFeature(),
     PgNotifyClientModule,
     OffersModule,
+    CollectionsModule,
+    TokensModule,
     SettingsModule,
   ],
 })
