@@ -5,7 +5,7 @@ import { DatabaseModule } from '@app/common/modules/database/database.module';
 import { CollectionEventsHandler, ContractEventsHandler } from './handlers';
 
 @Module({
-  imports: [DatabaseModule.forEscrow()],
+  imports: [DatabaseModule.forFeature()],
   providers: [
     sdkProvider,
     ContractEventsService,
