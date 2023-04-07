@@ -65,22 +65,16 @@ export class DatabaseModule {
         }),
       ],
       providers: [ContractService, OfferService, OfferEventService],
-    };
-  }
-
-  static forEscrow(): DynamicModule {
-    return {
-      module: DatabaseModule,
-      imports: [TypeOrmModule.forFeature(entities)],
-      providers: [ContractService, OfferService, OfferEventService],
       exports: [ContractService, OfferService, OfferEventService],
     };
   }
 
-  static forMarket(): DynamicModule {
+  static forFeature(): DynamicModule {
     return {
       module: DatabaseModule,
       imports: [...typeOrmModulesFactory()],
+      providers: [ContractService, OfferService, OfferEventService],
+      exports: [ContractService, OfferService, OfferEventService],
     };
   }
 }
