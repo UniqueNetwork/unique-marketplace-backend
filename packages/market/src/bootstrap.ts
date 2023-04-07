@@ -1,6 +1,5 @@
 import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-
 import { green, yellow } from 'cli-color';
 import { ConfigService } from '@nestjs/config';
 import { useContainer } from 'class-validator';
@@ -14,7 +13,7 @@ export default async function (app: INestApplication, logger: Logger) {
   });
 
   // Start app
-  //app.setGlobalPrefix('api');
+
   app.useGlobalPipes(new ValidationPipe());
   app.enableShutdownHooks();
   // app.get(pgNotifyClient).emit('new-collection-added', {collectionId: 12}); // todo uncomment for debug
@@ -30,7 +29,7 @@ export default async function (app: INestApplication, logger: Logger) {
     logger.log(`API application on port: ${yellow(configService.get('port'))}`);
     logger.log(
       `API application ${green('version:')} ${yellow(
-        configService.get('app.version')
+        configService.get('releaseVersion')
       )} ${green('started!')}`
     );
   });

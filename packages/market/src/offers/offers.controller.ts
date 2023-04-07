@@ -1,5 +1,4 @@
-import { OfferService } from '@app/common/modules/database/services/offer.service';
-import { Controller, forwardRef, Get, Inject } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { OffersService } from './offers.service';
 
@@ -9,5 +8,7 @@ export class OffersController {
   constructor(private offersService: OffersService) {}
 
   @Get('/offers')
-  async getOffers() {}
+  async getOffers() {
+    return {};
+  }
 }

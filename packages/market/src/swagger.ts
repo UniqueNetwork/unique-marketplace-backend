@@ -1,19 +1,26 @@
-import * as fs from 'fs';
-import { join } from 'path';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { INestApplication } from '@nestjs/common';
-import {ConfigService} from "@nestjs/config";
-
-export default async function swaggerInit (app: INestApplication,config: ConfigService) {
-  const fileDocumentSecondary = fs.readFileSync(join(process.cwd(), 'docs', 'description.md')).toString();
+import { ConfigService } from '@nestjs/config';
+import * as utils from './utils/utils';
+import { version } from '../../../package.json';
+export default async function swaggerInit(
+  app: INestApplication,
+  config: ConfigService
+) {
+  const fileDocumentSecondary = utils.readApiDocs('description.md');
   const description = [fileDocumentSecondary].filter((el) => el).join('\n\n');
   const documentBuild = new DocumentBuilder()
-    .setTitle(config.get('app.market.title'))
+    .setTitle(config.get('market.name'))
     .setDescription(description)
-    .setVersion(`v${config.get('app.version')}`)
-    .addTag(config.get('app.market.tag'))
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'accessToken')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'refreshToken')
+    .setVersion(`v${version}`)
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'accessToken'
+    )
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'refreshToken'
+    )
     .addApiKey({ type: 'apiKey', in: 'header', name: 'x-api-key' }, 'apiKey')
     .build();
 
@@ -22,8 +29,8 @@ export default async function swaggerInit (app: INestApplication,config: ConfigS
     extraModels: [],
   });
 
-  SwaggerModule.setup('swagger', app, document, {
+  SwaggerModule.setup('api/swagger', app, document, {
     explorer: true,
-    customSiteTitle: config.get('app.market.siteTitle'),
+    customSiteTitle: config.get('market.title'),
   });
 }

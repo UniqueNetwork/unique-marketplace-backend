@@ -9,6 +9,11 @@ export const loadConfig = (): Config => ({
   cors: process.env.CORS || '',
   swagger: process.env.SWAGGER || 'swagger',
 
+  market: {
+    title: 'Unique Market v3.0',
+    name: 'Market REST API',
+  },
+
   signer: {
     seed: process.env.SIGNER_SEED,
   },

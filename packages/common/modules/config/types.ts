@@ -7,6 +7,7 @@ export type Config = {
   cors: string;
   swagger: string;
 
+  market: MarketSwaggerOptions;
   cache: CacheConfig;
 
   signer?: SignerConfig;
@@ -24,6 +25,11 @@ export type Config = {
   uniqueRpcUrl: string;
 
   database: PostgresConnectionOptions;
+};
+
+export type MarketSwaggerOptions = {
+  title: string;
+  name: string;
 };
 
 export type SignerConfig = {
