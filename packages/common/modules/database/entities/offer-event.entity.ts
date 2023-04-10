@@ -4,6 +4,8 @@ import {
   PrimaryGeneratedColumn,
   JoinColumn,
   ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { OfferEventType } from '../../types';
 import { OfferEntity } from './offer.entity';
@@ -27,4 +29,10 @@ export class OfferEventEntity {
 
   @Column({ name: 'address', type: 'varchar' })
   address: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

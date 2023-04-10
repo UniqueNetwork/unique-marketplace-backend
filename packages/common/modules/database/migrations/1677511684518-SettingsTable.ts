@@ -1,26 +1,25 @@
-import { MigrationInterface, QueryRunner, Table } from "typeorm";
+import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class SettingsTable1677511684518 implements MigrationInterface {
-
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.createTable(
       new Table({
-        name: "settings",
+        name: 'settings',
         columns: [
           {
-            name: "key",
-            type: "text",
+            name: 'key',
+            type: 'text',
             isPrimary: true,
-            primaryKeyConstraintName: "MARKET_SETTINGS_PK_KEY"
+            primaryKeyConstraintName: 'MARKET_SETTINGS_PK_KEY',
           },
-          { name: "value", type: "text" }
+          { name: 'value', type: 'text' },
         ],
-      })
+      }),
+      true
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.dropTable("settings");
+    await queryRunner.dropTable('settings');
   }
-
 }

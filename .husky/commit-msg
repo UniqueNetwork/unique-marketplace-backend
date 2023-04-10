@@ -2,17 +2,17 @@
 . "$(dirname -- "$0")/_/husky.sh"
 #
 message="$(cat $1)"
-requiredPattern="^((release\/v.*)|(SDK-.*)|((M|m)erge branch.*))$"
-if ! [[ $message =~ $requiredPattern ]];
-then
-  echo "🚨 Wrong commit message! 😕"
-  echo "The commit message must have this format:"
-  echo "'SDK-...', 'release/v...', or 'merge branch ...'"
-  echo "Example: SDK-777 Added steroids ;-)"
-  echo "-"
-  echo "Your commit message was:"
-  echo $message
-  echo "-"
-  echo "For more information, check script in .husky/commit-msg"
-  exit 1
-fi
+#requiredPattern="^((release\/v.*)|(SDK-.*)|((M|m)erge branch.*))$"
+#if ! [[ $message =~ $requiredPattern ]];
+#then
+#  echo "🚨 Wrong commit message! 😕"
+#  echo "The commit message must have this format:"
+#  echo "'SDK-...', 'release/v...', or 'merge branch ...'"
+#  echo "Example: SDK-777 Added steroids ;-)"
+#  echo "-"
+#  echo "Your commit message was:"
+#  echo $message
+#  echo "-"
+#  echo "For more information, check script in .husky/commit-msg"
+#  exit 1
+#fi

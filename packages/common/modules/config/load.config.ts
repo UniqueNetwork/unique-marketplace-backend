@@ -9,6 +9,11 @@ export const loadConfig = (): Config => ({
   cors: process.env.CORS || '',
   swagger: process.env.SWAGGER || 'swagger',
 
+  market: {
+    title: 'Unique Market v3.0',
+    name: 'Market REST API',
+  },
+
   signer: {
     seed: process.env.SIGNER_SEED,
   },
@@ -23,6 +28,7 @@ export const loadConfig = (): Config => ({
   monitoringPort: +process.env.MONITORING_PORT || 0,
 
   database: loadDatabaseConfig(),
+  logging: process.env.POSTGRES_LOG === 'true',
 
   uniqueSdkRestUrl: process.env.UNIQUE_SDK_REST_URL,
   uniqueRpcUrl: process.env.UNIQUE_RPC_URL,

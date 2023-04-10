@@ -1,6 +1,5 @@
 import { INestApplication, Logger } from '@nestjs/common';
-import bootstrap from "./bootstrap";
-
+import bootstrap from './bootstrap';
 
 let app: INestApplication;
 const logger = new Logger('NestApplication', { timestamp: true });
@@ -10,31 +9,4 @@ const logger = new Logger('NestApplication', { timestamp: true });
  */
 bootstrap(app, logger).catch((error: unknown) => {
   logger.error(`API bootstrapping application failed! ${error}`);
-});
-
-/**
- * GracefulShutdown todo это все убрать надо, искаропки же шатдаун весь работает
- */
-async function gracefulShutdown(app): Promise<void> {
-  if (app !== undefined) {
-    await app.close();
-    logger.warn(`API application closed!`);
-  }
-  process.exit(0);
-}
-
-/**
- * Handle the SIGINT signal.
- */
-process.once('SIGTERM', async () => {
-  logger.warn(`SIGTERM: API graceful shutdown... `);
-  await gracefulShutdown(app);
-});
-
-/**
- * Handle the SIGINT signal.
- */
-process.once('SIGINT', async () => {
-  logger.warn(`SIGINT: API graceful shutdown... `);
-  await gracefulShutdown(app);
 });
