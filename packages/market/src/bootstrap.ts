@@ -6,6 +6,7 @@ import { useContainer } from 'class-validator';
 import swaggerInit from './swagger';
 import { AppModule } from './app.module';
 import { pgNotifyClient } from '@app/common/pg-transport/pg-notify-client.symbol';
+import helmet from 'helmet';
 
 export default async function (app: INestApplication, logger: Logger) {
   app = await NestFactory.create(AppModule, {
@@ -22,6 +23,14 @@ export default async function (app: INestApplication, logger: Logger) {
   const configService = app.get(ConfigService);
   // Swagger
   await swaggerInit(app, configService);
+
+  app.enableCors({
+    allowedHeaders:
+      'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Observe, Signature, Authorization',
+    origin: true,
+    credentials: true,
+  });
+  app.use(helmet());
 
   // Listener port
 
