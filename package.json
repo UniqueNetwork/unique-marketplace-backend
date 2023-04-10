@@ -1,6 +1,6 @@
 {
   "name": "unique-marketplace-backend",
-  "version": "3.0.10",
+  "version": "3.0.12",
   "description": "Backend project for unique marketplace",
   "author": "Unique Network",
   "private": true,
@@ -80,7 +80,7 @@
     "marketplace"
   ],
   "bugs": {
-    "url": "https://github.com/UniqueNetwork/unique-sdk/issues"
+    "url": "https://github.com/UniqueNetwork/unique-marketplace-backend/issues"
   },
   "homepage": "https://unique.network/",
   "repository": {

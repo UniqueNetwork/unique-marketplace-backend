@@ -19,7 +19,7 @@ export class CollectionsController {
 
   @Post()
   create(@Body() createCollectionDto: CreateCollectionDto) {
-    return this.collectionsService.create(createCollectionDto);
+    return this.collectionsService.testCreate(createCollectionDto);
   }
 
   @Get('/')
