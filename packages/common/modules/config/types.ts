@@ -25,6 +25,7 @@ export type Config = {
   uniqueRpcUrl: string;
 
   database: PostgresConnectionOptions;
+  logging: boolean;
 };
 
 export type MarketSwaggerOptions = {

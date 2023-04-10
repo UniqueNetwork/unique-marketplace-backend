@@ -1,4 +1,13 @@
-import { Entity, Column, Index, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  Index,
+  ManyToOne,
+  JoinColumn,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { OfferStatus } from '../../types';
 import { ContractEntity } from './contract.entity';
 
@@ -7,7 +16,8 @@ import { ContractEntity } from './contract.entity';
 @Index(['collectionId'])
 @Index(['collectionId', 'tokenId'])
 export class OfferEntity {
-  @Column('uuid', { primary: true, name: 'id' })
+  @PrimaryGeneratedColumn('uuid')
+  //@Column('uuid', { primary: true, name: 'id' })
   id: string;
 
   @Column({ name: 'order_id' })
@@ -36,4 +46,10 @@ export class OfferEntity {
 
   @Column({ type: 'varchar' })
   seller: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

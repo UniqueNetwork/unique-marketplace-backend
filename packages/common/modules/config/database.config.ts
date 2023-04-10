@@ -1,4 +1,4 @@
-import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
+import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 
 export const loadDatabaseConfig = (): PostgresConnectionOptions => ({
   type: 'postgres',

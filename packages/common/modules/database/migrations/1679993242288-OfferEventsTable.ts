@@ -14,6 +14,17 @@ export class OfferEventsTable1679993242288 implements MigrationInterface {
           },
           { name: 'block_number', type: 'integer' },
           { name: 'address', type: 'varchar' },
+          {
+            name: 'created_at',
+            type: 'timestamp without time zone',
+            default: 'CURRENT_TIMESTAMP',
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamp without time zone',
+            default: 'CURRENT_TIMESTAMP',
+            onUpdate: 'CURRENT_TIMESTAMP',
+          },
         ],
       })
     );
