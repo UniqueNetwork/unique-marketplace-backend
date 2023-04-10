@@ -2,10 +2,15 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SettingsDto } from './dto/setting.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ContractEntity, SettingEntity } from '@app/common/modules/database';
+import {
+  CollectionEntity,
+  ContractEntity,
+  SettingEntity,
+} from '@app/common/modules/database';
 import { Repository } from 'typeorm';
 import { AddressService } from '@app/common/src/lib/address.service';
 import { CollectionData } from './interfaces/settings.interface';
+import { CollectionStatus } from '@app/common/modules/types';
 
 @Injectable()
 export class SettingsService {
@@ -14,6 +19,8 @@ export class SettingsService {
     private addressService: AddressService,
     @InjectRepository(ContractEntity)
     private contractRepository: Repository<ContractEntity>,
+    @InjectRepository(CollectionEntity)
+    private collectionRepository: Repository<CollectionEntity>,
     @InjectRepository(SettingEntity)
     private settingsRepository: Repository<SettingEntity>
   ) {}
@@ -38,7 +45,7 @@ export class SettingsService {
         unique: {
           restUrl: this.configService.get('uniqueSdkRestUrl'),
           rpcUrl: this.configService.get('uniqueRpcUrl'),
-          collections: collectionTemp,
+          collections: await this.getCollectionSettings(),
           contracts,
         },
       },
@@ -52,6 +59,19 @@ export class SettingsService {
     } catch (e) {
       throw new BadRequestException(e.message);
     }
+  }
+
+  async getCollectionSettings(): Promise<any> {
+    const collestions = await this.collectionRepository.find({
+      where: { status: CollectionStatus.Enabled },
+    });
+    const collectionMap = new Map();
+    collestions.map((elem) =>
+      collectionMap.set(elem.collectionId, {
+        allowedTokens: elem.allowedTokens,
+      })
+    );
+    return Object.fromEntries(collectionMap);
   }
 
   async escrowAddress(): Promise<string> {

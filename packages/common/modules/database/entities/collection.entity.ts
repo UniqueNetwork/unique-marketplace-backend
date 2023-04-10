@@ -6,7 +6,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { CollectionMode, CollectionStatus } from '../../types';
+import {
+  CollectionActive,
+  CollectionMode,
+  CollectionStatus,
+} from '../../types';
 
 @Entity('collections', { schema: 'public' })
 @Index(['collectionId'])
@@ -38,9 +42,6 @@ export class CollectionEntity {
   @Column('boolean', { name: 'mint_mode', default: false })
   mintMode: boolean;
 
-  @Column('int', { name: 'total_tokens', default: 0 })
-  totalTokens: number;
-
   @Column('varchar', { name: 'allowed_tokens', default: '' })
   allowedTokens: string;
 
@@ -51,13 +52,25 @@ export class CollectionEntity {
   })
   status: CollectionStatus;
 
+  @Column('enum', {
+    name: 'active',
+    enum: CollectionActive,
+    default: CollectionActive.false,
+  })
+  active: CollectionActive;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @Column('varchar', { name: 'network', length: 64, nullable: true })
+  @Column('varchar', {
+    name: 'network',
+    length: 64,
+    nullable: true,
+    default: null,
+  })
   network: string;
 
   @Column('jsonb', { name: 'data', default: {} })
