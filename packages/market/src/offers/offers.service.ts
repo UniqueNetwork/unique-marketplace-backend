@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OfferEntity } from '@app/common/modules/database';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { OffersDto } from './dto/offers.dto';
-import { BaseService } from '../utils/base.service';
+import { BaseService } from '@app/common/src/lib/base.service';
 
 @Injectable()
 export class OffersService extends BaseService<OfferEntity, OffersDto> {
