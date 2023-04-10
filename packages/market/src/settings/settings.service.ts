@@ -10,6 +10,7 @@ import {
 import { Repository } from 'typeorm';
 import { AddressService } from '../utils/address.service';
 import { KeyringAccount } from '@unique-nft/accounts/keyring';
+import { CollectionData } from './interfaces/settings.interface';
 
 @Injectable()
 export class SettingsService {
@@ -24,6 +25,15 @@ export class SettingsService {
 
   async prepareSettings() {
     const contracts = await this.contractRepository.find({});
+
+    const collectionTemp: CollectionData = {
+      '5': { allowedTokens: '' },
+      '509': { allowedTokens: '' },
+      '437': { allowedTokens: '' },
+      '522': { allowedTokens: '' },
+      '497': { allowedTokens: '' },
+    };
+
     const settings: SettingsDto = {
       marketType: 'marketType',
       administrators: [],
@@ -32,7 +42,7 @@ export class SettingsService {
         unique: {
           restUrl: this.configService.get('uniqueSdkRestUrl'),
           rpcUrl: this.configService.get('uniqueRpcUrl'),
-          collections: {},
+          collections: collectionTemp,
           contracts,
         },
       },

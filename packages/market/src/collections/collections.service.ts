@@ -14,7 +14,7 @@ export class CollectionsService {
     private collectionRepository: Repository<CollectionEntity>
   ) {}
 
-  create(createCollectionDto: CreateCollectionDto) {
+  async testCreate(createCollectionDto: CreateCollectionDto) {
     return 'This action adds a new collection';
   }
 
