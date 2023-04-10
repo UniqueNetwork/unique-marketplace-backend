@@ -6,7 +6,12 @@ export class OffersTable1679578453871 implements MigrationInterface {
       new Table({
         name: 'offers',
         columns: [
-          { name: 'id', type: 'uuid', isPrimary: true },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
           { name: 'order_id', type: 'integer' },
           { name: 'collection_id', type: 'integer' },
           { name: 'token_id', type: 'integer' },
@@ -18,6 +23,17 @@ export class OffersTable1679578453871 implements MigrationInterface {
             type: 'varchar',
           },
           { name: 'seller', type: 'varchar' },
+          {
+            name: 'created_at',
+            type: 'timestamp without time zone',
+            default: 'CURRENT_TIMESTAMP',
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamp without time zone',
+            default: 'CURRENT_TIMESTAMP',
+            onUpdate: 'CURRENT_TIMESTAMP',
+          },
         ],
         foreignKeys: [
           {

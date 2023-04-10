@@ -28,6 +28,7 @@ export const loadConfig = (): Config => ({
   monitoringPort: +process.env.MONITORING_PORT || 0,
 
   database: loadDatabaseConfig(),
+  logging: process.env.POSTGRES_LOG === 'true',
 
   uniqueSdkRestUrl: process.env.UNIQUE_SDK_REST_URL,
   uniqueRpcUrl: process.env.UNIQUE_RPC_URL,
