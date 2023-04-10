@@ -2,14 +2,9 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SettingsDto } from './dto/setting.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  ContractEntity,
-  OfferEntity,
-  SettingEntity,
-} from '@app/common/modules/database';
+import { ContractEntity, SettingEntity } from '@app/common/modules/database';
 import { Repository } from 'typeorm';
-import { AddressService } from '../utils/address.service';
-import { KeyringAccount } from '@unique-nft/accounts/keyring';
+import { AddressService } from '@app/common/src/lib/address.service';
 import { CollectionData } from './interfaces/settings.interface';
 
 @Injectable()
@@ -27,11 +22,12 @@ export class SettingsService {
     const contracts = await this.contractRepository.find({});
 
     const collectionTemp: CollectionData = {
-      '5': { allowedTokens: '' },
-      '509': { allowedTokens: '' },
-      '437': { allowedTokens: '' },
-      '522': { allowedTokens: '' },
-      '497': { allowedTokens: '' },
+      '26': { allowedTokens: '1,4,23,25-100,1000-2000' },
+      '57': { allowedTokens: '' },
+      '196': { allowedTokens: '' },
+      '17': { allowedTokens: '' },
+      '1003': { allowedTokens: '' },
+      '982': { allowedTokens: '' },
     };
 
     const settings: SettingsDto = {
