@@ -14,7 +14,7 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
             default: 'uuid_generate_v4()',
           },
           {
-            name: 'collections_id',
+            name: 'collection_id',
             type: 'int',
             default: 0,
           },
@@ -33,6 +33,7 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
           {
             name: 'decimal_points',
             type: 'int',
+            isNullable: true,
           },
           {
             name: 'name',
@@ -56,17 +57,25 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
             name: 'mint_mode',
             type: 'boolean',
             default: false,
+            isNullable: true,
           },
           {
             name: 'allowed_tokens',
             type: 'varchar',
             default: "''",
+            isNullable: true,
           },
           {
             name: 'status',
             type: 'enum',
             enum: ['Enabled', 'Disabled'],
             default: "'Enabled'",
+          },
+          {
+            name: 'active',
+            type: 'boolean',
+            enum: ['true', 'false'],
+            default: 'false',
           },
           {
             name: 'created_at',
@@ -82,6 +91,7 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
           {
             name: 'network',
             type: 'varchar',
+            isNullable: true,
           },
           {
             name: 'data',
@@ -92,7 +102,7 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
       true
     );
     await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "collections_idx" ON "collections" ("collections_id") `
+      `CREATE INDEX IF NOT EXISTS "collections_idx" ON "collections" ("collection_id") `
     );
   }
 

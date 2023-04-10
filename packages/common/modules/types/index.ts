@@ -16,9 +16,9 @@ export enum CollectionStatus {
   Disabled = 'Disabled',
 }
 
-export enum CollectionImportType {
-  Env = 'Env',
-  Api = 'Api',
+export enum CollectionActive {
+  true = 'true',
+  false = 'false',
 }
 
 export enum CollectionMode {
