@@ -7,7 +7,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { OffersService } from './offers.service';
 import { OffersDto } from './dto/offers.dto';
 
@@ -17,14 +17,20 @@ export class OffersController {
   constructor(private offersService: OffersService) {}
 
   @Get('/')
+  @ApiQuery({ name: 'page', example: 1 })
+  @ApiQuery({ name: 'pageSize', example: 10 })
   async get(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10
+    @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe)
+    limit: number = 10
   ) {
     limit = limit > 100 ? 100 : limit;
     return await this.offersService.getOffers({
       page,
       limit,
+      routingLabels: {
+        limitLabel: 'pageSize', // default: limit
+      },
     });
   }
 
