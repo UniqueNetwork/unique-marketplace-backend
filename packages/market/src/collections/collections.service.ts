@@ -1,17 +1,21 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import {
-  CollectionDto,
-  CreateCollectionDto,
-} from './dto/create-collection.dto';
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
+import { CollectionDto } from './dto/create-collection.dto';
 import {
   UpdateCollectionDto,
   UpdateCollectionStatusDto,
 } from './dto/update-collection.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CollectionEntity } from '@app/common/modules/database';
+import { CollectionEntity, OfferEntity } from '@app/common/modules/database';
 import { BaseService } from '@app/common/src/lib/base.service';
-import { CollectionStatus } from '@app/common/modules/types';
+import { pgNotifyClient } from '@app/common/pg-transport/pg-notify-client.symbol';
+import { ClientProxy } from '@nestjs/microservices';
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class CollectionsService extends BaseService<
@@ -21,10 +25,15 @@ export class CollectionsService extends BaseService<
   private logger: Logger = new Logger(CollectionsService.name);
 
   constructor(
+    @Inject(pgNotifyClient) private client: ClientProxy,
     @InjectRepository(CollectionEntity)
     private collectionRepository: Repository<CollectionEntity>
   ) {
     super({});
+  }
+
+  async testClientMessage(): Promise<any> {
+    this.client.emit('new-collection-added', { collectionId: 12 });
   }
 
   async testCreate(collectionId: number, allowedTokens: string) {
@@ -51,9 +60,9 @@ export class CollectionsService extends BaseService<
     return await this.collectionRepository.insert(collection);
   }
 
-  async findAll(): Promise<any> {
+  async findAll(options: IPaginationOptions): Promise<any> {
     const qb = await this.collectionRepository.createQueryBuilder();
-    return await this.getDataAndCountMany(qb);
+    return await paginate<CollectionEntity>(qb, options);
   }
 
   async toggleCollection(
