@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   Query,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CollectionsService } from './collections.service';
 import { CreateCollectionDto } from './dto/create-collection.dto';
@@ -23,8 +25,26 @@ export class CollectionsController {
   constructor(private readonly collectionsService: CollectionsService) {}
 
   @Get('/')
-  findAll() {
-    return this.collectionsService.findAll();
+  @ApiQuery({ name: 'page', example: 1 })
+  @ApiQuery({ name: 'pageSize', example: 10 })
+  findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe)
+    limit: number = 10
+  ) {
+    limit = limit > 100 ? 100 : limit;
+    return this.collectionsService.findAll({
+      page,
+      limit,
+      routingLabels: {
+        limitLabel: 'pageSize', // default: limit
+      },
+    });
+  }
+
+  @Get('/test')
+  test() {
+    return this.collectionsService.testClientMessage();
   }
 
   @Patch('/')
@@ -34,7 +54,6 @@ export class CollectionsController {
     @Query('collectionId') collectionId: number,
     @Query('allowedTokens') allowedTokens: string
   ) {
-    console.dir({ collectionId, allowedTokens }, { depth: 10 });
     return await this.collectionsService.testCreate(
       collectionId,
       allowedTokens
@@ -44,11 +63,11 @@ export class CollectionsController {
   @Patch('/toggle')
   @ApiQuery({ name: 'id' })
   @ApiQuery({ name: 'status', enum: CollectionStatus })
-  updateStatus(
+  async updateStatus(
     @Query('id') id: number,
     @Query('status') status: CollectionStatus
   ) {
-    return this.collectionsService.toggleCollection({
+    return await this.collectionsService.toggleCollection({
       collectionId: id,
       status: status,
     });

@@ -17,7 +17,7 @@ export default async function (app: INestApplication, logger: Logger) {
 
   app.useGlobalPipes(new ValidationPipe());
   app.enableShutdownHooks();
-  // app.get(pgNotifyClient).emit('new-collection-added', {collectionId: 12}); // todo uncomment for debug
+  //app.get(pgNotifyClient).emit('new-collection-added', { collectionId: 12 }); // todo uncomment for debug
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const configService = app.get(ConfigService);

@@ -31,6 +31,14 @@ export class BaseService<T, S> {
     return { data, count };
   }
 
+  protected routeLablel() {
+    return {
+      routingLabels: {
+        limitLabel: 'page-size', // default: limit
+        pageLabel: 'current-page', //default: page
+      },
+    };
+  }
   protected async getDataAndCountMany(qb: SelectQueryBuilder<T>) {
     const items = await qb.getMany();
     let itemsCount = 0;
