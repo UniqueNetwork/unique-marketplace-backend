@@ -1,5 +1,5 @@
 import { SelectQueryBuilder } from 'typeorm';
-import { IQueryArgs, ISetting, ISettingsSchema } from './base.constans';
+import { IQueryArgs, ISetting, ISettingsSchema } from './base.constants';
 
 export class BaseService<T, S> {
   private readonly DEFAULT_PAGE_SIZE = 10;

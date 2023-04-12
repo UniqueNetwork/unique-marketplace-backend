@@ -1,5 +1,8 @@
 import { CollectionMode, CollectionStatus } from '@app/common/modules/types';
 import { ApiProperty, PickType } from '@nestjs/swagger';
+import { Pagination } from 'nestjs-typeorm-paginate';
+import { CollectionEntity } from '@app/common/modules/database';
+import { Collection } from 'typeorm';
 
 export class CollectionDto {
   @ApiProperty({ example: 5 })
@@ -41,3 +44,10 @@ export class CreateCollectionDto extends PickType(CollectionDto, [
   'collectionId',
   'allowedTokens',
 ] as const) {}
+
+export class PaginateCollectionDto {
+  @ApiProperty({ isArray: true, example: [CollectionDto] })
+  items: CollectionDto[];
+  @ApiProperty({})
+  metadata: string;
+}

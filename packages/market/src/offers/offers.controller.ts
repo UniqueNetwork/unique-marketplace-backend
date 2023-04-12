@@ -7,9 +7,12 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { OffersService } from './offers.service';
-import { OffersDto } from './dto/offers.dto';
+import { OfferEventDto, OffersDto } from './dto/offers.dto';
+import fs from 'fs';
+import { readApiDocs } from '../utils/utils';
+import { PaginationRouting } from '@app/common/src/lib/base.constants';
 
 @ApiTags('Offers')
 @Controller('offers')
@@ -17,6 +20,10 @@ export class OffersController {
   constructor(private offersService: OffersService) {}
 
   @Get('/')
+  @ApiOperation({
+    summary: 'Get offers, filters and seller',
+    description: readApiDocs('offers-get.md'),
+  })
   @ApiQuery({ name: 'page', example: 1 })
   @ApiQuery({ name: 'pageSize', example: 10 })
   async get(
@@ -28,14 +35,11 @@ export class OffersController {
     return await this.offersService.getOffers({
       page,
       limit,
-      routingLabels: {
-        limitLabel: 'pageSize', // default: limit
-      },
-    });
+    } as PaginationRouting);
   }
 
   @Post('/test_create')
-  async postOffers(@Body() offer: OffersDto) {
+  async postOffers(@Body() offer: OfferEventDto) {
     return this.offersService.testAddOffer(offer);
   }
 }
