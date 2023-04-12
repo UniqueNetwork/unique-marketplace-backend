@@ -1,9 +1,8 @@
-import { ClientProxy, ReadPacket, WritePacket } from "@nestjs/microservices";
-import { Client } from "pg";
-import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
-import { Logger } from "@nestjs/common";
+import { ClientProxy, ReadPacket, WritePacket } from '@nestjs/microservices';
+import { Client } from 'pg';
+import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import { Logger } from '@nestjs/common';
 export class PgTransportClient extends ClientProxy {
-
   private logger = new Logger('PgNotifyClient');
   private client: Client;
 
@@ -12,14 +11,13 @@ export class PgTransportClient extends ClientProxy {
   protected serializer = {
     serialize: (input, options) => {
       return input;
-    }
-  }
+    },
+  };
 
-  constructor(
-    private options: PostgresConnectionOptions,
-  ) {
+  constructor(private options: PostgresConnectionOptions) {
     super();
-    this.client = new Client({ // todo use current connection: const client: PgClient = (dataSource.driver as PostgresDriver).master._clients[0];
+    this.client = new Client({
+      // todo use current connection: const client: PgClient = (dataSource.driver as PostgresDriver).master._clients[0];
       host: options.host,
       port: options.port,
       user: options.username,
@@ -34,18 +32,19 @@ export class PgTransportClient extends ClientProxy {
     }
     await this.client.connect();
     this.connected = true;
-    this.logger.log("Connected");
+    this.logger.log('Connected');
   }
 
   async close() {
     this.client.end();
-    this.logger.log("Disconnected");
+    this.logger.log('Disconnected');
   }
 
   async dispatchEvent(packet: ReadPacket<Record<string, any>>): Promise<any> {
     // todo serializer?
-    console.log('dispatchEvent', packet);
-    this.client.query(`notify "${packet.pattern}", '${JSON.stringify(packet.data)}'`);
+    this.client.query(
+      `notify "${packet.pattern}", '${JSON.stringify(packet.data)}'`
+    );
   }
 
   publish(

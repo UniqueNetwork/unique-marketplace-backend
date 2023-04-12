@@ -1,25 +1,21 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  ContractEntity,
-  OfferEntity,
-  OfferEventEntity,
-} from '@app/common/modules/database';
+import { ContractEntity, OfferEntity } from '@app/common/modules/database';
 import { Repository } from 'typeorm';
-import { OfferEventDto, OffersDto } from './dto/offers.dto';
+import { OffersDto } from './dto/offers.dto';
 import { BaseService } from '@app/common/src/lib/base.service';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class OffersService extends BaseService<OfferEntity, OffersDto> {
   constructor(
-    @InjectRepository(OfferEventEntity)
-    private offersRepository: Repository<OfferEventEntity>
+    @InjectRepository(OfferEntity)
+    private offersRepository: Repository<OfferEntity>
   ) {
     super({});
   }
 
-  async testAddOffer(offer: OfferEventDto) {
+  async testAddOffer(offer: OffersDto) {
     const offers = await this.offersRepository.create(offer);
     await this.offersRepository.insert(offers);
     return offers;
@@ -27,13 +23,7 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
 
   async getOffers(options: IPaginationOptions): Promise<any> {
     const qb = this.offersRepository
-      .createQueryBuilder('event')
-      .leftJoinAndMapOne(
-        'event.offer',
-        OfferEntity,
-        'offers',
-        'offers.order_id = event.offer_id'
-      )
+      .createQueryBuilder('offers')
       .leftJoinAndMapOne(
         'offers.contract',
         ContractEntity,

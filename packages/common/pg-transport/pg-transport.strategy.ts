@@ -1,21 +1,27 @@
-import { BaseRpcContext, CustomTransportStrategy, Server } from "@nestjs/microservices";
-import { Client, NotificationResponseMessage } from "pg";
-import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
+import {
+  BaseRpcContext,
+  CustomTransportStrategy,
+  Server,
+} from '@nestjs/microservices';
+import { Client, NotificationResponseMessage } from 'pg';
+import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 
-export class PgTransportStrategy extends Server implements CustomTransportStrategy {
-
+export class PgTransportStrategy
+  extends Server
+  implements CustomTransportStrategy
+{
   private client: Client;
+  private connected = false;
 
-  constructor(
-    private options: PostgresConnectionOptions,
-  ) {
+  constructor(private options: PostgresConnectionOptions) {
     super();
-    this.client = new Client({ // todo use current connection: const client: PgClient = (dataSource.driver as PostgresDriver).master._clients[0];
+    this.client = new Client({
+      // todo use current connection: const client: PgClient = (dataSource.driver as PostgresDriver).master._clients[0];
       host: options.host,
       port: options.port,
       user: options.username,
       password: options.password,
-      database: options.database
+      database: options.database,
     });
   }
 
@@ -27,17 +33,25 @@ export class PgTransportStrategy extends Server implements CustomTransportStrate
       })
     );
     this.client.on('notification', (message: NotificationResponseMessage) => {
-      this.handleEvent(message.channel, {
-        pattern: message.channel,
-        data: JSON.parse(message.payload),
-      }, new BaseRpcContext(message));
+      this.handleEvent(
+        message.channel,
+        {
+          pattern: message.channel,
+          data: JSON.parse(message.payload),
+        },
+        new BaseRpcContext(message)
+      );
     });
     callback();
   }
 
   async connect(): Promise<void> {
+    if (this.connected) {
+      return;
+    }
     await this.client.connect();
-    this.logger.log("Connected");
+    this.connected = true;
+    this.logger.log('Connected');
   }
 
   async listenTo(channel: string): Promise<void> {
@@ -48,6 +62,6 @@ export class PgTransportStrategy extends Server implements CustomTransportStrate
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   async close() {
     this.client.end();
-    this.logger.log("Disconnected");
+    this.logger.log('Disconnected');
   }
 }

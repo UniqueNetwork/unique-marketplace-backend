@@ -7,12 +7,11 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { OffersService } from './offers.service';
-import { OfferEventDto, OffersDto } from './dto/offers.dto';
-import fs from 'fs';
 import { readApiDocs } from '../utils/utils';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
+import { OffersDto } from './dto/offers.dto';
 
 @ApiTags('Offers')
 @Controller('offers')
@@ -39,7 +38,7 @@ export class OffersController {
   }
 
   @Post('/test_create')
-  async postOffers(@Body() offer: OfferEventDto) {
+  async postOffers(@Body() offer: OffersDto) {
     return this.offersService.testAddOffer(offer);
   }
 }

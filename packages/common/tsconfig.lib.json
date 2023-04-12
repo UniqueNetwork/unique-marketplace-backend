@@ -5,7 +5,6 @@
     "declaration": true,
     "types": ["node"],
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]

@@ -14,9 +14,8 @@ import { Repository } from 'typeorm';
 import { CollectionEntity } from '@app/common/modules/database';
 import { BaseService } from '@app/common/src/lib/base.service';
 import { pgNotifyClient } from '@app/common/pg-transport/pg-notify-client.symbol';
-import { ClientProxy } from '@nestjs/microservices';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
-import { CollectionStatus } from '@app/common/modules/types';
+import { PgTransportClient } from '@app/common/pg-transport/pg-transport.client';
 
 @Injectable()
 export class CollectionsService extends BaseService<
@@ -26,7 +25,7 @@ export class CollectionsService extends BaseService<
   private logger: Logger = new Logger(CollectionsService.name);
 
   constructor(
-    @Inject(pgNotifyClient) private client: ClientProxy,
+    @Inject(pgNotifyClient) private client: PgTransportClient,
     @InjectRepository(CollectionEntity)
     private collectionRepository: Repository<CollectionEntity>
   ) {
@@ -34,13 +33,13 @@ export class CollectionsService extends BaseService<
   }
 
   async addCollection(collectionId: number): Promise<any> {
-    await this.hasCollection(collectionId);
-    const collection = await this.collectionRepository.create({
+    //await this.hasCollection(collectionId);
+
+    this.client.emit('new-collection-added', {
       collectionId,
-      data: JSON.parse('{}'),
     });
-    this.client.emit('new-collection-added', { collectionId });
-    return await this.collectionRepository.insert(collection);
+
+    return {}; // await this.collectionRepository.insert(collection);
   }
 
   async testClientMessage(): Promise<any> {

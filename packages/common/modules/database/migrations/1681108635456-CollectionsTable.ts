@@ -98,11 +98,14 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
             type: 'jsonb',
           },
         ],
+        indices: [
+          {
+            name: 'collections_idx',
+            columnNames: ['collection_id'],
+          },
+        ],
       }),
       true
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "collections_idx" ON "collections" ("collection_id") `
     );
   }
 
