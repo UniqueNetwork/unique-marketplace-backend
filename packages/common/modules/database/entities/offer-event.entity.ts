@@ -27,7 +27,7 @@ export class OfferEventEntity {
   @Column({ name: 'block_number', type: 'integer' })
   blockNumber: number;
 
-  @Column({ name: 'address', type: 'varchar' })
+  @Column({ name: 'address', type: 'varchar', nullable: true })
   address: string;
 
   @CreateDateColumn({ name: 'created_at' })

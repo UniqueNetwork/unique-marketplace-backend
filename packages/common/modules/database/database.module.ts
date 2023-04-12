@@ -19,6 +19,10 @@ import {
 import { ContractService, OfferService } from './services';
 import { OfferEventService } from './services/offer-event.service';
 import { CollectionEntity } from './entities/collection.entity';
+import { TokensEntity } from './entities/tokens.entity';
+import { PropertiesEntity } from './entities/properties.entity';
+import { TokensTable1681310408111 } from './migrations/1681310408111-TokensTable';
+import { PropertiesTable1681310408929 } from './migrations/1681310408929-PropertiesTable';
 
 const entities = [
   SettingEntity,
@@ -26,6 +30,8 @@ const entities = [
   OfferEntity,
   OfferEventEntity,
   CollectionEntity,
+  TokensEntity,
+  PropertiesEntity,
 ];
 const migrations = [
   SettingsTable1677511684518,
@@ -34,6 +40,8 @@ const migrations = [
   OffersTable1679578453871,
   OfferEventsTable1679993242288,
   CollectionsTable1681108635456,
+  TokensTable1681310408111,
+  PropertiesTable1681310408929,
 ];
 
 function typeOrmModulesFactory(

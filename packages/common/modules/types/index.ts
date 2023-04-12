@@ -26,3 +26,22 @@ export enum CollectionMode {
   Fungible = 'Fungible',
   ReFungible = 'ReFungible',
 }
+
+export type DecodedCollection = {
+  collectionId: number;
+  owner: string;
+  mode: CollectionMode;
+  tokenPrefix: string;
+  name: string;
+  description: string;
+  data: any;
+};
+
+export enum TypeAttributToken {
+  ImageURL = 'ImageURL',
+  Enum = 'Enum',
+  String = 'String',
+  Prefix = 'Prefix',
+  Number = 'Number',
+  VideoURL = 'VideoURL',
+}

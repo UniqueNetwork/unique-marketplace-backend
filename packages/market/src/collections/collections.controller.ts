@@ -16,6 +16,7 @@ import { CollectionStatus } from '@app/common/modules/types';
 import { BaseController } from '@app/common/src/lib/base.controller';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 import { PaginateCollectionDto } from './dto/create-collection.dto';
+import { EventPattern, Payload } from '@nestjs/microservices';
 
 @ApiTags('Collections')
 @Controller('collections')
