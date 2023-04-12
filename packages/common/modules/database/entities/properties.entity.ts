@@ -48,9 +48,9 @@ export class PropertiesEntity {
   })
   type: TypeAttributToken;
 
-  @Column('jsonb', { name: 'attributes', default: {}})
+  @Column('jsonb', { name: 'attributes', default: {} })
   attributes: string;
 
-  @Column('jsonb', { name: 'nested', [] })
+  @Column('jsonb', { name: 'nested', default: [] })
   nested: string;
 }
