@@ -7,6 +7,8 @@ export class PgTransportClient extends ClientProxy {
   private logger = new Logger('PgNotifyClient');
   private client: Client;
 
+  private connected = false;
+
   protected serializer = {
     serialize: (input, options) => {
       return input;
@@ -27,7 +29,11 @@ export class PgTransportClient extends ClientProxy {
   }
 
   async connect(): Promise<any> {
+    if (this.connected) {
+      return;
+    }
     await this.client.connect();
+    this.connected = true;
     this.logger.log("Connected");
   }
 
@@ -38,6 +44,7 @@ export class PgTransportClient extends ClientProxy {
 
   async dispatchEvent(packet: ReadPacket<Record<string, any>>): Promise<any> {
     // todo serializer?
+    console.log('dispatchEvent', packet);
     this.client.query(`notify "${packet.pattern}", '${JSON.stringify(packet.data)}'`);
   }
 
