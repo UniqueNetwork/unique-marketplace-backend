@@ -22,6 +22,7 @@ export class ContractEventsService implements OnModuleInit {
     this.client = this.sdk.subscriptions.connect({
       reconnection: true,
       autoConnect: true,
+      transports: ['websocket'],
     });
 
     this.client.on(
@@ -55,6 +56,12 @@ export class ContractEventsService implements OnModuleInit {
         fromBlock,
       });
 
+    this.client.socket.on('connect_error', async (err) => {
+      this.logger.log(
+        `connect_error v${contract.version}:${contract.address}`,
+        err
+      );
+    });
     this.client.socket.on('connect', async () => {
       this.logger.log(`reconnect v${contract.version}:${contract.address}`);
       const processedAt = await this.contractService.getProcessedBlock(
@@ -65,7 +72,7 @@ export class ContractEventsService implements OnModuleInit {
 
     this.client.on(
       'contract-logs',
-      this.contractEventsHandler.onEvent.bind(this)
+      this.contractEventsHandler.onEvent.bind(this.contractEventsHandler)
     );
     this.client.on('has-next', (room, data) => loadBlocks(data.nextId));
   }
