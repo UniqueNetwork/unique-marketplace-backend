@@ -12,19 +12,19 @@ import { OfferEntity } from './offer.entity';
 
 @Entity({ name: 'offer-events' })
 export class OfferEventEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
   id: number;
 
   @JoinColumn({
     name: 'offer_id',
   })
-  @ManyToOne(() => OfferEntity)
+  @ManyToOne(() => OfferEntity, (offer) => offer.orderId)
   offer: OfferEntity;
 
   @Column({ name: 'event_type', type: 'varchar' })
   eventType: OfferEventType;
 
-  @Column({ name: 'block_number' })
+  @Column({ name: 'block_number', type: 'integer' })
   blockNumber: number;
 
   @Column({ name: 'address', type: 'varchar' })

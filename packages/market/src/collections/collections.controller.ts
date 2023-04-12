@@ -1,50 +1,58 @@
 import {
   Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
   DefaultValuePipe,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
   ParseIntPipe,
+  Patch,
+  Query,
 } from '@nestjs/common';
 import { CollectionsService } from './collections.service';
-import { CreateCollectionDto } from './dto/create-collection.dto';
-import {
-  UpdateCollectionDto,
-  UpdateCollectionStatusDto,
-} from './dto/update-collection.dto';
-import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CollectionStatus } from '@app/common/modules/types';
+import { BaseController } from '@app/common/src/lib/base.controller';
+import { PaginationRouting } from '@app/common/src/lib/base.constants';
+import { PaginateCollectionDto } from './dto/create-collection.dto';
 
 @ApiTags('Collections')
 @Controller('collections')
-export class CollectionsController {
-  constructor(private readonly collectionsService: CollectionsService) {}
+export class CollectionsController extends BaseController<CollectionsService> {
+  constructor(private readonly collectionsService: CollectionsService) {
+    super();
+  }
 
   @Get('/')
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    type: PaginateCollectionDto,
+    status: HttpStatus.OK,
+  })
   @ApiQuery({ name: 'page', example: 1 })
   @ApiQuery({ name: 'pageSize', example: 10 })
-  findAll(
+  async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
     @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe)
     limit: number = 10
-  ) {
+  ): Promise<PaginateCollectionDto> {
     limit = limit > 100 ? 100 : limit;
-    return this.collectionsService.findAll({
+    return await this.collectionsService.findAll({
       page,
       limit,
-      routingLabels: {
-        limitLabel: 'pageSize', // default: limit
-      },
-    });
+    } as PaginationRouting);
   }
 
   @Get('/test')
   test() {
     return this.collectionsService.testClientMessage();
+  }
+
+  @Patch('/add')
+  @ApiQuery({ name: 'collectionId', type: 'integer' })
+  async addCollection(@Query('collectionId') collectionId: number) {
+    return await this.collectionsService.addCollection(collectionId);
   }
 
   @Patch('/')

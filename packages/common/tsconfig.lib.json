@@ -4,6 +4,7 @@
     "outDir": "../../dist/out-tsc",
     "declaration": true,
     "types": ["node"],
+    "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },
   "include": ["src/**/*.ts"],

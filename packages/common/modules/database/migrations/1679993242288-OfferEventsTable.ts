@@ -6,14 +6,19 @@ export class OfferEventsTable1679993242288 implements MigrationInterface {
       new Table({
         name: 'offer-events',
         columns: [
-          { name: 'id', type: 'integer', isGenerated: true, isPrimary: true },
-          { name: 'offer_id', type: 'varchar' },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
+          { name: 'offer_id', type: 'integer' },
           {
             name: 'event_type',
             type: 'varchar',
           },
           { name: 'block_number', type: 'integer' },
-          { name: 'address', type: 'varchar' },
+          { name: 'address', type: 'varchar', isNullable: true },
           {
             name: 'created_at',
             type: 'timestamp without time zone',

@@ -1,5 +1,9 @@
-import { ContractEntity, OfferEntity } from '@app/common/modules/database';
-import { OfferStatus } from '@app/common/modules/types';
+import {
+  ContractEntity,
+  OfferEntity,
+  OfferEventEntity,
+} from '@app/common/modules/database';
+import { OfferEventType, OfferStatus } from '@app/common/modules/types';
 import { ApiProperty } from '@nestjs/swagger';
 import { ContractDto } from './contract.dto';
 
@@ -27,4 +31,15 @@ export class OffersDto {
 
   @ApiProperty({ example: OfferStatus.Opened })
   status: OfferStatus;
+}
+
+export class OfferEventDto {
+  @ApiProperty({})
+  address: string;
+
+  @ApiProperty({})
+  blockNumber: number;
+
+  @ApiProperty({ enum: OfferEventType })
+  eventType: OfferEventType;
 }

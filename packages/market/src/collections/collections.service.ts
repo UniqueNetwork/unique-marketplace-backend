@@ -11,11 +11,12 @@ import {
 } from './dto/update-collection.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CollectionEntity, OfferEntity } from '@app/common/modules/database';
+import { CollectionEntity } from '@app/common/modules/database';
 import { BaseService } from '@app/common/src/lib/base.service';
 import { pgNotifyClient } from '@app/common/pg-transport/pg-notify-client.symbol';
 import { ClientProxy } from '@nestjs/microservices';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
+import { CollectionStatus } from '@app/common/modules/types';
 
 @Injectable()
 export class CollectionsService extends BaseService<
@@ -32,17 +33,23 @@ export class CollectionsService extends BaseService<
     super({});
   }
 
+  async addCollection(collectionId: number): Promise<any> {
+    await this.hasCollection(collectionId);
+    const collection = await this.collectionRepository.create({
+      collectionId,
+      data: JSON.parse('{}'),
+    });
+    this.client.emit('new-collection-added', { collectionId });
+    return await this.collectionRepository.insert(collection);
+  }
+
   async testClientMessage(): Promise<any> {
     this.client.emit('new-collection-added', { collectionId: 12 });
   }
 
   async testCreate(collectionId: number, allowedTokens: string) {
-    const collectioExist = await this.collectionRepository.findOne({
-      where: { collectionId: collectionId },
-    });
-    if (collectioExist) {
-      throw new BadRequestException('Collection is already');
-    }
+    await this.hasCollection(collectionId);
+
     const collection = await this.collectionRepository.create({
       decimalPoints: 0,
       description: null,
@@ -65,6 +72,10 @@ export class CollectionsService extends BaseService<
     return await paginate<CollectionEntity>(qb, options);
   }
 
+  /**
+   * Toggle status of collection: Enabled or Disabled
+   * @param updateCollectionStatusDto
+   */
   async toggleCollection(
     updateCollectionStatusDto: UpdateCollectionStatusDto
   ): Promise<CollectionEntity> {
@@ -98,5 +109,21 @@ export class CollectionsService extends BaseService<
 
   async remove(id: number) {
     return await this.collectionRepository.delete({ collectionId: id });
+  }
+
+  /**
+   * Проверяем есть ли такая коллекция в списке макрета, Включена ли коллекция!
+   * @param collectionId
+   * @private
+   */
+  private async hasCollection(collectionId: number) {
+    const collectioExist = await this.collectionRepository.findOne({
+      where: { collectionId: collectionId },
+    });
+    if (collectioExist) {
+      throw new BadRequestException(
+        `Сollection present already on the market. Status: ${collectioExist.status}`
+      );
+    }
   }
 }

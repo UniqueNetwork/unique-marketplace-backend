@@ -1,3 +1,11 @@
+import { IPaginationOptions } from 'nestjs-typeorm-paginate';
+
+export interface PaginationRouting extends IPaginationOptions {
+  routingLabels: {
+    limitLabel: 'pageSize'; // default: limit
+  };
+}
+
 export interface ISetting {
   [key: string]: string;
 }
