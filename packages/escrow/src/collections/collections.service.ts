@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Sdk } from '@unique-nft/sdk';
+import { Sdk } from '@unique-nft/sdk/full';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CollectionEntity } from '@app/common/modules/database';
 import { Repository } from 'typeorm';
