@@ -11,13 +11,16 @@ import { initSentry } from '@app/common/modules/sentry';
 import { PgTransportStrategy } from '@app/common/pg-transport/pg-transport.strategy';
 import { loadConfig } from '@app/common/modules/config';
 import { pgNotifyClient } from '@app/common/pg-transport/pg-notify-client.symbol';
+import { WorkerService } from 'nestjs-graphile-worker';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice(AppModule, {
     strategy: new PgTransportStrategy(
       loadConfig().database // todo take from app context? const client: PgClient = (dataSource.driver as PostgresDriver).master._clients[0];
     ),
+    logger: ['error', 'warn', 'debug', 'log', 'verbose'],
   });
+  app.get(WorkerService).run();
   app.enableShutdownHooks();
   initSentry(app);
   await startMetricsServer(app);

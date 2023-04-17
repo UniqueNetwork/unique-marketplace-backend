@@ -51,6 +51,6 @@ export class PropertiesEntity {
   @Column('jsonb', { name: 'attributes', default: {} })
   attributes: string;
 
-  @Column('jsonb', { name: 'nested', default: [] })
+  @Column('jsonb', { name: 'nested', default: {} })
   nested: string;
 }

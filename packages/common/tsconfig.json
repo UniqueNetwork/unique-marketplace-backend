@@ -3,6 +3,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
   },
   "files": [],
   "include": [],

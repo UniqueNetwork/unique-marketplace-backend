@@ -6,24 +6,46 @@ import {
   Patch,
   Param,
   Delete,
+  HttpCode,
+  HttpStatus,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { TokensService } from './tokens.service';
 import { CreateTokenDto } from './dto/create-token.dto';
 import { UpdateTokenDto } from './dto/update-token.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { PaginateCollectionDto } from '../collections/dto/create-collection.dto';
+import { readApiDocs } from '../utils/utils';
+import { PaginationRouting } from '@app/common/src/lib/base.constants';
 @ApiTags('Tokens')
 @Controller('tokens')
 export class TokensController {
   constructor(private readonly tokensService: TokensService) {}
 
-  @Post()
-  create(@Body() createTokenDto: CreateTokenDto) {
-    return this.tokensService.create(createTokenDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.tokensService.findAll();
+  @Get('/')
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    type: PaginateCollectionDto,
+    status: HttpStatus.OK,
+  })
+  @ApiOperation({
+    summary: 'Show the entire list of tokens',
+    description: readApiDocs('tokens-list.md'),
+  })
+  @ApiQuery({ name: 'page', example: 1 })
+  @ApiQuery({ name: 'pageSize', example: 10 })
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe)
+    limit: number = 10
+  ): Promise<PaginateCollectionDto> {
+    limit = limit > 100 ? 100 : limit;
+    return await this.tokensService.findAll({
+      page,
+      limit,
+    } as PaginationRouting);
   }
 
   @Get('/:cid/:id')
