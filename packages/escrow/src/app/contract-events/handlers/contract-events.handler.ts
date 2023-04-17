@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Room, Extrinsic, ContractLogData } from '@unique-nft/sdk/full';
+import { ContractLogData, Extrinsic, Room } from '@unique-nft/sdk';
 import { ethers } from 'ethers';
 import { LogDescription } from '@ethersproject/abi/src.ts/interface';
 import {

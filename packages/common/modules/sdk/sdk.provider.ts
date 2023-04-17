@@ -1,6 +1,6 @@
 import { Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Sdk } from '@unique-nft/sdk/full';
+import { Sdk } from '@unique-nft/sdk';
 import { Config } from '../config';
 import { KeyringProvider } from '@unique-nft/accounts/keyring';
 

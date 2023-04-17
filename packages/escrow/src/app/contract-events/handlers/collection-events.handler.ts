@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Sdk, CollectionData, Room } from '@unique-nft/sdk/full';
+import { CollectionData, Room, Sdk } from '@unique-nft/sdk';
 import { OfferService, OfferEntity } from '@app/common/modules/database';
 
 @Injectable()
