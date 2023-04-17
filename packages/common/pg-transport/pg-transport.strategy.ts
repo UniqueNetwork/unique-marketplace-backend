@@ -3,7 +3,7 @@ import {
   CustomTransportStrategy,
   Server,
 } from '@nestjs/microservices';
-import { Client, NotificationResponseMessage } from 'pg';
+import { Client } from 'pg';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 
 export class PgTransportStrategy
@@ -32,7 +32,7 @@ export class PgTransportStrategy
         return this.listenTo(channel);
       })
     );
-    this.client.on('notification', (message: NotificationResponseMessage) => {
+    this.client.on('notification', (message: any) => {
       this.handleEvent(
         message.channel,
         {

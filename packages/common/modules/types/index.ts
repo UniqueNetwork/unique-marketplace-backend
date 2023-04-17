@@ -1,3 +1,5 @@
+import { CollectionInfoWithSchemaResponse } from '@unique-nft/sdk';
+
 export enum OfferStatus {
   Opened = 'Opened',
   Canceled = 'Canceled',
@@ -35,6 +37,9 @@ export type DecodedCollection = {
   name: string;
   description: string;
   data: any;
+  active?: CollectionActive;
+  decimalPoints?: number;
+  network: string;
 };
 
 export enum TypeAttributToken {
@@ -45,3 +50,20 @@ export enum TypeAttributToken {
   Number = 'Number',
   VideoURL = 'VideoURL',
 }
+
+export type PayLoadCollection = {
+  collectionId: number;
+};
+
+export type ChainDataResponse = {
+  SS58Prefix: number;
+  token: string;
+  decimals: number;
+  wsUrl: string;
+  genesisHash: string;
+};
+
+export type CollectionSchemaAndChain = {
+  collection: CollectionInfoWithSchemaResponse;
+  chain: ChainDataResponse;
+};

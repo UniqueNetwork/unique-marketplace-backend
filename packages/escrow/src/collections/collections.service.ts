@@ -1,56 +1,97 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Sdk } from '@unique-nft/sdk';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { CollectionInfoWithSchemaResponse, Sdk } from '@unique-nft/sdk';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CollectionEntity } from '@app/common/modules/database';
 import { Repository } from 'typeorm';
-import { CollectionMode, DecodedCollection } from '@app/common/modules/types';
-import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
-import { pgNotifyClient } from '@app/common/pg-transport/pg-notify-client.symbol';
-import { PgTransportClient } from '@app/common/pg-transport/pg-transport.client';
+import { TokensEntity } from '@app/common/modules/database/entities/tokens.entity';
+import { WorkerService } from 'nestjs-graphile-worker';
+import { SdkService } from '../app/sdk.service';
+import { CollectionSchemaAndChain } from '@app/common/modules/types';
 
 @Injectable()
 export class CollectionsService {
-  logger: Logger = new Logger(CollectionsService.name);
+  private logger: Logger = new Logger(CollectionsService.name);
   constructor(
-    private readonly sdk: Sdk,
+    /** Unique SDK */
+    private readonly sdkService: SdkService,
+
+    /** Collection Repository */
     @InjectRepository(CollectionEntity)
-    private collectionRepository: Repository<CollectionEntity>
+    private collectionRepository: Repository<CollectionEntity>,
+
+    /** Token Repository */
+    @InjectRepository(TokensEntity)
+    private tokensRepository: Repository<TokensEntity>,
+
+    /** Graphile Worker */
+    private readonly graphileWorker: WorkerService
   ) {}
 
-  async addNewCollection(data) {
+  /**
+   * `Adding collection and tokens to database`
+   * @description
+   * {@link CollectionsController}
+   * @param data
+   */
+  async addNewCollection(data): Promise<void> {
     const { collectionId } = data;
     try {
-      const collectionNew = await this.sdk.collections.get(data);
-      const decodedCollection: DecodedCollection = {
-        collectionId: data.collectionId,
-        owner: collectionNew?.owner,
-        mode: collectionNew?.mode as CollectionMode,
-        tokenPrefix: collectionNew?.tokenPrefix,
-        name: collectionNew?.name,
-        description: collectionNew?.description,
-        data: collectionNew,
-      };
-      const collectionExist = await this.collectionRepository.findOne({
-        where: { collectionId: collectionId },
-      });
-
-      const entity = this.collectionRepository.create(decodedCollection);
-      if (collectionExist) {
-        await this.collectionRepository.update(
-          { id: collectionExist.id },
-          decodedCollection
+      const [collection, tokens, chain] = await Promise.all([
+        this.sdkService.getSchemaCollection(collectionId),
+        this.sdkService.getTokensCollection(collectionId),
+        this.sdkService.getChainProperties(),
+      ]);
+      if (collection) {
+        await this.addTaskForAddCollection({ collection, chain });
+        await this.addTaskForAddTokensList(
+          tokens.list,
+          collection.id,
+          chain.token
         );
-        this.logger.log(`Collection id ${data.collectionId} updated!`);
+        this.logger.log(
+          `Added a collection to work on schema: ${collection.id} and tokens: ${tokens.list.length}`
+        );
       } else {
-        await this.collectionRepository.save({
-          ...entity,
-        });
-        this.logger.log(`Collection id ${data.collectionId} saved!`);
+        this.logger.warn('No found collection or destroyed');
       }
     } catch (e) {
-      this.logger.error(
-        `E1000 collectionId: ${data.collectionId} ${e.message}`
-      );
+      this.logger.error(e.message);
+    }
+  }
+
+  /**
+   * @async
+   * `Task adding a collection`
+   * @description The method takes the schema of the collection and sends it to the task to be added to database
+   * @param {CollectionInfoWithSchemaResponse} collection - collection information
+   * @private
+   */
+  private async addTaskForAddCollection(collection: CollectionSchemaAndChain) {
+    await this.graphileWorker.addJob('collectCollection', collection);
+  }
+
+  /**
+   * `The task of adding a token to the database and a list of tokens`
+   * @description The method creates a task to collect data about the token,
+   * get its schema, and store this information in the database.
+   * @param {Object} tokens - list of sorted Tokens
+   * @param {Number} collectionId - collection ID
+   * @private
+   * @async
+   */
+  private async addTaskForAddTokensList(
+    tokens: number[],
+    collectionId: number,
+    network: string
+  ) {
+    if (tokens.length > 0) {
+      tokens.map(async (token) => {
+        await this.graphileWorker.addJob('collectTokens', {
+          tokenId: token,
+          collectionId,
+          network,
+        });
+      });
     }
   }
 }

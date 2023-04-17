@@ -8,6 +8,7 @@ import { OffersModule } from './offers/offers.module';
 import { SettingsModule } from './settings/settings.module';
 import { CollectionsModule } from './collections/collections.module';
 import { TokensModule } from './tokens/tokens.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TokensModule } from './tokens/tokens.module';
     CollectionsModule,
     TokensModule,
     SettingsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

@@ -14,6 +14,10 @@ export class TokensTable1681310408111 implements MigrationInterface {
             default: 'uuid_generate_v4()',
           },
           {
+            name: 'network',
+            type: 'varchar',
+          },
+          {
             name: 'collection_id',
             type: 'int',
             default: 0,
@@ -32,10 +36,33 @@ export class TokensTable1681310408111 implements MigrationInterface {
           {
             name: 'nested',
             type: 'jsonb',
+            default: "'{}'",
+          },
+
+          {
+            name: 'other_owners',
+            type: 'jsonb',
+            default: "'{}'",
+          },
+          {
+            name: 'amount',
+            type: 'int',
+            default: 1,
           },
           {
             name: 'data',
             type: 'jsonb',
+            default: "'{}'",
+          },
+          {
+            name: 'burned',
+            type: 'boolean',
+            default: "'f'",
+          },
+          {
+            name: 'parse_data',
+            type: 'boolean',
+            default: "'f'",
           },
           {
             name: 'created_at',
@@ -52,7 +79,8 @@ export class TokensTable1681310408111 implements MigrationInterface {
         indices: [
           {
             name: 'Collection_and_token_idx',
-            columnNames: ['collection_id', 'token_id'],
+            isUnique: true,
+            columnNames: ['collection_id', 'token_id', 'network'],
           },
         ],
       }),

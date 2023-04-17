@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   DefaultValuePipe,
   Delete,
@@ -11,12 +12,24 @@ import {
   Query,
 } from '@nestjs/common';
 import { CollectionsService } from './collections.service';
-import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CollectionStatus } from '@app/common/modules/types';
 import { BaseController } from '@app/common/src/lib/base.controller';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
-import { PaginateCollectionDto } from './dto/create-collection.dto';
+import {
+  AddTokensDto,
+  PaginateCollectionDto,
+  ResponseTokenDto,
+} from './dto/create-collection.dto';
 import { EventPattern, Payload } from '@nestjs/microservices';
+import { readApiDocs } from '../utils/utils';
+import fs from 'fs';
 
 @ApiTags('Collections')
 @Controller('collections')
@@ -30,6 +43,10 @@ export class CollectionsController extends BaseController<CollectionsService> {
   @ApiResponse({
     type: PaginateCollectionDto,
     status: HttpStatus.OK,
+  })
+  @ApiOperation({
+    summary: 'Show the entire list of collections',
+    description: readApiDocs('collection-add.md'),
   })
   @ApiQuery({ name: 'page', example: 1 })
   @ApiQuery({ name: 'pageSize', example: 10 })
@@ -45,28 +62,28 @@ export class CollectionsController extends BaseController<CollectionsService> {
     } as PaginationRouting);
   }
 
-  @Get('/test')
-  test() {
-    return this.collectionsService.testClientMessage();
-  }
-
   @Patch('/add')
+  @ApiOperation({
+    summary: 'Adding the collection and its tokens to the database',
+    description: readApiDocs('collection-add.md'),
+  })
   @ApiQuery({ name: 'collectionId', type: 'integer' })
   async addCollection(@Query('collectionId') collectionId: number) {
     return await this.collectionsService.addCollection(collectionId);
   }
 
-  @Patch('/')
-  @ApiQuery({ name: 'collectionId', type: 'integer' })
-  @ApiQuery({ name: 'allowedTokens', required: false })
-  async create(
-    @Query('collectionId') collectionId: number,
-    @Query('allowedTokens') allowedTokens: string
-  ) {
-    return await this.collectionsService.testCreate(
-      collectionId,
-      allowedTokens
-    );
+  @Patch('/allowed/tokens/:collectionId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Adding and removing tokens that can be put up for sale',
+    description: readApiDocs('tokens-for-sales.md'),
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: ResponseTokenDto })
+  async addTokens(
+    @Param('collectionId') collectionId: number,
+    @Body() data: AddTokensDto
+  ): Promise<ResponseTokenDto> {
+    return await this.collectionsService.allowedTokens(collectionId, data);
   }
 
   @Patch('/toggle')
