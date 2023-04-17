@@ -1,5 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { CollectionInfoWithSchemaResponse, Sdk } from '@unique-nft/sdk';
+import { Injectable, Logger } from '@nestjs/common';
+import { CollectionInfoWithSchemaResponse } from '@unique-nft/sdk/';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CollectionEntity } from '@app/common/modules/database';
 import { Repository } from 'typeorm';

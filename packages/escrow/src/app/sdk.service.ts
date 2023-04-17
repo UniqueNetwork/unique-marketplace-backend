@@ -4,8 +4,7 @@ import {
   CollectionInfoWithSchemaResponse,
   Sdk,
   TokenByIdResponse,
-} from '@unique-nft/sdk';
-import { Address } from '@unique-nft/utils';
+} from '@unique-nft/sdk/full';
 
 export type ResponseTokenSchema = {
   rawType: string;
