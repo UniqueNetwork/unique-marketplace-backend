@@ -1,4 +1,4 @@
-import { Sdk, SocketClient } from '@unique-nft/sdk/full';
+import { Sdk, SocketClient } from '@unique-nft/sdk';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getContractAbi } from '@app/contracts/scripts';
 import { ContractEntity, ContractService } from '@app/common/modules/database';
