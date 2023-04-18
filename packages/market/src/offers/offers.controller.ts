@@ -45,7 +45,21 @@ export class OffersController {
   getById(
     @Param('id') id: string,
   ): Promise<OfferEntity> {
-    return this.offersService.getOffer(id);
+    return this.offersService.getOfferById(id);
+  }
+
+  @Get(':collectionId/:tokenId')
+  @ApiOperation({
+    summary: 'Get offer by CollectionId and TokeId',
+  })
+  getByCollectionIdAndTokenId(
+    @Param('collectionId') collectionId: string,
+    @Param('tokenId') tokenId: string,
+  ): Promise<OfferEntity[]> {
+    return this.offersService.getOffersByCursor({
+      collectionId: Number(collectionId),
+      tokenId: Number(tokenId),
+    });
   }
 
   @Post('/test_create')

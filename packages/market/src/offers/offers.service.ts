@@ -21,8 +21,17 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     return offers;
   }
 
-  getOffer(id: string): Promise<OfferEntity> {
+  getOfferById(id: string): Promise<OfferEntity> {
     return this.offersRepository.findOne({ where: { id } });
+  }
+
+  getOffersByCursor(cursor: { collectionId: OfferEntity["collectionId"], tokenId: OfferEntity["tokenId"] }): Promise<OfferEntity[]> {
+    return this.offersRepository.find({
+      where: {
+        ...cursor,
+        // todo status
+      },
+    });
   }
 
   async getOffers(options: IPaginationOptions): Promise<any> { // todo any
