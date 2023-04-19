@@ -31,8 +31,11 @@ export class OfferEntity {
   @Column({ name: 'amount', type: 'integer' })
   amount: number;
 
-  @Column({ name: 'price', type: 'bigint' })
-  price: bigint;
+  @Column({ name: 'price_parsed', type: 'bigint' })
+  priceParsed: bigint;
+
+  @Column({ name: 'price_raw', type: 'bigint' })
+  priceRaw: string;
 
   @JoinColumn({
     name: 'contract_address',

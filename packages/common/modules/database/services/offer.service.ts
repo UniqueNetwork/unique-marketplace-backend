@@ -46,7 +46,8 @@ export class OfferService {
       offer.status = status;
     }
 
-    offer.price = order.price.toBigInt();
+    offer.priceParsed = order.price.toBigInt();
+    offer.priceRaw = order.price.toString();
     offer.amount = order.amount;
     offer.contract = contract;
 

@@ -15,7 +15,8 @@ export class OffersTable1679578453871 implements MigrationInterface {
           { name: 'order_id', type: 'integer' },
           { name: 'collection_id', type: 'integer' },
           { name: 'token_id', type: 'integer' },
-          { name: 'price', type: 'bigint' },
+          { name: 'price_parsed', type: 'string' },
+          { name: 'price_raw', type: 'string' },
           { name: 'amount', type: 'integer' },
           { name: 'contract_address', type: 'varchar' },
           {

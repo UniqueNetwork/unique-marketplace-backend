@@ -17,6 +17,7 @@ export class OfferEventsTable1679993242288 implements MigrationInterface {
             name: 'event_type',
             type: 'varchar',
           },
+          { name: 'meta', type: 'jsonb', default: "'{}'" },
           { name: 'block_number', type: 'integer' },
           { name: 'address', type: 'varchar', isNullable: true },
           {
