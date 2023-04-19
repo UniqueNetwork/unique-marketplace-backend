@@ -2,16 +2,17 @@ import {
   Body,
   Controller,
   DefaultValuePipe,
-  Get,
+  Get, Param,
   ParseIntPipe,
   Post,
-  Query,
-} from '@nestjs/common';
+  Query
+} from "@nestjs/common";
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { OffersService } from './offers.service';
 import { readApiDocs } from '../utils/utils';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 import { OffersDto } from './dto/offers.dto';
+import { OfferEntity } from "@app/common/modules/database";
 
 @ApiTags('Offers')
 @Controller('offers')
@@ -35,6 +36,30 @@ export class OffersController {
       page,
       limit,
     } as PaginationRouting);
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get offer by ID',
+  })
+  getById(
+    @Param('id') id: string,
+  ): Promise<OfferEntity> {
+    return this.offersService.getOfferById(id);
+  }
+
+  @Get(':collectionId/:tokenId')
+  @ApiOperation({
+    summary: 'Get offer by CollectionId and TokeId',
+  })
+  getByCollectionIdAndTokenId(
+    @Param('collectionId') collectionId: string,
+    @Param('tokenId') tokenId: string,
+  ): Promise<OfferEntity[]> {
+    return this.offersService.getOffersByCursor({
+      collectionId: Number(collectionId),
+      tokenId: Number(tokenId),
+    });
   }
 
   @Post('/test_create')

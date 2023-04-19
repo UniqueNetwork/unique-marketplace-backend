@@ -21,7 +21,20 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     return offers;
   }
 
-  async getOffers(options: IPaginationOptions): Promise<any> {
+  getOfferById(id: string): Promise<OfferEntity> {
+    return this.offersRepository.findOne({ where: { id } });
+  }
+
+  getOffersByCursor(cursor: { collectionId: OfferEntity["collectionId"], tokenId: OfferEntity["tokenId"] }): Promise<OfferEntity[]> {
+    return this.offersRepository.find({
+      where: {
+        ...cursor,
+        // todo status
+      },
+    });
+  }
+
+  async getOffers(options: IPaginationOptions): Promise<any> { // todo any
     const qb = this.offersRepository
       .createQueryBuilder('offers')
       .leftJoinAndMapOne(
