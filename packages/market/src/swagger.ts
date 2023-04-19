@@ -30,8 +30,8 @@ export default async function swaggerInit(
     extraModels: [],
   });
 
-  SwaggerModule.setup('api/swagger', app, document, {
+  SwaggerModule.setup('swagger', app, document, {
     explorer: true,
-    customSiteTitle: config.get('market.title'),
+    customSiteTitle: config.get('market.title')
   });
 }
