@@ -13,7 +13,7 @@ const config: HardhatUserConfig = {
     cache: './dist/packages/contracts/cache',
     artifacts: './dist/packages/contracts/artifacts',
   },
-  defaultNetwork: 'unq',
+  defaultNetwork: 'opal',
   networks: {
     hardhat: {},
     unq: {

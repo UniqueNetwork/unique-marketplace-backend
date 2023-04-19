@@ -33,8 +33,8 @@ export declare namespace Market {
     id: PromiseOrValue<BigNumberish>;
     collectionId: PromiseOrValue<BigNumberish>;
     tokenId: PromiseOrValue<BigNumberish>;
-    price: PromiseOrValue<BigNumberish>;
     amount: PromiseOrValue<BigNumberish>;
+    price: PromiseOrValue<BigNumberish>;
     seller: PromiseOrValue<string>;
   };
 
@@ -42,15 +42,15 @@ export declare namespace Market {
     number,
     number,
     number,
-    BigNumber,
     number,
+    BigNumber,
     string
   ] & {
     id: number;
     collectionId: number;
     tokenId: number;
-    price: BigNumber;
     amount: number;
+    price: BigNumber;
     seller: string;
   };
 }
@@ -145,9 +145,9 @@ export interface MarketInterface extends utils.Interface {
   events: {
     "Log(string)": EventFragment;
     "TokenIsApproved(uint32,tuple)": EventFragment;
-    "TokenIsPurchased(uint32,tuple,uint256)": EventFragment;
+    "TokenIsPurchased(uint32,tuple,uint32)": EventFragment;
     "TokenIsUpForSale(uint32,tuple)": EventFragment;
-    "TokenRevoke(uint32,tuple,uint256)": EventFragment;
+    "TokenRevoke(uint32,tuple,uint32)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Log"): EventFragment;
@@ -178,10 +178,10 @@ export type TokenIsApprovedEventFilter = TypedEventFilter<TokenIsApprovedEvent>;
 export interface TokenIsPurchasedEventObject {
   version: number;
   item: Market.OrderStructOutput;
-  salesAmount: BigNumber;
+  salesAmount: number;
 }
 export type TokenIsPurchasedEvent = TypedEvent<
-  [number, Market.OrderStructOutput, BigNumber],
+  [number, Market.OrderStructOutput, number],
   TokenIsPurchasedEventObject
 >;
 
@@ -203,10 +203,10 @@ export type TokenIsUpForSaleEventFilter =
 export interface TokenRevokeEventObject {
   version: number;
   item: Market.OrderStructOutput;
-  amount: BigNumber;
+  amount: number;
 }
 export type TokenRevokeEvent = TypedEvent<
-  [number, Market.OrderStructOutput, BigNumber],
+  [number, Market.OrderStructOutput, number],
   TokenRevokeEventObject
 >;
 
@@ -406,7 +406,7 @@ export interface Market extends BaseContract {
     ): TokenIsApprovedEventFilter;
     TokenIsApproved(version?: null, item?: null): TokenIsApprovedEventFilter;
 
-    "TokenIsPurchased(uint32,tuple,uint256)"(
+    "TokenIsPurchased(uint32,tuple,uint32)"(
       version?: null,
       item?: null,
       salesAmount?: null
@@ -423,7 +423,7 @@ export interface Market extends BaseContract {
     ): TokenIsUpForSaleEventFilter;
     TokenIsUpForSale(version?: null, item?: null): TokenIsUpForSaleEventFilter;
 
-    "TokenRevoke(uint32,tuple,uint256)"(
+    "TokenRevoke(uint32,tuple,uint32)"(
       version?: null,
       item?: null,
       amount?: null

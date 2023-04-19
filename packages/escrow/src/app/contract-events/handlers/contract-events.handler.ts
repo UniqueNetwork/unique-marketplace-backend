@@ -161,7 +161,7 @@ export class ContractEventsHandler {
         eventType,
         extrinsic.block.id,
         extrinsic.signer,
-        tokenRevokeArgs.amount.toBigInt()
+        tokenRevokeArgs.amount
       );
     }
   }
@@ -188,7 +188,7 @@ export class ContractEventsHandler {
         OfferEventType.Buy,
         extrinsic.block.id,
         extrinsic.signer,
-        tokenIsPurchasedArgs.salesAmount.toBigInt()
+        tokenIsPurchasedArgs.salesAmount
       );
     }
   }

@@ -33,9 +33,9 @@ contract Market {
     bool marketPause;
 
     event TokenIsUpForSale(uint32 version, Order item);
-    event TokenRevoke(uint32 version, Order item, uint256 amount);
+    event TokenRevoke(uint32 version, Order item, uint32 amount);
     event TokenIsApproved(uint32 version, Order item);
-    event TokenIsPurchased(uint32 version, Order item, uint256 salesAmount);
+    event TokenIsPurchased(uint32 version, Order item, uint32 salesAmount);
     event Log(string message);
 
     error InvalidArgument(string info);
@@ -258,6 +258,9 @@ contract Market {
         uint32 tokenId,
         uint32 amount
     ) public payable onlyNonPause {
+        if (msg.value == 0) {
+          revert InvalidArgument("msg.value must not be zero");
+        }
         if (amount == 0) {
           revert InvalidArgument("amount must not be zero");
         }
@@ -273,13 +276,12 @@ contract Market {
 
         uint256 totalValue = order.price * amount;
         uint256 feeValue = (totalValue * marketFee) / 100;
-        uint256 totalValueWithFee = totalValue + feeValue;
-        if (msg.value < totalValueWithFee) {
+
+        if (msg.value < totalValue) {
             revert NotEnoughMoneyError();
         }
 
         IERC721 erc721 = getErc721(order.collectionId);
-
         isApproved(erc721, order);
 
         order.amount -= amount;
@@ -297,10 +299,9 @@ contract Market {
             revert FailTransferToken("without reason");
         }
 
-        order.seller.transfer(totalValue);
-
-        if (msg.value > totalValueWithFee) {
-            payable(msg.sender).transfer(msg.value - totalValueWithFee);
+        order.seller.transfer(totalValue - feeValue);
+        if (msg.value > totalValue) {
+            payable(msg.sender).transfer(msg.value - totalValue);
         }
 
         emit TokenIsPurchased(version, order, amount);
