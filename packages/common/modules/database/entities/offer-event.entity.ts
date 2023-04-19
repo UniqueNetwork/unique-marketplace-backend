@@ -13,7 +13,7 @@ import { OfferEntity } from './offer.entity';
 @Entity({ name: 'offer-events' })
 export class OfferEventEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @JoinColumn({
     name: 'offer_id',
@@ -23,6 +23,9 @@ export class OfferEventEntity {
 
   @Column({ name: 'event_type', type: 'varchar' })
   eventType: OfferEventType;
+
+  @Column({ name: 'meta', type: 'jsonb' })
+  meta: string;
 
   @Column({ name: 'block_number', type: 'integer' })
   blockNumber: number;
