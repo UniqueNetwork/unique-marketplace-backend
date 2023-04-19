@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { Address } from '@unique-nft/utils';
 import { KeyringAccount, KeyringProvider } from '@unique-nft/accounts/keyring';
 import { UniqueNFTFactory } from '@unique-nft/solidity-interfaces';
-import { Sdk } from '@unique-nft/sdk';
+import { Sdk } from '@unique-nft/sdk/full';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { loadConfig } from '../scripts';
 import * as fs from 'fs';
@@ -50,14 +50,20 @@ export async function getCollectionData(sdk: Sdk): Promise<TestData> {
     return JSON.parse(dataStr);
   } else {
     const [account1] = await ethers.getSigners();
+    console.log('account1', !!account1);
 
-    const data = {
-      nft: await createNft(sdk, address, account1.address),
-      rft: await createRft(sdk, address, account1.address),
-      fungibleId: await createFungible(sdk, address),
-    };
-    fs.writeFileSync(filename, JSON.stringify(data, null, 2));
-    return data;
+    try {
+      const data = {
+        nft: await createNft(sdk, address, account1.address),
+        rft: await createRft(sdk, address, account1.address),
+        fungibleId: await createFungible(sdk, address),
+      };
+      fs.writeFileSync(filename, JSON.stringify(data, null, 2));
+      console.log('data', data);
+      return data;
+    } catch (err) {
+      console.log('err', err);
+    }
   }
 }
 

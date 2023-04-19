@@ -28,7 +28,18 @@
         "type": "string"
       }
     ],
-    "name": "FailTransformToken",
+    "name": "FailTransferToken",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "info",
+        "type": "string"
+      }
+    ],
+    "name": "InvalidArgument",
     "type": "error"
   },
   {
@@ -38,7 +49,7 @@
   },
   {
     "inputs": [],
-    "name": "NotEnoughError",
+    "name": "NotEnoughMoneyError",
     "type": "error"
   },
   {
@@ -106,14 +117,14 @@
             "type": "uint32"
           },
           {
-            "internalType": "uint256",
-            "name": "price",
-            "type": "uint256"
-          },
-          {
             "internalType": "uint32",
             "name": "amount",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
           },
           {
             "internalType": "address payable",
@@ -157,14 +168,14 @@
             "type": "uint32"
           },
           {
-            "internalType": "uint256",
-            "name": "price",
-            "type": "uint256"
-          },
-          {
             "internalType": "uint32",
             "name": "amount",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
           },
           {
             "internalType": "address payable",
@@ -179,9 +190,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint32",
         "name": "salesAmount",
-        "type": "uint256"
+        "type": "uint32"
       }
     ],
     "name": "TokenIsPurchased",
@@ -214,14 +225,14 @@
             "type": "uint32"
           },
           {
-            "internalType": "uint256",
-            "name": "price",
-            "type": "uint256"
-          },
-          {
             "internalType": "uint32",
             "name": "amount",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
           },
           {
             "internalType": "address payable",
@@ -265,14 +276,14 @@
             "type": "uint32"
           },
           {
-            "internalType": "uint256",
-            "name": "price",
-            "type": "uint256"
-          },
-          {
             "internalType": "uint32",
             "name": "amount",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
           },
           {
             "internalType": "address payable",
@@ -287,9 +298,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint32",
         "name": "amount",
-        "type": "uint256"
+        "type": "uint32"
       }
     ],
     "name": "TokenRevoke",
@@ -369,14 +380,14 @@
             "type": "uint32"
           },
           {
-            "internalType": "uint256",
-            "name": "price",
-            "type": "uint256"
-          },
-          {
             "internalType": "uint32",
             "name": "amount",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
           },
           {
             "internalType": "address payable",

@@ -115,7 +115,7 @@ describe('fails', function () {
     ).to.revertedWithCustomError(market, 'SellerIsNotOwner');
   });
 
-  it.skip('put fail; token is not approved', async () => {
+  it('put fail; token is not approved', async () => {
     const { ownerAccount } = await getAccounts(
       sdk,
       nftToken.collectionId,
