@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { Sdk } from '@unique-nft/sdk';
+import { Sdk } from '@unique-nft/sdk/full';
 import {
   createSdk,
   deploy,
@@ -75,6 +75,8 @@ describe('e2e', function () {
         tokenPrice,
         ownerAccount.address,
       ]);
+
+    console.log('market', market.address);
   });
 
   it('check approved', async () => {
