@@ -9,12 +9,7 @@ export class BaseService<T, S> {
   private readonly relations: string[] = [];
 
   constructor(schemas: ISettingsSchema = {}) {
-    const {
-      aliasFields = {},
-      relationsFields = {},
-      customQueryFields = {},
-      relations = [],
-    } = schemas;
+    const { aliasFields = {}, relationsFields = {}, customQueryFields = {}, relations = [] } = schemas;
     this.aliasFields = aliasFields;
     this.relationsFields = relationsFields;
     this.relations = relations;
@@ -31,7 +26,7 @@ export class BaseService<T, S> {
     return { data, count };
   }
 
-  protected routeLablel() {
+  protected routeLabel() {
     return {
       routingLabels: {
         limitLabel: 'page-size', // default: limit
@@ -53,12 +48,7 @@ export class BaseService<T, S> {
     return qb.getCount();
   }
 
-  protected getConditionField(
-    qb: SelectQueryBuilder<T>,
-    field: string
-  ): string {
-    return `"${this.relationsFields[field] ?? qb.alias}"."${
-      this.aliasFields[field] ?? field
-    }"`;
+  protected getConditionField(qb: SelectQueryBuilder<T>, field: string): string {
+    return `"${this.relationsFields[field] ?? qb.alias}"."${this.aliasFields[field] ?? field}"`;
   }
 }
