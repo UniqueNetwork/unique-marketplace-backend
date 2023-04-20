@@ -2,15 +2,30 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SettingsDto } from './dto/setting.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  CollectionEntity,
-  ContractEntity,
-  SettingEntity,
-} from '@app/common/modules/database';
+import { CollectionEntity, ContractEntity, SettingEntity } from '@app/common/modules/database';
 import { Repository } from 'typeorm';
 import { AddressService } from '@app/common/src/lib/address.service';
-import { CollectionData } from './interfaces/settings.interface';
-import { CollectionStatus } from '@app/common/modules/types';
+import { CollectionStatus, CustomObject } from '@app/common/modules/types';
+import { OmitType } from '@nestjs/swagger';
+
+interface CollectionDataDescription {
+  mode: string;
+  name: string;
+  description: string;
+  tokenPrefix: string;
+  owner: string;
+  readOnly: string;
+  schema: ICollectionSchema;
+}
+
+interface ICollectionSchema {
+  image: CustomObject;
+  schemaName: string;
+  collectionId: number;
+  coverPicture: CustomObject;
+  schemaVersion: string;
+  attributesSchemaVersion: string;
+}
 
 @Injectable()
 export class SettingsService {
@@ -22,20 +37,11 @@ export class SettingsService {
     @InjectRepository(CollectionEntity)
     private collectionRepository: Repository<CollectionEntity>,
     @InjectRepository(SettingEntity)
-    private settingsRepository: Repository<SettingEntity>
+    private settingsRepository: Repository<SettingEntity>,
   ) {}
 
   async prepareSettings() {
     const contracts = await this.contractRepository.find({});
-
-    const collectionTemp: CollectionData = {
-      '26': { allowedTokens: '1,4,23,25-100,1000-2000' },
-      '57': { allowedTokens: '' },
-      '196': { allowedTokens: '' },
-      '17': { allowedTokens: '' },
-      '1003': { allowedTokens: '' },
-      '982': { allowedTokens: '' },
-    };
 
     const settings: SettingsDto = {
       marketType: 'marketType',
@@ -61,23 +67,38 @@ export class SettingsService {
     }
   }
 
+  /**
+   * Getting data about collections for sale
+   */
   async getCollectionSettings(): Promise<any> {
     const collestions = await this.collectionRepository.find({
       where: { status: CollectionStatus.Enabled },
     });
     const collectionMap = new Map();
-    collestions.map((elem) =>
-      collectionMap.set(elem.collectionId, {
-        allowedTokens: elem.allowedTokens,
-      })
-    );
+    collestions.map((elem) => {
+      const { allowedTokens, data } = elem;
+      const collectionDescription = this.collectionDataTransformation(data);
+      console.dir(collectionDescription, { depth: 1 });
+      collectionMap.set(elem.collectionId, { allowedTokens: elem.allowedTokens, description: collectionDescription });
+    });
     return Object.fromEntries(collectionMap);
   }
 
+  /**
+   * Transforming data from the collection for description
+   * @param data
+   */
+  collectionDataTransformation(data): CollectionDataDescription {
+    delete data.schema.attributesSchema;
+    const { mode, name, description, owner, tokenPrefix, readOnly, schema } = data;
+    return { name, description, tokenPrefix, mode, owner, readOnly, schema };
+  }
+
+  /**
+   * Escrow seed to Substrate address
+   */
   async escrowAddress(): Promise<string> {
-    const account = await this.addressService.substrateFromSeed(
-      this.configService.get('signer.seed')
-    );
+    const account = await this.addressService.substrateFromSeed(this.configService.get('signer.seed'));
     return account.address;
   }
 }
