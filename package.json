@@ -1,6 +1,6 @@
 {
   "name": "unique-marketplace-backend",
-  "version": "3.0.30",
+  "version": "3.0.42",
   "description": "Backend project for unique marketplace",
   "author": "Unique Network",
   "private": true,
@@ -22,6 +22,7 @@
     "start": "node -r source-map-support/register ./dist/packages/market/main.js",
     "legacy-postinstall": "npm run husky:install",
     "prepare": "husky install",
+    "changelog": "git cliff --prepend ./CHANGELOG.md -u -c ./cliff.toml -r ./ --include-path 'packages/escrow/*' --include-path 'packages/market/*' ",
     "tools:generate:docs": "ts-node tools/generate-docs.ts",
     "generate:client:api": "npx ts-node --project tools/tsconfig.tools.json tools/generate-client-api.ts",
     "sol:test": "npx hardhat test",
@@ -29,6 +30,8 @@
     "sol:build:version": "npm run sol:compile && npx hardhat build:version"
   },
   "dependencies": {
+    "@commitlint/cli": "^17.6.1",
+    "@commitlint/config-conventional": "^17.6.1",
     "@nestjs/axios": "^2.0.0",
     "@nestjs/common": "^9.3.9",
     "@nestjs/config": "^2.3.1",
@@ -68,7 +71,7 @@
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.5.0",
     "typeorm": "^0.3.12",
-    "web3": "^1.8.2"
+    "web3": "^0.20.7"
   },
   "lint-staged": {
     "*.ts": "npm run lint:fix"
@@ -93,7 +96,7 @@
   "devDependencies": {
     "@nestjs/schematics": "^9.0.4",
     "@nestjs/testing": "^9.3.9",
-    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
     "@nrwl/cli": "^15.7.2",
     "@nrwl/eslint-plugin-nx": "^15.7.2",
     "@nrwl/jest": "^15.7.2",
@@ -113,6 +116,7 @@
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "git-cliff": "^1.1.2",
     "hardhat": "^2.13.0",
     "jest": "^29.4.3",
     "jest-environment-jsdom": "28.1.1",

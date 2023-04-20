@@ -11,10 +11,10 @@ export class PropertiesEntity {
   id: string;
 
   @Column('int', { name: 'collection_id' })
-  collectionId: string;
+  collectionId: number;
 
   @Column('int', { name: 'token_id' })
-  tokenId: string;
+  tokenId: number;
 
   @Column('varchar', { name: 'network', length: 16 })
   network: string;

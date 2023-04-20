@@ -1,4 +1,9 @@
 import { CollectionInfoWithSchemaResponse } from '@unique-nft/sdk';
+import { string } from 'hardhat/internal/core/params/argumentTypes';
+
+export type CustomObject = {
+  [key: string]: any | Object | Array<string> | boolean | number | string | undefined;
+};
 
 export enum OfferStatus {
   Opened = 'Opened',

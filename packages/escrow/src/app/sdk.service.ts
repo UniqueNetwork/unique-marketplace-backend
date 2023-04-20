@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
-import {
-  CollectionInfoWithSchemaResponse,
-  Sdk,
-  TokenByIdResponse,
-} from '@unique-nft/sdk/full';
+import { CollectionInfoWithSchemaResponse, NestedToken, Sdk, TokenByIdResponse } from '@unique-nft/sdk/full';
+import { BundleType } from '../tasks/properties.task';
 
 export type ResponseTokenSchema = {
   rawType: string;
@@ -25,6 +22,61 @@ export type TokenBalance = {
 export class SdkService {
   constructor(private readonly sdk: Sdk) {}
 
+  async isBundle(token: number, collection: number): Promise<any> {
+    try {
+      return await this.sdk.tokens.isBundle({ collectionId: collection, tokenId: token });
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  async getBundle(token: number, collection: number): Promise<NestedToken> {
+    try {
+      return await this.sdk.tokens.getBundle({ collectionId: collection, tokenId: token });
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  public serializeBunlde(bundle: NestedToken): Array<BundleType> {
+    function recurseBundle(bundle: NestedToken): Array<BundleType> {
+      if (bundle?.nestingChildTokens) {
+        if (Array.isArray(bundle.nestingChildTokens)) {
+          const items = [
+            {
+              collectionId: +bundle.collectionId,
+              tokenId: +bundle.tokenId,
+            },
+          ];
+          bundle.nestingChildTokens.forEach((child) => {
+            items.push(...recurseBundle(child));
+          });
+          return items;
+        } else {
+          return [
+            {
+              collectionId: +bundle.collectionId,
+              tokenId: +bundle.tokenId,
+            },
+            ...recurseBundle(bundle.nestingChildTokens),
+          ];
+        }
+      } else {
+        return [
+          {
+            collectionId: +bundle.collectionId,
+            tokenId: +bundle.tokenId,
+          },
+        ];
+      }
+    }
+
+    return [...new Set(recurseBundle(bundle))];
+  }
+
+  async getTokenSchema(collectionId: number, tokenId: number): Promise<TokenByIdResponse> {
+    return await this.sdk.tokens.get({ collectionId: collectionId, tokenId: tokenId });
+  }
   /**
    * Get a list of token numbers
    * @param collectionId
@@ -32,7 +84,7 @@ export class SdkService {
   async getTokensCollection(collectionId: string): Promise<any> {
     const token: ResponseTokenSchema = await this.sdk.stateQuery.execute(
       { endpoint: 'rpc', module: 'unique', method: 'collectionTokens' },
-      { args: [collectionId] }
+      { args: [collectionId] },
     );
     const list = token.json.sort((a, b) => a - b);
 
@@ -44,15 +96,12 @@ export class SdkService {
   async getTokenOwners(collectionId: number, tokenId: number): Promise<any> {
     const token: ResponseTokenSchema = await this.sdk.stateQuery.execute(
       { endpoint: 'rpc', module: 'unique', method: 'tokenOwners' },
-      { args: [collectionId.toString(), tokenId.toString()] }
+      { args: [collectionId.toString(), tokenId.toString()] },
     );
     return token;
   }
 
-  async getTokenBalances(
-    tokenBalance: TokenBalance,
-    at?: string
-  ): Promise<any> {
+  async getTokenBalances(tokenBalance: TokenBalance, at?: string): Promise<any> {
     const { collectionId } = tokenBalance;
     const collection = await this.getSchemaCollection(collectionId);
     if (collection.mode === 'NFT') {
@@ -67,11 +116,7 @@ export class SdkService {
     }
   }
 
-  async getTotalPieces(
-    tokenId: number,
-    collectionId: number,
-    at?: string
-  ): Promise<any> {
+  async getTotalPieces(tokenId: number, collectionId: number, at?: string): Promise<any> {
     return await this.sdk.refungible.totalPieces({
       tokenId,
       collectionId,
@@ -85,9 +130,7 @@ export class SdkService {
    * @param {String} id - collection ID
    * @return ({Promise<CollectionInfoWithSchemaResponse>})
    */
-  async getSchemaCollection(
-    id: number
-  ): Promise<CollectionInfoWithSchemaResponse> {
+  async getSchemaCollection(id: number): Promise<CollectionInfoWithSchemaResponse> {
     return await this.sdk.collections.get({ collectionId: id });
   }
 
@@ -97,11 +140,7 @@ export class SdkService {
    * @param collectionId
    * @param at
    */
-  async getSchemaToken(
-    tokenId: number,
-    collectionId: number,
-    at?: string
-  ): Promise<TokenByIdResponse> {
+  async getSchemaToken(tokenId: number, collectionId: number, at?: string): Promise<TokenByIdResponse> {
     return await this.sdk.tokens.get({ collectionId, tokenId, at });
   }
 

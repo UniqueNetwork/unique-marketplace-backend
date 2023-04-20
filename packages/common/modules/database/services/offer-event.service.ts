@@ -18,13 +18,16 @@ export class OfferEventService {
     address: string,
     amount: number | bigint
   ): Promise<OfferEventEntity> {
-    const event = this.offerEventEntityRepository.create();
-
-    event.offer = offer;
-    event.eventType = eventType;
-    event.blockNumber = blockNumber;
-    event.address = address;
-
+    const offerEvent = {
+      offer,
+      eventType,
+      blockNumber,
+      address,
+      amount,
+      meta: '{}',
+    };
+    const event = this.offerEventEntityRepository.create(offerEvent);
+    console.dir({ event }, { depth: 10 });
     await this.offerEventEntityRepository.save(event);
 
     return event;

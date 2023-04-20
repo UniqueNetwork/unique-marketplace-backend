@@ -6,26 +6,7 @@ import { TokensEntity } from '@app/common/modules/database/entities/tokens.entit
 import { Repository } from 'typeorm';
 import { SdkService } from '../app/sdk.service';
 import { Address } from '@unique-nft/utils';
-
-export interface TokenPayload {
-  tokenId: number;
-  collectionId: number;
-  network: string;
-}
-
-export type UnknownObject = {
-  [key: string]: any | Object | string | number;
-};
-
-export interface TokenDataForUpdate {
-  tokenId: number;
-  collectionId: number;
-  network: string;
-  otherOwners: UnknownObject;
-  owner_token: string;
-  nested: UnknownObject;
-  data: UnknownObject;
-}
+import { TokenDataForUpdate, TokenPayload } from './task.types';
 
 @Injectable()
 @Task('collectTokens')
@@ -35,7 +16,7 @@ export class TokensTask {
   constructor(
     private sdkService: SdkService,
     @InjectRepository(TokensEntity)
-    private tokensRepository: Repository<TokensEntity>
+    private tokensRepository: Repository<TokensEntity>,
   ) {}
 
   /**
@@ -47,11 +28,7 @@ export class TokensTask {
   @TaskHandler()
   async handler(payload: TokenPayload, helpers: Helpers): Promise<void> {
     const { tokenId, collectionId, network } = payload;
-    const upsertDataToken: TokenDataForUpdate = await this.prepareTokenData(
-      collectionId,
-      tokenId,
-      network
-    );
+    const upsertDataToken: TokenDataForUpdate = await this.prepareTokenData(collectionId, tokenId, network);
     if (upsertDataToken) {
       await this.upsertTokens(upsertDataToken);
     }
@@ -64,11 +41,7 @@ export class TokensTask {
    * @param {Number} tokenId - token ID
    * @param {String} network - network chain
    */
-  async prepareTokenData(
-    collectionId: number,
-    tokenId: number,
-    network: string
-  ): Promise<TokenDataForUpdate> {
+  async prepareTokenData(collectionId: number, tokenId: number, network: string): Promise<TokenDataForUpdate> {
     if (tokenId === 0) {
       return;
     }
@@ -77,8 +50,7 @@ export class TokensTask {
       .then(async (token) => {
         let owners = [];
         if (token.owner !== null) {
-          owners = (await this.sdkService.getTokenOwners(collectionId, tokenId))
-            .human;
+          owners = (await this.sdkService.getTokenOwners(collectionId, tokenId)).human;
         } else {
           owners.push(`{ Substrate: ${token.owner} }`);
         }
@@ -109,9 +81,7 @@ export class TokensTask {
     const otherOwners = JSON.parse(JSON.stringify(token.tokenOwners));
     const owner_token = token.owner;
 
-    const nested =
-      JSON.parse(JSON.stringify(this.nestedCollectionAndToken(token.owner))) ||
-      {};
+    const nested = JSON.parse(JSON.stringify(this.nestedCollectionAndToken(token.owner))) || {};
 
     const data = JSON.parse(JSON.stringify(token));
 
@@ -131,18 +101,12 @@ export class TokensTask {
    * @param updateTokenData
    */
   async upsertTokens(updateTokenData) {
-    await this.tokensRepository.upsert(updateTokenData, [
-      'collectionId',
-      'tokenId',
-      'network',
-    ]);
+    await this.tokensRepository.upsert(updateTokenData, ['collectionId', 'tokenId', 'network']);
   }
 
   nestedCollectionAndToken(address) {
     if (Address.is.ethereumAddress(address)) {
-      return Address.is.nestingAddress(address)
-        ? Address.nesting.addressToIds(address)
-        : null;
+      return Address.is.nestingAddress(address) ? Address.nesting.addressToIds(address) : null;
     } else {
       return null;
     }

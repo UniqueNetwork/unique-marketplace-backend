@@ -24,7 +24,7 @@ export class CollectionsService {
     private tokensRepository: Repository<TokensEntity>,
 
     /** Graphile Worker */
-    private readonly graphileWorker: WorkerService
+    private readonly graphileWorker: WorkerService,
   ) {}
 
   /**
@@ -43,14 +43,8 @@ export class CollectionsService {
       ]);
       if (collection) {
         await this.addTaskForAddCollection({ collection, chain });
-        await this.addTaskForAddTokensList(
-          tokens.list,
-          collection.id,
-          chain.token
-        );
-        this.logger.log(
-          `Added a collection to work on schema: ${collection.id} and tokens: ${tokens.list.length}`
-        );
+        await this.addTaskForAddTokensList(tokens.list, collection.id, chain.token);
+        this.logger.log(`Added a collection to work on schema: ${collection.id} and tokens: ${tokens.list.length}`);
       } else {
         this.logger.warn('No found collection or destroyed');
       }
@@ -79,14 +73,16 @@ export class CollectionsService {
    * @private
    * @async
    */
-  private async addTaskForAddTokensList(
-    tokens: number[],
-    collectionId: number,
-    network: string
-  ) {
+  private async addTaskForAddTokensList(tokens: number[], collectionId: number, network: string) {
     if (tokens.length > 0) {
       tokens.map(async (token) => {
         await this.graphileWorker.addJob('collectTokens', {
+          tokenId: token,
+          collectionId,
+          network,
+        });
+
+        await this.graphileWorker.addJob('collectProperties', {
           tokenId: token,
           collectionId,
           network,
