@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 #
-message="$(cat $1)"
+#message="$(cat $1)"
 #requiredPattern="^((release\/v.*)|(SDK-.*)|((M|m)erge branch.*))$"
 #if ! [[ $message =~ $requiredPattern ]];
 #then
@@ -16,3 +16,4 @@ message="$(cat $1)"
 #  echo "For more information, check script in .husky/commit-msg"
 #  exit 1
 #fi
+npx --no -- commitlint --edit ${1}
