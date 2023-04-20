@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { CollectionInfoWithSchemaResponse, NestedToken, Sdk, TokenByIdResponse } from '@unique-nft/sdk/full';
-import { BundleType } from '../tasks/properties.task';
+import { BundleType } from '../tasks/task.types';
 
 export type ResponseTokenSchema = {
   rawType: string;
