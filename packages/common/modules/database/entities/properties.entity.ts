@@ -1,7 +1,7 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { TypeAttributToken } from '../../types';
 
-@Index('Search_index_locale', ['collectionId', 'tokenId', 'locale'])
+@Index('Search_index_locale', ['collection_id', 'token_id', 'locale'])
 @Index('List_items_inx', ['list_items'])
 @Index('Total_items_inx', ['total_items'])
 @Index('Keys_inx', ['key'])
@@ -11,10 +11,10 @@ export class PropertiesEntity {
   id: string;
 
   @Column('int', { name: 'collection_id' })
-  collectionId: number;
+  collection_id: number;
 
   @Column('int', { name: 'token_id' })
-  tokenId: number;
+  token_id: number;
 
   @Column('varchar', { name: 'network', length: 16 })
   network: string;

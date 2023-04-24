@@ -2,12 +2,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Config } from '../config';
-import {
-  ContractEntity,
-  OfferEntity,
-  OfferEventEntity,
-  SettingEntity,
-} from './entities';
+import { ContractEntity, OfferEntity, OfferEventEntity, ViewOffers, SettingEntity } from './entities';
 import {
   CollectionsTable1681108635456,
   ContractsTable1677511684518,
@@ -29,6 +24,7 @@ const entities = [
   ContractEntity,
   OfferEntity,
   OfferEventEntity,
+  ViewOffers,
   CollectionEntity,
   TokensEntity,
   PropertiesEntity,
@@ -48,15 +44,13 @@ function typeOrmModulesFactory(
   appendOptions: Pick<
     Partial<TypeOrmModuleOptions>,
     'migrations' | 'migrationsRun' | 'migrationsTransactionMode' | 'logger'
-  > = {}
+  > = {},
 ) {
   return [
     TypeOrmModule.forFeature(entities),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (
-        configService: ConfigService<Config>
-      ): TypeOrmModuleOptions => {
+      useFactory: (configService: ConfigService<Config>): TypeOrmModuleOptions => {
         return {
           ...configService.get('database'),
           entities,
