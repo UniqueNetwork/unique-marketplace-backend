@@ -1,18 +1,10 @@
-import {
-  Body,
-  Controller,
-  DefaultValuePipe,
-  Get, Param,
-  ParseIntPipe,
-  Post,
-  Query
-} from "@nestjs/common";
+import { Body, Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { OffersService } from './offers.service';
 import { readApiDocs } from '../utils/utils';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
-import { OffersDto } from './dto/offers.dto';
-import { OfferEntity } from "@app/common/modules/database";
+import { OffersDto, OffersFilter, OfferSortingRequest } from './dto/offers.dto';
+import { OfferEntity } from '@app/common/modules/database';
 
 @ApiTags('Offers')
 @Controller('offers')
@@ -28,23 +20,20 @@ export class OffersController {
   @ApiQuery({ name: 'pageSize', example: 10 })
   async get(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
-    @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe)
-    limit: number = 10
+    @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe) pageSize: number = 10,
+    @Query() offerFilter: OffersFilter,
+    @Query() sort: OfferSortingRequest,
   ) {
-    limit = limit > 100 ? 100 : limit;
-    return await this.offersService.getOffers({
-      page,
-      limit,
-    } as PaginationRouting);
+    const limit = pageSize > 100 ? 100 : pageSize;
+    const pagination = { page, limit } as PaginationRouting;
+    return await this.offersService.getOffers(offerFilter, pagination, sort);
   }
 
   @Get(':id')
   @ApiOperation({
     summary: 'Get offer by ID',
   })
-  getById(
-    @Param('id') id: string,
-  ): Promise<OfferEntity> {
+  getById(@Param('id') id: string): Promise<OfferEntity> {
     return this.offersService.getOfferById(id);
   }
 
