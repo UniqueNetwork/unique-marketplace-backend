@@ -90,8 +90,8 @@ export class PropertiesTask {
 
     const propertiesDataItems: PropertiesEntity[] = items.map((item) =>
       this.propertiesRepository.create({
-        collectionId: collectionToken.collectionId,
-        tokenId: collectionToken.tokenId,
+        collection_id: collectionToken.collectionId,
+        token_id: collectionToken.tokenId,
         network: collectionToken?.network,
         locale: item.locale,
         items: item.items,
