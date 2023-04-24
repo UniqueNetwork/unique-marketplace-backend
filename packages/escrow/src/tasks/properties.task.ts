@@ -67,7 +67,7 @@ export class PropertiesTask {
   async addSearchIndexIfNotExists(collectionToken: CollectionToken): Promise<any> {
     const { collectionId, tokenId, network } = collectionToken;
     const dbIndex = await this.propertiesRepository.find({
-      where: { collectionId, tokenId, network },
+      where: { collection_id: collectionId, token_id: tokenId, network },
     });
     if (dbIndex.length) return dbIndex;
     const searchIndexItems = await this.getTokenInfoItems(collectionToken);
