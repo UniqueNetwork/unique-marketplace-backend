@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { UniqueNFT, CrossAddress } from "@unique-nft/solidity-interfaces/contracts/UniqueNFT.sol";
 import "@unique-nft/solidity-interfaces/contracts/CollectionHelpers.sol";
 import "./utils.sol";
 
@@ -30,7 +31,7 @@ contract Market {
     uint32 public marketFee;
     address selfAddress;
     address ownerAddress;
-    bool marketPause;
+    mapping(address => bool) admins;
 
     event TokenIsUpForSale(uint32 version, Order item);
     event TokenRevoke(uint32 version, Order item, uint32 amount);
@@ -55,8 +56,8 @@ contract Market {
       _;
     }
 
-    modifier onlyNonPause() {
-      require(!marketPause, "Market on hold");
+    modifier onlyAdmin() {
+      require(msg.sender == ownerAddress || admins[msg.sender], "Only admin can");
       _;
     }
 
@@ -91,36 +92,15 @@ contract Market {
         return IERC721(collectionAddress);
     }
 
-    function onlyTokenOwner(
-        IERC721 erc721,
-        uint32 tokenId,
-        address seller
-    ) private view {
-        address realOwner = erc721.ownerOf(tokenId);
+    function getUniqueNFT(uint32 collectionId) private view returns (UniqueNFT) {
+      address collectionAddress = collectionHelpers.collectionAddress(
+        collectionId
+      );
 
-        if (realOwner != seller) {
-            revert SellerIsNotOwner();
-        }
+      UniqueNFT nft = UniqueNFT(collectionAddress);
+      return nft;
     }
 
-    function isApproved(IERC721 erc721, Order memory item) private {
-        // todo not implementable in chain
-        try erc721.getApproved(item.tokenId) returns (address approved) {
-            emit Log(
-                string.concat(
-                    "getApproved approved: ",
-                    utils.toString(approved)
-                )
-            );
-            if (approved != selfAddress) {
-                revert TokenIsNotApproved();
-            }
-        } catch Error(string memory reason) {
-            emit Log(string.concat("getApproved error: ", reason));
-        } catch {
-            emit Log(string.concat("getApproved error without reason"));
-        }
-    }
 
     // ################################################################
     // Set new contract owner                                         #
@@ -131,11 +111,19 @@ contract Market {
     }
 
     // ################################################################
-    // Set market pause                                               #
+    // Add new admin                                                  #
     // ################################################################
 
-    function setPause(bool pause) public onlyOwner {
-        marketPause = pause;
+    function addAdmin() public onlyAdmin {
+      admins[msg.sender] = true;
+    }
+
+    // ################################################################
+    // Remove admin                                                  #
+    // ################################################################
+
+    function removeAdmin() public onlyAdmin {
+      delete admins[msg.sender];
     }
 
     // ################################################################
@@ -147,20 +135,27 @@ contract Market {
         uint32 tokenId,
         uint256 price,
         uint32 amount
-    ) public onlyNonPause {
+    ) public {
         if (price == 0) {
           revert InvalidArgument("price must not be zero");
         }
         if (amount == 0) {
           revert InvalidArgument("amount must not be zero");
         }
+
         if (orders[collectionId][tokenId].price > 0) {
             revert TokenIsAlreadyOnSale();
         }
 
         IERC721 erc721 = getErc721(collectionId);
 
-        onlyTokenOwner(erc721, tokenId, msg.sender);
+      if (erc721.ownerOf(tokenId) != msg.sender) {
+        revert SellerIsNotOwner();
+      }
+
+        if (erc721.getApproved(tokenId) != selfAddress) {
+          revert TokenIsNotApproved();
+        }
 
         Order memory order = Order(
             0,
@@ -170,8 +165,6 @@ contract Market {
             price,
             payable(msg.sender)
         );
-
-        isApproved(erc721, order);
 
         order.id = idCount++;
         orders[collectionId][tokenId] = order;
@@ -187,10 +180,6 @@ contract Market {
         uint32 collectionId,
         uint32 tokenId
     ) external view returns (Order memory) {
-        if (orders[collectionId][tokenId].price == 0) {
-            revert OrderNotFound();
-        }
-
         return orders[collectionId][tokenId];
     }
 
@@ -207,17 +196,19 @@ contract Market {
           revert InvalidArgument("amount must not be zero");
         }
 
-        IERC721 erc721 = getErc721(collectionId);
-        onlyTokenOwner(erc721, tokenId, msg.sender);
-
         Order memory order = orders[collectionId][tokenId];
 
         if (order.price == 0) {
-            revert OrderNotFound();
+          revert OrderNotFound();
         }
 
         if (amount > order.amount) {
-            revert TooManyAmountRequested();
+          revert TooManyAmountRequested();
+        }
+
+        IERC721 erc721 = getErc721(collectionId);
+        if (erc721.ownerOf(tokenId) != order.seller) {
+          revert SellerIsNotOwner();
         }
 
         order.amount -= amount;
@@ -234,7 +225,7 @@ contract Market {
     // Check approved                                                 #
     // ################################################################
 
-    function checkApproved(uint32 collectionId, uint32 tokenId) public {
+    function checkApproved(uint32 collectionId, uint32 tokenId) public onlyAdmin {
         Order memory order = orders[collectionId][tokenId];
         if (order.price == 0) {
             revert OrderNotFound();
@@ -242,11 +233,13 @@ contract Market {
 
         IERC721 erc721 = getErc721(collectionId);
 
-        onlyTokenOwner(erc721, tokenId, order.seller);
+        if (erc721.ownerOf(tokenId) != order.seller || erc721.getApproved(tokenId) != selfAddress) {
+          emit TokenRevoke(version, order, order.amount);
 
-        isApproved(erc721, order);
-
-        emit TokenIsApproved(version, order);
+          delete orders[collectionId][tokenId];
+        } else {
+          emit TokenIsApproved(version, order);
+        }
     }
 
     // ################################################################
@@ -256,8 +249,10 @@ contract Market {
     function buy(
         uint32 collectionId,
         uint32 tokenId,
-        uint32 amount
-    ) public payable onlyNonPause {
+        uint32 amount,
+        address buyerEth,
+        uint256 buyerSub
+    ) public payable {
         if (msg.value == 0) {
           revert InvalidArgument("msg.value must not be zero");
         }
@@ -282,7 +277,9 @@ contract Market {
         }
 
         IERC721 erc721 = getErc721(order.collectionId);
-        isApproved(erc721, order);
+        if (erc721.ownerOf(tokenId) != order.seller || erc721.getApproved(tokenId) != selfAddress) {
+          revert TokenIsNotApproved();
+        }
 
         order.amount -= amount;
         if (order.amount == 0) {
@@ -291,13 +288,12 @@ contract Market {
             orders[collectionId][tokenId] = order;
         }
 
-        try
-            erc721.transferFrom(order.seller, msg.sender, order.tokenId)
-        {} catch Error(string memory reason) {
-            revert FailTransferToken(reason);
-        } catch {
-            revert FailTransferToken("without reason");
-        }
+        UniqueNFT nft = getUniqueNFT(order.collectionId);
+        nft.transferFromCross(
+          CrossAddress(order.seller, 0),
+          CrossAddress(buyerEth, buyerSub),
+          order.tokenId
+        );
 
         order.seller.transfer(totalValue - feeValue);
         if (msg.value > totalValue) {

@@ -3,9 +3,9 @@ import { Address } from '@unique-nft/utils';
 import { KeyringAccount, KeyringProvider } from '@unique-nft/accounts/keyring';
 import { UniqueNFTFactory } from '@unique-nft/solidity-interfaces';
 import { Sdk } from '@unique-nft/sdk/full';
+import * as fs from 'fs';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { loadConfig } from '../scripts';
-import * as fs from 'fs';
 
 export async function createSdk() {
   const appConfig = loadConfig();
@@ -63,15 +63,12 @@ export async function getCollectionData(sdk: Sdk): Promise<TestData> {
       return data;
     } catch (err) {
       console.log('err', err);
+      throw err;
     }
   }
 }
 
-async function createNft(
-  sdk: Sdk,
-  address: string,
-  owner: string
-): Promise<TokenData> {
+async function createNft(sdk: Sdk, address: string, owner: string): Promise<TokenData> {
   const collectionRes = await sdk.collections.create.submitWaitResult({
     address,
     name: 'test',
@@ -99,11 +96,7 @@ async function createNft(
   };
 }
 
-async function createRft(
-  sdk: Sdk,
-  address: string,
-  owner: string
-): Promise<TokenData> {
+async function createRft(sdk: Sdk, address: string, owner: string): Promise<TokenData> {
   const collectionRes = await sdk.refungible.createCollection.submitWaitResult({
     address,
     name: 'test',
@@ -167,11 +160,7 @@ export function getKeyringAccount(): Promise<KeyringAccount> {
   return KeyringProvider.fromMnemonic(seed);
 }
 
-export async function getAccounts(
-  sdk: Sdk,
-  collectionId: number,
-  tokenId: number
-) {
+export async function getAccounts(sdk: Sdk, collectionId: number, tokenId: number) {
   const [account1, account2] = await ethers.getSigners();
 
   const tokenOwner = await sdk.tokens.owner({
@@ -179,12 +168,13 @@ export async function getAccounts(
     tokenId,
   });
 
-  const isOwner1 =
-    tokenOwner?.owner.toLowerCase() === account1.address.toLowerCase();
+  const isOwner1 = tokenOwner?.owner.toLowerCase() === account1.address.toLowerCase();
 
-  const ownerAccount: SignerWithAddress = isOwner1 ? account1 : account2;
+  const ownerAccount = account1;
 
-  const otherAccount: SignerWithAddress = isOwner1 ? account2 : account1;
+  const sellAccount: SignerWithAddress = isOwner1 ? account1 : account2;
 
-  return { ownerAccount, otherAccount };
+  const buyAccount: SignerWithAddress = isOwner1 ? account2 : account1;
+
+  return { ownerAccount, sellAccount, buyAccount };
 }
