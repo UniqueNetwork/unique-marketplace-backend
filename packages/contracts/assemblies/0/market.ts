@@ -57,37 +57,42 @@ export declare namespace Market {
 
 export interface MarketInterface extends utils.Interface {
   functions: {
-    "buy(uint32,uint32,uint32)": FunctionFragment;
+    "addAdmin()": FunctionFragment;
+    "buy(uint32,uint32,uint32,address,uint256)": FunctionFragment;
     "checkApproved(uint32,uint32)": FunctionFragment;
     "getOrder(uint32,uint32)": FunctionFragment;
     "marketFee()": FunctionFragment;
     "put(uint32,uint32,uint256,uint32)": FunctionFragment;
+    "removeAdmin()": FunctionFragment;
     "revoke(uint32,uint32,uint32)": FunctionFragment;
     "setOwner()": FunctionFragment;
-    "setPause(bool)": FunctionFragment;
     "version()": FunctionFragment;
     "withdraw(address)": FunctionFragment;
   };
 
   getFunction(
     nameOrSignatureOrTopic:
+      | "addAdmin"
       | "buy"
       | "checkApproved"
       | "getOrder"
       | "marketFee"
       | "put"
+      | "removeAdmin"
       | "revoke"
       | "setOwner"
-      | "setPause"
       | "version"
       | "withdraw"
   ): FunctionFragment;
 
+  encodeFunctionData(functionFragment: "addAdmin", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "buy",
     values: [
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<string>,
       PromiseOrValue<BigNumberish>
     ]
   ): string;
@@ -110,6 +115,10 @@ export interface MarketInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
+    functionFragment: "removeAdmin",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "revoke",
     values: [
       PromiseOrValue<BigNumberish>,
@@ -118,16 +127,13 @@ export interface MarketInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(functionFragment: "setOwner", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "setPause",
-    values: [PromiseOrValue<boolean>]
-  ): string;
   encodeFunctionData(functionFragment: "version", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "withdraw",
     values: [PromiseOrValue<string>]
   ): string;
 
+  decodeFunctionResult(functionFragment: "addAdmin", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "checkApproved",
@@ -136,9 +142,12 @@ export interface MarketInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "getOrder", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "marketFee", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "put", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "removeAdmin",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "revoke", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "setOwner", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "setPause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "version", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
@@ -239,10 +248,16 @@ export interface Market extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    addAdmin(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
+      buyerEth: PromiseOrValue<string>,
+      buyerSub: PromiseOrValue<BigNumberish>,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -268,6 +283,10 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    removeAdmin(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     revoke(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -279,11 +298,6 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    setPause(
-      pause: PromiseOrValue<boolean>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
     version(overrides?: CallOverrides): Promise<[number]>;
 
     withdraw(
@@ -292,10 +306,16 @@ export interface Market extends BaseContract {
     ): Promise<ContractTransaction>;
   };
 
+  addAdmin(
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   buy(
     collectionId: PromiseOrValue<BigNumberish>,
     tokenId: PromiseOrValue<BigNumberish>,
     amount: PromiseOrValue<BigNumberish>,
+    buyerEth: PromiseOrValue<string>,
+    buyerSub: PromiseOrValue<BigNumberish>,
     overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -321,6 +341,10 @@ export interface Market extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  removeAdmin(
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   revoke(
     collectionId: PromiseOrValue<BigNumberish>,
     tokenId: PromiseOrValue<BigNumberish>,
@@ -332,11 +356,6 @@ export interface Market extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  setPause(
-    pause: PromiseOrValue<boolean>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   version(overrides?: CallOverrides): Promise<number>;
 
   withdraw(
@@ -345,10 +364,14 @@ export interface Market extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    addAdmin(overrides?: CallOverrides): Promise<void>;
+
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
+      buyerEth: PromiseOrValue<string>,
+      buyerSub: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -374,6 +397,8 @@ export interface Market extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    removeAdmin(overrides?: CallOverrides): Promise<void>;
+
     revoke(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -382,11 +407,6 @@ export interface Market extends BaseContract {
     ): Promise<void>;
 
     setOwner(overrides?: CallOverrides): Promise<void>;
-
-    setPause(
-      pause: PromiseOrValue<boolean>,
-      overrides?: CallOverrides
-    ): Promise<void>;
 
     version(overrides?: CallOverrides): Promise<number>;
 
@@ -436,10 +456,16 @@ export interface Market extends BaseContract {
   };
 
   estimateGas: {
+    addAdmin(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
+      buyerEth: PromiseOrValue<string>,
+      buyerSub: PromiseOrValue<BigNumberish>,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -465,6 +491,10 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    removeAdmin(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     revoke(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -473,11 +503,6 @@ export interface Market extends BaseContract {
     ): Promise<BigNumber>;
 
     setOwner(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setPause(
-      pause: PromiseOrValue<boolean>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -490,10 +515,16 @@ export interface Market extends BaseContract {
   };
 
   populateTransaction: {
+    addAdmin(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
+      buyerEth: PromiseOrValue<string>,
+      buyerSub: PromiseOrValue<BigNumberish>,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -519,6 +550,10 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    removeAdmin(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
     revoke(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -527,11 +562,6 @@ export interface Market extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     setOwner(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setPause(
-      pause: PromiseOrValue<boolean>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
