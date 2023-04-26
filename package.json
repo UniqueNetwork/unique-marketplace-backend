@@ -1,6 +1,6 @@
 {
   "name": "unique-marketplace-backend",
-  "version": "3.0.58",
+  "version": "3.0.60",
   "description": "Backend project for unique marketplace",
   "author": "Unique Network",
   "private": true,
@@ -71,7 +71,7 @@
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.5.0",
     "typeorm": "^0.3.12",
-    "web3": "^0.20.7"
+    "web3": "^1.8.2"
   },
   "lint-staged": {
     "*.ts": "npm run lint:fix"
