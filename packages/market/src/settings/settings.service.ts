@@ -11,6 +11,7 @@ import { OmitType } from '@nestjs/swagger';
 interface CollectionDataDescription {
   mode: string;
   name: string;
+  id: number;
   description: string;
   tokenPrefix: string;
   owner: string;
@@ -77,8 +78,8 @@ export class SettingsService {
     const collectionMap = new Map();
     collestions.map((elem) => {
       const { allowedTokens, data } = elem;
+      console.dir({ elem }, { depth: 10 });
       const collectionDescription = this.collectionDataTransformation(data);
-      console.dir(collectionDescription, { depth: 1 });
       collectionMap.set(elem.collectionId, { allowedTokens: elem.allowedTokens, description: collectionDescription });
     });
     return Object.fromEntries(collectionMap);
@@ -90,8 +91,8 @@ export class SettingsService {
    */
   collectionDataTransformation(data): CollectionDataDescription {
     delete data.schema.attributesSchema;
-    const { mode, name, description, owner, tokenPrefix, readOnly, schema } = data;
-    return { name, description, tokenPrefix, mode, owner, readOnly, schema };
+    const { id, mode, name, description, owner, tokenPrefix, readOnly, schema } = data;
+    return { id, name, description, tokenPrefix, mode, owner, readOnly, schema };
   }
 
   /**

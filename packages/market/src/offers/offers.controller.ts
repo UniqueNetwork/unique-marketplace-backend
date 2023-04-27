@@ -1,9 +1,20 @@
-import { Body, Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Get,
+  HttpStatus,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { OffersService } from './offers.service';
 import { readApiDocs } from '../utils/utils';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
-import { OffersDto, OffersFilter, OfferSortingRequest } from './dto/offers.dto';
+import { OfferEntityDto, OffersDto, OffersFilter, OfferSortingRequest } from './dto/offers.dto';
 import { OfferEntity } from '@app/common/modules/database';
 
 @ApiTags('Offers')
@@ -37,18 +48,23 @@ export class OffersController {
     return this.offersService.getOfferById(id);
   }
 
-  @Get(':collectionId/:tokenId')
+  @Get('/:collectionId/:tokenId')
   @ApiOperation({
-    summary: 'Get offer by CollectionId and TokeId',
+    summary: 'Get one offer',
+    description: readApiDocs('offers-get.md'),
   })
-  getByCollectionIdAndTokenId(
-    @Param('collectionId') collectionId: string,
-    @Param('tokenId') tokenId: string,
-  ): Promise<OfferEntity[]> {
-    return this.offersService.getOffersByCursor({
-      collectionId: Number(collectionId),
-      tokenId: Number(tokenId),
-    });
+  @ApiResponse({ type: OfferEntityDto, status: HttpStatus.OK })
+  async getOneOffer(
+    @Param('collectionId', ParseIntPipe) collectionId: number,
+    @Param('tokenId', ParseIntPipe) tokenId: number,
+  ): Promise<OfferEntityDto> {
+    const offer = await this.offersService.getOne({ collectionId, tokenId });
+
+    if (offer) {
+      return offer;
+    } else {
+      throw new NotFoundException(`No active offer for collection ${collectionId}, token ${tokenId}`);
+    }
   }
 
   @Post('/test_create')
