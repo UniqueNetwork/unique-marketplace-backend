@@ -240,7 +240,6 @@ export class OfferEntityDto {
       creationAt: offersData.created_at,
       status: offersData.offerStatus,
     };
-    console.dir({ offersData }, { depth: 10 });
 
     return plainToInstance<OfferEntityDto, Record<string, any>>(OfferEntityDto, plain, {
       excludeExtraneousValues: true,

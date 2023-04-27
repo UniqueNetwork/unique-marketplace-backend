@@ -335,7 +335,9 @@ export class ViewOffersService {
   }
 
   public async filterByOne(collectionId: number, tokenId: number): Promise<any> {
-    let queryFilter = this.connection.manager.createQueryBuilder(ViewOffers, 'v_offers_search');
+    let queryFilter = this.viewOffersRepository
+      .createQueryBuilder('v_offers_search')
+      .where({ collection_id: collectionId, token_id: tokenId });
     //const bundle = await this.bundle(collectionId, tokenId);
     // queryFilter = this.byCollectionTokenId(queryFilter, bundle.collectionId, bundle.tokenId);
     queryFilter = this.prepareQuery(queryFilter);

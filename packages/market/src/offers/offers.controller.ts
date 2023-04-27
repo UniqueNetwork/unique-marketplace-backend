@@ -59,7 +59,6 @@ export class OffersController {
     @Param('tokenId', ParseIntPipe) tokenId: number,
   ): Promise<OfferEntityDto> {
     const offer = await this.offersService.getOne({ collectionId, tokenId });
-
     if (offer) {
       return offer;
     } else {

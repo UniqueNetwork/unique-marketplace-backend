@@ -78,7 +78,6 @@ export class SettingsService {
     const collectionMap = new Map();
     collestions.map((elem) => {
       const { allowedTokens, data } = elem;
-      console.dir({ elem }, { depth: 10 });
       const collectionDescription = this.collectionDataTransformation(data);
       collectionMap.set(elem.collectionId, { allowedTokens: elem.allowedTokens, description: collectionDescription });
     });
