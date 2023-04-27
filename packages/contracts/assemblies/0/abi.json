@@ -307,6 +307,13 @@
     "type": "event"
   },
   {
+    "inputs": [],
+    "name": "addAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint32",
@@ -322,6 +329,16 @@
         "internalType": "uint32",
         "name": "amount",
         "type": "uint32"
+      },
+      {
+        "internalType": "address",
+        "name": "buyerEth",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "buyerSub",
+        "type": "uint256"
       }
     ],
     "name": "buy",
@@ -445,6 +462,13 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "removeAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint32",
@@ -470,19 +494,6 @@
   {
     "inputs": [],
     "name": "setOwner",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "pause",
-        "type": "bool"
-      }
-    ],
-    "name": "setPause",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
