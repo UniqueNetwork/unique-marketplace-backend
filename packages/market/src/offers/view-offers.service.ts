@@ -334,13 +334,13 @@ export class ViewOffersService {
       .andWhere('v_offers_search.offer_status in (:...status)', { status: ['active', 'removed_by_admin'] });
   }
 
-  public async filterByOne(collectionId: number, tokenId: number, options: IPaginationOptions): Promise<any> {
-    let queryFilter = this.viewOffersRepository.createQueryBuilder('v_offers_search');
-    const bundle = await this.bundle(collectionId, tokenId);
-    queryFilter = this.byCollectionTokenId(queryFilter, bundle.collectionId, bundle.tokenId);
+  public async filterByOne(collectionId: number, tokenId: number): Promise<any> {
+    let queryFilter = this.connection.manager.createQueryBuilder(ViewOffers, 'v_offers_search');
+    //const bundle = await this.bundle(collectionId, tokenId);
+    // queryFilter = this.byCollectionTokenId(queryFilter, bundle.collectionId, bundle.tokenId);
     queryFilter = this.prepareQuery(queryFilter);
-
-    const items = await paginate(queryFilter, options);
+    const itemQuery = this.pagination(queryFilter, { page: 1, pageSize: 1 });
+    const items = await itemQuery.query.getRawMany();
     return items;
   }
 

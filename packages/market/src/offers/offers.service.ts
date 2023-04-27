@@ -53,6 +53,13 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     return [...new Set(items.map((item) => +item.collection_id))].filter((id) => id !== null && id !== 0);
   }
 
+  /**
+   * `Show all Offers with filters`
+   * Returns all offers with descriptions of tokens, collection schemes and attributes by tokens
+   * @param {OffersFilter} searchOptions - Search options
+   * @param {PaginationRequest} pagination - Pagination request page and pageSize
+   * @param sort
+   */
   async getOffers(searchOptions: OffersFilter, pagination: PaginationRequest, sort): Promise<any> {
     let offers;
     let items = [];
@@ -76,7 +83,7 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
       });
     }
 
-    const result = new PaginationResultDto(OfferEntityDto, {
+    return new PaginationResultDto(OfferEntityDto, {
       page: offers.page,
       pageSize: offers.pageSize,
       itemsCount: offers.itemsCount,
@@ -84,8 +91,19 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
       attributes: offers.attributes as Array<TraitDto>,
       attributesCount: offers.attributesCount,
     });
+  }
 
-    return result;
+  async getOne(filter: { collectionId: number; tokenId: number }): Promise<OfferEntityDto | null> {
+    const { collectionId, tokenId } = filter;
+
+    const source = await this.viewOffersService.filterByOne(collectionId, tokenId);
+
+    const searchIndex = await this.searchIndex(this.parserCollectionIdTokenId(source));
+    const collections = await this.collections(this.getCollectionIds(source));
+
+    const offers = this.parseItems(source, searchIndex, collections).pop() as any as ViewOffers;
+
+    return offers && OfferEntityDto.fromOffersEntity(offers);
   }
 
   private parserCollectionIdTokenId(items: Array<any>): string | null {
