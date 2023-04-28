@@ -18,6 +18,7 @@ import { TokensEntity } from './entities/tokens.entity';
 import { PropertiesEntity } from './entities/properties.entity';
 import { TokensTable1681310408111 } from './migrations/1681310408111-TokensTable';
 import { PropertiesTable1681310408929 } from './migrations/1681310408929-PropertiesTable';
+import { ViewOffers1682699159580 } from './migrations/1682699159580-ViewOffers';
 
 const entities = [
   SettingEntity,
@@ -38,6 +39,7 @@ const migrations = [
   CollectionsTable1681108635456,
   TokensTable1681310408111,
   PropertiesTable1681310408929,
+  ViewOffers1682699159580,
 ];
 
 function typeOrmModulesFactory(
