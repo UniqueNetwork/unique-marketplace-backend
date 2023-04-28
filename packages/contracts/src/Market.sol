@@ -16,7 +16,7 @@ contract Market {
       uint32 tokenId;
       uint32 amount;
       uint256 price;
-      address payable seller;
+      CrossAddress seller;
     }
 
     uint32 public constant version = 1;
@@ -58,6 +58,18 @@ contract Market {
 
     modifier onlyAdmin() {
       require(msg.sender == ownerAddress || admins[msg.sender], "Only admin can");
+      _;
+    }
+
+    modifier validCrossAddress(address eth, uint256 sub) {
+      if (eth == address(0) && sub == 0) {
+        revert InvalidArgument("Ethereum and Substrate addresses cannot be null at the same time");
+      }
+
+      if (eth != address(0) && sub != 0) {
+        revert InvalidArgument("Ethereum and Substrate addresses cannot be not null at the same time");
+      }
+
       _;
     }
 
@@ -134,8 +146,9 @@ contract Market {
         uint32 collectionId,
         uint32 tokenId,
         uint256 price,
-        uint32 amount
-    ) public {
+        uint32 amount,
+        CrossAddress memory seller
+    ) public validCrossAddress(seller.eth, seller.sub) {
         if (price == 0) {
           revert InvalidArgument("price must not be zero");
         }
@@ -149,9 +162,9 @@ contract Market {
 
         IERC721 erc721 = getErc721(collectionId);
 
-      if (erc721.ownerOf(tokenId) != msg.sender) {
-        revert SellerIsNotOwner();
-      }
+        if (erc721.ownerOf(tokenId) != msg.sender) {
+          revert SellerIsNotOwner();
+        }
 
         if (erc721.getApproved(tokenId) != selfAddress) {
           revert TokenIsNotApproved();
@@ -163,7 +176,7 @@ contract Market {
             tokenId,
             amount,
             price,
-            payable(msg.sender)
+            seller
         );
 
         order.id = idCount++;
@@ -207,8 +220,12 @@ contract Market {
         }
 
         IERC721 erc721 = getErc721(collectionId);
-        if (erc721.ownerOf(tokenId) != order.seller) {
-          revert SellerIsNotOwner();
+        if (order.seller.eth != address(0)) {
+          if (erc721.ownerOf(tokenId) != order.seller.eth) {
+            revert SellerIsNotOwner();
+          }
+        } else {
+          // todo check mirror of order.seller.sub
         }
 
         order.amount -= amount;
@@ -233,7 +250,7 @@ contract Market {
 
         IERC721 erc721 = getErc721(collectionId);
 
-        if (erc721.ownerOf(tokenId) != order.seller || erc721.getApproved(tokenId) != selfAddress) {
+        if (erc721.getApproved(tokenId) != selfAddress) {
           emit TokenRevoke(version, order, order.amount);
 
           delete orders[collectionId][tokenId];
@@ -250,9 +267,8 @@ contract Market {
         uint32 collectionId,
         uint32 tokenId,
         uint32 amount,
-        address buyerEth,
-        uint256 buyerSub
-    ) public payable {
+        CrossAddress memory buyer
+    ) public payable validCrossAddress(buyer.eth, buyer.sub) {
         if (msg.value == 0) {
           revert InvalidArgument("msg.value must not be zero");
         }
@@ -277,7 +293,7 @@ contract Market {
         }
 
         IERC721 erc721 = getErc721(order.collectionId);
-        if (erc721.ownerOf(tokenId) != order.seller || erc721.getApproved(tokenId) != selfAddress) {
+        if (erc721.getApproved(tokenId) != selfAddress) {
           revert TokenIsNotApproved();
         }
 
@@ -290,12 +306,19 @@ contract Market {
 
         UniqueNFT nft = getUniqueNFT(order.collectionId);
         nft.transferFromCross(
-          CrossAddress(order.seller, 0),
-          CrossAddress(buyerEth, buyerSub),
+          order.seller,
+          buyer,
           order.tokenId
         );
 
-        order.seller.transfer(totalValue - feeValue);
+        address payable eth;
+        if (order.seller.eth != address(0)) {
+          eth = payable(order.seller.eth);
+        } else {
+          eth = payable(address(uint160(order.seller.sub >> 96)));
+        }
+        eth.transfer(totalValue - feeValue);
+
         if (msg.value > totalValue) {
             payable(msg.sender).transfer(msg.value - totalValue);
         }

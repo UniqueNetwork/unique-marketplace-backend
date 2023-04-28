@@ -28,6 +28,16 @@ import type {
   PromiseOrValue,
 } from '../../scripts/common-types';
 
+export type CrossAddressStruct = {
+  eth: PromiseOrValue<string>;
+  sub: PromiseOrValue<BigNumberish>;
+};
+
+export type CrossAddressStructOutput = [string, BigNumber] & {
+  eth: string;
+  sub: BigNumber;
+};
+
 export declare namespace Market {
   export type OrderStruct = {
     id: PromiseOrValue<BigNumberish>;
@@ -35,7 +45,7 @@ export declare namespace Market {
     tokenId: PromiseOrValue<BigNumberish>;
     amount: PromiseOrValue<BigNumberish>;
     price: PromiseOrValue<BigNumberish>;
-    seller: PromiseOrValue<string>;
+    seller: CrossAddressStruct;
   };
 
   export type OrderStructOutput = [
@@ -44,25 +54,25 @@ export declare namespace Market {
     number,
     number,
     BigNumber,
-    string
+    CrossAddressStructOutput
   ] & {
     id: number;
     collectionId: number;
     tokenId: number;
     amount: number;
     price: BigNumber;
-    seller: string;
+    seller: CrossAddressStructOutput;
   };
 }
 
 export interface MarketInterface extends utils.Interface {
   functions: {
     "addAdmin()": FunctionFragment;
-    "buy(uint32,uint32,uint32,address,uint256)": FunctionFragment;
+    "buy(uint32,uint32,uint32,(address,uint256))": FunctionFragment;
     "checkApproved(uint32,uint32)": FunctionFragment;
     "getOrder(uint32,uint32)": FunctionFragment;
     "marketFee()": FunctionFragment;
-    "put(uint32,uint32,uint256,uint32)": FunctionFragment;
+    "put(uint32,uint32,uint256,uint32,(address,uint256))": FunctionFragment;
     "removeAdmin()": FunctionFragment;
     "revoke(uint32,uint32,uint32)": FunctionFragment;
     "setOwner()": FunctionFragment;
@@ -92,8 +102,7 @@ export interface MarketInterface extends utils.Interface {
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>
+      CrossAddressStruct
     ]
   ): string;
   encodeFunctionData(
@@ -111,7 +120,8 @@ export interface MarketInterface extends utils.Interface {
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
+      PromiseOrValue<BigNumberish>,
+      CrossAddressStruct
     ]
   ): string;
   encodeFunctionData(
@@ -256,8 +266,7 @@ export interface Market extends BaseContract {
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
-      buyerEth: PromiseOrValue<string>,
-      buyerSub: PromiseOrValue<BigNumberish>,
+      buyer: CrossAddressStruct,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -280,6 +289,7 @@ export interface Market extends BaseContract {
       tokenId: PromiseOrValue<BigNumberish>,
       price: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
+      seller: CrossAddressStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -314,8 +324,7 @@ export interface Market extends BaseContract {
     collectionId: PromiseOrValue<BigNumberish>,
     tokenId: PromiseOrValue<BigNumberish>,
     amount: PromiseOrValue<BigNumberish>,
-    buyerEth: PromiseOrValue<string>,
-    buyerSub: PromiseOrValue<BigNumberish>,
+    buyer: CrossAddressStruct,
     overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -338,6 +347,7 @@ export interface Market extends BaseContract {
     tokenId: PromiseOrValue<BigNumberish>,
     price: PromiseOrValue<BigNumberish>,
     amount: PromiseOrValue<BigNumberish>,
+    seller: CrossAddressStruct,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -370,8 +380,7 @@ export interface Market extends BaseContract {
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
-      buyerEth: PromiseOrValue<string>,
-      buyerSub: PromiseOrValue<BigNumberish>,
+      buyer: CrossAddressStruct,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -394,6 +403,7 @@ export interface Market extends BaseContract {
       tokenId: PromiseOrValue<BigNumberish>,
       price: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
+      seller: CrossAddressStruct,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -464,8 +474,7 @@ export interface Market extends BaseContract {
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
-      buyerEth: PromiseOrValue<string>,
-      buyerSub: PromiseOrValue<BigNumberish>,
+      buyer: CrossAddressStruct,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -488,6 +497,7 @@ export interface Market extends BaseContract {
       tokenId: PromiseOrValue<BigNumberish>,
       price: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
+      seller: CrossAddressStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -523,8 +533,7 @@ export interface Market extends BaseContract {
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
-      buyerEth: PromiseOrValue<string>,
-      buyerSub: PromiseOrValue<BigNumberish>,
+      buyer: CrossAddressStruct,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -547,6 +556,7 @@ export interface Market extends BaseContract {
       tokenId: PromiseOrValue<BigNumberish>,
       price: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
+      seller: CrossAddressStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

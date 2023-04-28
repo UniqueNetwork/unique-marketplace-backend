@@ -12,7 +12,7 @@ export class OfferEventsTable1679993242288 implements MigrationInterface {
             isPrimary: true,
             default: 'uuid_generate_v4()',
           },
-          { name: 'offer_id', type: 'integer' },
+          { name: 'offer_id', type: 'uuid' },
           {
             name: 'event_type',
             type: 'varchar',
@@ -32,7 +32,7 @@ export class OfferEventsTable1679993242288 implements MigrationInterface {
             onUpdate: 'CURRENT_TIMESTAMP',
           },
         ],
-      })
+      }),
     );
   }
 

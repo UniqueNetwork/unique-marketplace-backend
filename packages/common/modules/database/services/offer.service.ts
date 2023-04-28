@@ -10,7 +10,7 @@ import { OfferStatus } from '../../types';
 export class OfferService {
   constructor(
     @InjectRepository(OfferEntity)
-    private offerEntityRepository: Repository<OfferEntity>
+    private offerEntityRepository: Repository<OfferEntity>,
   ) {}
 
   async delete(id: string) {
@@ -19,11 +19,7 @@ export class OfferService {
     });
   }
 
-  async update(
-    contract: ContractEntity,
-    order: Market.OrderStructOutput,
-    status: OfferStatus
-  ): Promise<OfferEntity | null> {
+  async update(contract: ContractEntity, order: Market.OrderStructOutput, status: OfferStatus): Promise<OfferEntity | null> {
     let offer = await this.offerEntityRepository.findOne({
       where: {
         orderId: order.id,
@@ -35,12 +31,14 @@ export class OfferService {
         return null;
       }
 
+      const isEthereumSeller = order.seller.eth && order.seller.eth != '0x0000000000000000000000000000000000000000';
+
       offer = this.offerEntityRepository.create();
       offer.id = uuid();
       offer.orderId = order.id;
       offer.collectionId = order.collectionId;
       offer.tokenId = order.tokenId;
-      offer.seller = order.seller;
+      offer.seller = isEthereumSeller ? order.seller.eth : order.seller.sub.toHexString();
       offer.status = OfferStatus.Opened;
     } else {
       offer.status = status;
@@ -56,10 +54,7 @@ export class OfferService {
     return offer;
   }
 
-  async find(
-    collectionId: number,
-    tokenId: number
-  ): Promise<OfferEntity | null> {
+  async find(collectionId: number, tokenId: number): Promise<OfferEntity | null> {
     return this.offerEntityRepository.findOne({
       where: {
         collectionId,
