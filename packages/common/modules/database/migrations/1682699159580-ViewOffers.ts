@@ -11,7 +11,7 @@ export class ViewOffers1682699159580 implements MigrationInterface {
     offer.price_parsed AS offer_price_parsed,
     offer.price_raw AS offer_price_raw,
     offer.seller AS offer_seller,
-    offer.created_at AS offer_ceated_at,
+    offer.created_at AS offer_created_at,
     offer.updated_at AS offer_updated_at,
     properties_filter.collection_id,
     properties_filter.network,
