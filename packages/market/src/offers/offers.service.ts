@@ -179,7 +179,7 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
             si.collection_id,
             si.token_id,
             si.attributes
-        from properties si  inner join (${sqlValues}) t on
+        from new_properties si  inner join (${sqlValues}) t on
         t.collection_id = si.collection_id and
         t.token_id = si.token_id;`,
       );
