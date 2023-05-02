@@ -1,11 +1,12 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { TokensEntity } from "../entities/tokens.entity";
 
 export class TokensTable1681310408111 implements MigrationInterface {
   name: 'TokensTable1681310408111';
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.createTable(
       new Table({
-        name: 'tokens',
+        name: queryRunner.manager.getRepository(TokensEntity).metadata.tableName,
         columns: [
           {
             name: 'id',
@@ -89,6 +90,6 @@ export class TokensTable1681310408111 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.dropTable('tokens');
+    await queryRunner.dropTable(queryRunner.manager.getRepository(TokensEntity).metadata.tableName);
   }
 }

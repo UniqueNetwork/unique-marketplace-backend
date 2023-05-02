@@ -7,4 +7,5 @@ export const loadDatabaseConfig = (): PostgresConnectionOptions => ({
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DATABASE,
+  entityPrefix: 'new_',
 });

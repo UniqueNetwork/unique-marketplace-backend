@@ -1,10 +1,11 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { SettingEntity } from "../entities";
 
 export class SettingsTable1677511684518 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.createTable(
       new Table({
-        name: 'settings',
+        name: queryRunner.manager.getRepository(SettingEntity).metadata.tableName,
         columns: [
           {
             name: 'key',
@@ -20,6 +21,6 @@ export class SettingsTable1677511684518 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.dropTable('settings');
+    await queryRunner.dropTable(queryRunner.manager.getRepository(SettingEntity).metadata.tableName);
   }
 }

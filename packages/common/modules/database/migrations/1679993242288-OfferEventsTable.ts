@@ -1,10 +1,11 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { OfferEventEntity } from "../entities";
 
 export class OfferEventsTable1679993242288 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.createTable(
       new Table({
-        name: 'offer-events',
+        name: queryRunner.manager.getRepository(OfferEventEntity).metadata.tableName,
         columns: [
           {
             name: 'id',
@@ -38,6 +39,6 @@ export class OfferEventsTable1679993242288 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.dropTable('contracts');
+    await queryRunner.dropTable(queryRunner.manager.getRepository(OfferEventEntity).metadata.tableName);
   }
 }
