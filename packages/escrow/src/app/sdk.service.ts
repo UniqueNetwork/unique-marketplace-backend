@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
-import { CollectionInfoWithSchemaResponse, NestedToken, Sdk, TokenByIdResponse } from '@unique-nft/sdk/full';
+import {
+  ChainPropertiesResponse,
+  CollectionInfoWithSchemaResponse,
+  NestedToken,
+  Sdk,
+  TokenByIdResponse,
+} from '@unique-nft/sdk/full';
 import { BundleType } from '../tasks/task.types';
 
 export type ResponseTokenSchema = {
@@ -144,7 +150,7 @@ export class SdkService {
     return await this.sdk.tokens.get({ collectionId, tokenId, at });
   }
 
-  async getChainProperties(): Promise<any> {
+  async getChainProperties(): Promise<ChainPropertiesResponse> {
     return this.sdk.common.chainProperties();
   }
 }
