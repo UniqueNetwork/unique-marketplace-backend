@@ -5,6 +5,7 @@ import { v4 as uuid } from 'uuid';
 import { ContractEntity, OfferEntity } from '../entities';
 import { Market } from '@app/contracts/assemblies/0/market';
 import { OfferStatus } from '../../types';
+import { ChainPropertiesResponse } from '@unique-nft/sdk/full';
 
 @Injectable()
 export class OfferService {
@@ -19,7 +20,12 @@ export class OfferService {
     });
   }
 
-  async update(contract: ContractEntity, order: Market.OrderStructOutput, status: OfferStatus): Promise<OfferEntity | null> {
+  async update(
+    contract: ContractEntity,
+    order: Market.OrderStructOutput,
+    status: OfferStatus,
+    chain?: ChainPropertiesResponse,
+  ): Promise<OfferEntity | null> {
     let offer = await this.offerEntityRepository.findOne({
       where: {
         orderId: order.id,
@@ -44,7 +50,7 @@ export class OfferService {
       offer.status = status;
     }
 
-    offer.priceParsed = order.price.toBigInt();
+    offer.priceParsed = order.price.toBigInt() / 10n ** 18n;
     offer.priceRaw = order.price.toString();
     offer.amount = order.amount;
     offer.contract = contract;

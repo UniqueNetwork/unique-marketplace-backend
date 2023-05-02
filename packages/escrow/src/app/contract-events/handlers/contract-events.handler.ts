@@ -11,21 +11,14 @@ import {
   TokenRevokeEventObject,
 } from '@app/contracts/assemblies/0/market';
 import { OfferEventType, OfferStatus } from '@app/common/modules/types';
-import {
-  ContractEntity,
-  ContractService,
-  OfferService,
-} from '@app/common/modules/database';
+import { ContractEntity, ContractService, OfferService } from '@app/common/modules/database';
 import { OfferEventService } from '@app/common/modules/database/services/offer-event.service';
+import { Sdk } from '@unique-nft/sdk/full';
 
 type LogEventHandler = (
   extrinsic: Extrinsic,
   contractEntity: ContractEntity,
-  args:
-    | TokenIsUpForSaleEventObject
-    | TokenIsApprovedEventObject
-    | TokenRevokeEventObject
-    | TokenIsPurchasedEventObject
+  args: TokenIsUpForSaleEventObject | TokenIsApprovedEventObject | TokenRevokeEventObject | TokenIsPurchasedEventObject,
 ) => Promise<void>;
 
 @Injectable()
@@ -36,13 +29,17 @@ export class ContractEventsHandler {
 
   private abiByAddress: Record<string, any>;
 
+  private chain;
+
   constructor(
+    private sdk: Sdk,
+
     @Inject(OfferService)
     private readonly offerService: OfferService,
     @Inject(ContractService)
     private readonly contractService: ContractService,
     @Inject(OfferEventService)
-    private readonly offerEventService: OfferEventService
+    private readonly offerEventService: OfferEventService,
   ) {
     this.eventHandlers = {
       TokenIsUpForSale: this.tokenIsUpForSale.bind(this),
@@ -50,6 +47,8 @@ export class ContractEventsHandler {
       TokenRevoke: this.tokenRevoke.bind(this),
       TokenIsApproved: this.tokenIsApproved.bind(this),
     };
+
+    // this.chain = Promise.all([this.sdkService.getChainProperties()]);
   }
 
   public init(abiByAddress: Record<string, any>) {
@@ -73,10 +72,7 @@ export class ContractEventsHandler {
       return;
     }
 
-    await this.contractService.updateProcessedBlock(
-      addressNormal,
-      extrinsic.block.id
-    );
+    await this.contractService.updateProcessedBlock(addressNormal, extrinsic.block.id);
 
     const abi = this.abiByAddress[addressNormal];
 
@@ -94,26 +90,14 @@ export class ContractEventsHandler {
 
     const eventName: MarketEventNames = name as MarketEventNames;
     if (eventName in this.eventHandlers) {
-      await this.eventHandlers[eventName](
-        extrinsic,
-        contractEntity,
-        args as any
-      );
+      await this.eventHandlers[eventName](extrinsic, contractEntity, args as any);
     } else {
       this.logger.warn(`Not found handler for event ${eventName}`);
     }
   }
 
-  private async tokenIsUpForSale(
-    extrinsic: Extrinsic,
-    contractEntity: ContractEntity,
-    tokenUpArgs: TokenIsUpForSaleEventObject
-  ) {
-    const offer = await this.offerService.update(
-      contractEntity,
-      tokenUpArgs.item,
-      OfferStatus.Opened
-    );
+  private async tokenIsUpForSale(extrinsic: Extrinsic, contractEntity: ContractEntity, tokenUpArgs: TokenIsUpForSaleEventObject) {
+    const offer = await this.offerService.update(contractEntity, tokenUpArgs.item, OfferStatus.Opened, this.chain);
 
     if (offer) {
       await this.offerEventService.create(
@@ -121,7 +105,7 @@ export class ContractEventsHandler {
         OfferEventType.Open,
         extrinsic.block.id,
         extrinsic.signer,
-        tokenUpArgs.item.amount
+        tokenUpArgs.item.amount,
       );
     }
   }
@@ -129,58 +113,31 @@ export class ContractEventsHandler {
   private async tokenIsApproved(
     extrinsic: Extrinsic,
     contractEntity: ContractEntity,
-    tokenRevokeArgs: TokenIsApprovedEventObject
+    tokenRevokeArgs: TokenIsApprovedEventObject,
   ) {
     // todo
   }
 
-  private async tokenRevoke(
-    extrinsic: Extrinsic,
-    contractEntity: ContractEntity,
-    tokenRevokeArgs: TokenRevokeEventObject
-  ) {
-    const offerStatus =
-      tokenRevokeArgs.item.amount === 0
-        ? OfferStatus.Canceled
-        : OfferStatus.Opened;
+  private async tokenRevoke(extrinsic: Extrinsic, contractEntity: ContractEntity, tokenRevokeArgs: TokenRevokeEventObject) {
+    const offerStatus = tokenRevokeArgs.item.amount === 0 ? OfferStatus.Canceled : OfferStatus.Opened;
 
-    const offer = await this.offerService.update(
-      contractEntity,
-      tokenRevokeArgs.item,
-      offerStatus
-    );
+    const offer = await this.offerService.update(contractEntity, tokenRevokeArgs.item, offerStatus);
 
     if (offer) {
-      const eventType =
-        tokenRevokeArgs.item.amount === 0
-          ? OfferEventType.Cancel
-          : OfferEventType.Revoke;
+      const eventType = tokenRevokeArgs.item.amount === 0 ? OfferEventType.Cancel : OfferEventType.Revoke;
 
-      await this.offerEventService.create(
-        offer,
-        eventType,
-        extrinsic.block.id,
-        extrinsic.signer,
-        tokenRevokeArgs.amount
-      );
+      await this.offerEventService.create(offer, eventType, extrinsic.block.id, extrinsic.signer, tokenRevokeArgs.amount);
     }
   }
 
   private async tokenIsPurchased(
     extrinsic: Extrinsic,
     contractEntity: ContractEntity,
-    tokenIsPurchasedArgs: TokenIsPurchasedEventObject
+    tokenIsPurchasedArgs: TokenIsPurchasedEventObject,
   ) {
-    const offerStatus =
-      tokenIsPurchasedArgs.item.amount === 0
-        ? OfferStatus.Completed
-        : OfferStatus.Opened;
+    const offerStatus = tokenIsPurchasedArgs.item.amount === 0 ? OfferStatus.Completed : OfferStatus.Opened;
 
-    const offer = await this.offerService.update(
-      contractEntity,
-      tokenIsPurchasedArgs.item,
-      offerStatus
-    );
+    const offer = await this.offerService.update(contractEntity, tokenIsPurchasedArgs.item, offerStatus);
 
     if (offer) {
       await this.offerEventService.create(
@@ -188,7 +145,7 @@ export class ContractEventsHandler {
         OfferEventType.Buy,
         extrinsic.block.id,
         extrinsic.signer,
-        tokenIsPurchasedArgs.salesAmount
+        tokenIsPurchasedArgs.salesAmount,
       );
     }
   }
