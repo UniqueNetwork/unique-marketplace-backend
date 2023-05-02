@@ -33,6 +33,7 @@ export class OfferEventsTable1679993242288 implements MigrationInterface {
           },
         ],
       }),
+      true,
     );
   }
 

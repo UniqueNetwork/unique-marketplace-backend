@@ -16,7 +16,8 @@ export class ContractsTable1677511684518 implements MigrationInterface {
           { name: 'created_at', type: 'integer' },
           { name: 'processed_at', type: 'integer' },
         ],
-      })
+      }),
+      true,
     );
   }
 

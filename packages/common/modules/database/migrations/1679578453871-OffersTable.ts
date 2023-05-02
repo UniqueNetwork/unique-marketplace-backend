@@ -60,7 +60,8 @@ export class OffersTable1679578453871 implements MigrationInterface {
             columnNames: ['collection_id', 'token_id'],
           },
         ],
-      })
+      }),
+      true,
     );
   }
 

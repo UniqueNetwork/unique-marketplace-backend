@@ -21,7 +21,7 @@ import { ViewColumn, ViewEntity } from 'typeorm';
     properties_filter.total_items,
     properties_filter.list_items
     FROM offers offer
-     LEFT JOIN ( SELECT sf.collection_id,
+     LEFT JOIN ( SELECT prop.collection_id,
             prop.network,
             prop.token_id,
             prop.is_trait,
