@@ -45,6 +45,7 @@ export class PropertiesEntity {
     enum: TypeAttributToken,
     nullable: false,
     default: TypeAttributToken.String,
+    enumName: 'new_properties_type_enum',
   })
   type: TypeAttributToken;
 

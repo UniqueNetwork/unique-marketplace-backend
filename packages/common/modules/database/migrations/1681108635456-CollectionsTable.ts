@@ -1,11 +1,12 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { CollectionEntity } from "../entities";
 
 export class CollectionsTable1681108635456 implements MigrationInterface {
   name: 'CollectionsTable1681108635456';
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.createTable(
       new Table({
-        name: 'collections',
+        name: queryRunner.manager.getRepository(CollectionEntity).metadata.tableName,
         columns: [
           {
             name: 'id',
@@ -110,6 +111,6 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.dropTable('collections');
+    await queryRunner.dropTable(queryRunner.manager.getRepository(CollectionEntity).metadata.tableName);
   }
 }

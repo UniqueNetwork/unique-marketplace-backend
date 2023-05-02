@@ -45,7 +45,7 @@ const migrations = [
 function typeOrmModulesFactory(
   appendOptions: Pick<
     Partial<TypeOrmModuleOptions>,
-    'migrations' | 'migrationsRun' | 'migrationsTransactionMode' | 'logger'
+    'migrations' | 'migrationsRun' | 'migrationsTransactionMode' | 'logger' | 'migrationsTableName'
   > = {},
 ) {
   return [
@@ -77,6 +77,7 @@ export class DatabaseModule {
           migrations,
           migrationsRun: true,
           migrationsTransactionMode: 'each',
+          migrationsTableName: 'new_migrations',
         }),
       ],
       providers: [ContractService, OfferService, OfferEventService],

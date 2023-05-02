@@ -1,10 +1,11 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { ContractEntity, OfferEntity } from "../entities";
 
 export class OffersTable1679578453871 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.createTable(
       new Table({
-        name: 'offers',
+        name: queryRunner.manager.getRepository(OfferEntity).metadata.tableName,
         columns: [
           {
             name: 'id',
@@ -38,7 +39,7 @@ export class OffersTable1679578453871 implements MigrationInterface {
         ],
         foreignKeys: [
           {
-            referencedTableName: 'contracts',
+            referencedTableName: queryRunner.manager.getRepository(ContractEntity).metadata.tableName,
             columnNames: ['contract_address'],
             referencedColumnNames: ['address'],
             deferrable: 'INITIALLY DEFERRED',
@@ -66,6 +67,6 @@ export class OffersTable1679578453871 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.dropTable('contracts');
+    await queryRunner.dropTable(queryRunner.manager.getRepository(OfferEntity).metadata.tableName);
   }
 }

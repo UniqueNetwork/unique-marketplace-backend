@@ -1,11 +1,12 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { PropertiesEntity } from "../entities/properties.entity";
 
 export class PropertiesTable1681310408929 implements MigrationInterface {
   name: 'PropertiesTable1681310408929';
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.createTable(
       new Table({
-        name: 'properties',
+        name: queryRunner.manager.getRepository(PropertiesEntity).metadata.tableName,
         columns: [
           {
             name: 'id',
@@ -73,6 +74,7 @@ export class PropertiesTable1681310408929 implements MigrationInterface {
               'VideoURL',
               'Number',
             ],
+            enumName: 'new_properties_type_enum',
             default: "'String'",
           },
           {
@@ -112,6 +114,6 @@ export class PropertiesTable1681310408929 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.dropTable('properties');
+    await queryRunner.dropTable(queryRunner.manager.getRepository(PropertiesEntity).metadata.tableName);
   }
 }
