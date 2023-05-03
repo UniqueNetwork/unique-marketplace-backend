@@ -19,7 +19,7 @@ contract Market {
       CrossAddress seller;
     }
 
-    uint32 public constant version = 1;
+    uint32 public constant version = 0;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     CollectionHelpers private constant collectionHelpers =
@@ -126,16 +126,16 @@ contract Market {
     // Add new admin                                                  #
     // ################################################################
 
-    function addAdmin() public onlyAdmin {
-      admins[msg.sender] = true;
+    function addAdmin(address admin) public onlyAdmin {
+      admins[admin] = true;
     }
 
     // ################################################################
     // Remove admin                                                  #
     // ################################################################
 
-    function removeAdmin() public onlyAdmin {
-      delete admins[msg.sender];
+    function removeAdmin(address admin) public onlyAdmin {
+      delete admins[admin];
     }
 
     // ################################################################
@@ -251,7 +251,9 @@ contract Market {
         IERC721 erc721 = getErc721(collectionId);
 
         if (erc721.getApproved(tokenId) != selfAddress) {
-          emit TokenRevoke(version, order, order.amount);
+          uint32 amount = order.amount;
+          order.amount = 0;
+          emit TokenRevoke(version, order, amount);
 
           delete orders[collectionId][tokenId];
         } else {

@@ -34,5 +34,6 @@ export type MarketSwaggerOptions = {
 };
 
 export type SignerConfig = {
-  seed?: string;
+  metamaskSeed?: string;
+  substrateSeed?: string;
 };

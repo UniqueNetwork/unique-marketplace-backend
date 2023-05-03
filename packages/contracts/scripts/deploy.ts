@@ -2,6 +2,8 @@ import { ethers } from 'ethers';
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
 import Web3 from 'web3';
+import { KeyringProvider } from '@unique-nft/accounts/keyring';
+import { Address } from '@unique-nft/utils';
 
 const assembliesBasePath = './packages/contracts/assemblies';
 
@@ -30,11 +32,13 @@ export async function deploy(
   version: number,
   feeValue: number,
   rpcUrl: string,
-  mnemonic: string
+  metamaskSeed: string,
+  substrateSeed: string,
+  restUrl: string,
 ) {
   const { abi, bytecode } = await getContractSource(version);
 
-  const privateKey = ethers.Wallet.fromMnemonic(mnemonic).privateKey;
+  const privateKey = ethers.Wallet.fromMnemonic(metamaskSeed).privateKey;
 
   const web3 = new Web3(rpcUrl);
 
@@ -50,11 +54,16 @@ export async function deploy(
       data: incrementerTx.encodeABI(),
       gas: await incrementerTx.estimateGas(),
     },
-    privateKey
+    privateKey,
   );
-  const { contractAddress, blockNumber } = await web3.eth.sendSignedTransaction(
-    tx.rawTransaction as string
-  );
+
+  const { contractAddress, blockNumber } = await web3.eth.sendSignedTransaction(tx.rawTransaction as string);
+  if (!contractAddress) {
+    throw Error('Failed to publish contract');
+  }
+
+  await addToAdmin(metamaskSeed, substrateSeed, rpcUrl, restUrl, contractAddress, abi);
+
   return {
     contractAddress,
     blockNumber,
@@ -79,4 +88,31 @@ export async function deploy(
 
   return market.address;
    */
+}
+
+async function addToAdmin(
+  metamaskSeed: string,
+  substrateSeed: string,
+  rpcUrl: string,
+  restUrl: string,
+  contractAddress: string,
+  contractAbi: any,
+) {
+  const provider = new KeyringProvider({
+    type: 'sr25519',
+  });
+  await provider.init();
+  const signer = provider.addSeed(substrateSeed);
+  const adminEthereumAddress = Address.mirror.substrateToEthereum(signer.address);
+
+  const metamaskProvider = new ethers.providers.JsonRpcBatchProvider(rpcUrl);
+
+  const ownerWallet = ethers.Wallet.fromMnemonic(metamaskSeed).connect(metamaskProvider);
+
+  const contract = new ethers.Contract(contractAddress, contractAbi, ownerWallet);
+
+  const tx = await contract.addAdmin(adminEthereumAddress, {
+    gasLimit: 10_000_000,
+  });
+  await tx.wait();
 }

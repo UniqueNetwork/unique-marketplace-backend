@@ -6,10 +6,13 @@ import { OfferService, OfferEntity } from '@app/common/modules/database';
 export class CollectionEventsHandler {
   private abiByAddress: Record<string, any>;
 
+  private queueIsBusy: boolean;
+  private approveQueue: OfferEntity[] = [];
+
   constructor(
     private readonly sdk: Sdk,
     @Inject(OfferService)
-    private readonly offerService: OfferService
+    private readonly offerService: OfferService,
   ) {}
 
   public init(abiByAddress: Record<string, any>) {
@@ -17,9 +20,9 @@ export class CollectionEventsHandler {
   }
 
   public async onEvent(room: Room, data: CollectionData) {
-    const { parsed, event } = data;
+    const { parsed } = data;
 
-    const { collectionId, tokenId } = parsed;
+    const { collectionId, tokenId, event } = parsed;
 
     const { method } = event;
 
@@ -34,7 +37,10 @@ export class CollectionEventsHandler {
       }
 
       if (method === 'Approved') {
-        await this.runCheckApproved(offer);
+        const { addressTo } = parsed;
+        if (this.abiByAddress[addressTo]) {
+          await this.runCheckApproved(offer);
+        }
       }
 
       if (method === 'Transfer') {
@@ -54,22 +60,41 @@ export class CollectionEventsHandler {
   }
 
   private async runCheckApproved(offer: OfferEntity) {
+    if (this.queueIsBusy) {
+      this.approveQueue.push(offer);
+      return;
+    }
+    this.queueIsBusy = true;
+
     const abi = this.abiByAddress[offer.contract.address];
 
     const address = this.sdk.options.signer.address;
-    const contract = await this.sdk.evm.contractConnect(
-      offer.contract.address,
-      abi
-    );
-    const result = await contract.send.submitWaitResult({
+
+    const contract = await this.sdk.evm.contractConnect(offer.contract.address, abi);
+
+    const args = {
       address,
       funcName: 'checkApproved',
+      gasLimit: 10_000_000,
       args: {
         collectionId: offer.collectionId,
         tokenId: offer.tokenId,
       },
-    });
-    console.log('result', JSON.stringify(result, null, 2));
+    };
+    const result = await contract.send.submitWaitResult(args);
+
+    if (result.parsed.isExecutedFailed) {
+      try {
+        await contract.call(args);
+      } catch (err) {
+        console.error('checkApproved call error', err);
+      }
+    }
+
+    this.queueIsBusy = false;
+    if (this.approveQueue.length) {
+      this.runCheckApproved(this.approveQueue.shift());
+    }
   }
 
   private async deleteCollectionOffers(collectionId: number) {
