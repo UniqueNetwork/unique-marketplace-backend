@@ -67,13 +67,13 @@ export declare namespace Market {
 
 export interface MarketInterface extends utils.Interface {
   functions: {
-    "addAdmin()": FunctionFragment;
+    "addAdmin(address)": FunctionFragment;
     "buy(uint32,uint32,uint32,(address,uint256))": FunctionFragment;
     "checkApproved(uint32,uint32)": FunctionFragment;
     "getOrder(uint32,uint32)": FunctionFragment;
     "marketFee()": FunctionFragment;
     "put(uint32,uint32,uint256,uint32,(address,uint256))": FunctionFragment;
-    "removeAdmin()": FunctionFragment;
+    "removeAdmin(address)": FunctionFragment;
     "revoke(uint32,uint32,uint32)": FunctionFragment;
     "setOwner()": FunctionFragment;
     "version()": FunctionFragment;
@@ -95,7 +95,10 @@ export interface MarketInterface extends utils.Interface {
       | "withdraw"
   ): FunctionFragment;
 
-  encodeFunctionData(functionFragment: "addAdmin", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "addAdmin",
+    values: [PromiseOrValue<string>]
+  ): string;
   encodeFunctionData(
     functionFragment: "buy",
     values: [
@@ -126,7 +129,7 @@ export interface MarketInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "removeAdmin",
-    values?: undefined
+    values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "revoke",
@@ -259,6 +262,7 @@ export interface Market extends BaseContract {
 
   functions: {
     addAdmin(
+      admin: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -294,6 +298,7 @@ export interface Market extends BaseContract {
     ): Promise<ContractTransaction>;
 
     removeAdmin(
+      admin: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -317,6 +322,7 @@ export interface Market extends BaseContract {
   };
 
   addAdmin(
+    admin: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -352,6 +358,7 @@ export interface Market extends BaseContract {
   ): Promise<ContractTransaction>;
 
   removeAdmin(
+    admin: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -374,7 +381,10 @@ export interface Market extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    addAdmin(overrides?: CallOverrides): Promise<void>;
+    addAdmin(
+      admin: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
@@ -407,7 +417,10 @@ export interface Market extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    removeAdmin(overrides?: CallOverrides): Promise<void>;
+    removeAdmin(
+      admin: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     revoke(
       collectionId: PromiseOrValue<BigNumberish>,
@@ -467,6 +480,7 @@ export interface Market extends BaseContract {
 
   estimateGas: {
     addAdmin(
+      admin: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -502,6 +516,7 @@ export interface Market extends BaseContract {
     ): Promise<BigNumber>;
 
     removeAdmin(
+      admin: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -526,6 +541,7 @@ export interface Market extends BaseContract {
 
   populateTransaction: {
     addAdmin(
+      admin: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -561,6 +577,7 @@ export interface Market extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     removeAdmin(
+      admin: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

@@ -15,7 +15,8 @@ export const loadConfig = (): Config => ({
   },
 
   signer: {
-    seed: process.env.SIGNER_SEED,
+    metamaskSeed: process.env.METAMASK_SIGNER_SEED,
+    substrateSeed: process.env.SUBSTRATE_SIGNER_SEED,
   },
 
   cache: createCacheConfig(process.env),

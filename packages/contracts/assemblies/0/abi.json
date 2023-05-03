@@ -355,7 +355,13 @@
     "type": "event"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "admin",
+        "type": "address"
+      }
+    ],
     "name": "addAdmin",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -546,7 +552,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "admin",
+        "type": "address"
+      }
+    ],
     "name": "removeAdmin",
     "outputs": [],
     "stateMutability": "nonpayable",
