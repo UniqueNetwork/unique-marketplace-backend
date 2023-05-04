@@ -29,6 +29,7 @@ contract Market {
     mapping(uint32 => mapping(uint32 => Order)) orders;
     uint32 private idCount = 1;
     uint32 public marketFee;
+    uint64 public ctime;
     address selfAddress;
     address ownerAddress;
     mapping(address => bool) admins;
@@ -73,8 +74,10 @@ contract Market {
       _;
     }
 
-    constructor(uint32 fee) {
+    constructor(uint32 fee, uint64 timestamp) {
         marketFee = fee;
+        ctime = timestamp;
+
         if (marketFee == 0 || marketFee >= 100) {
             revert InvalidMarketFee();
         }

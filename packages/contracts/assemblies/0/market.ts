@@ -70,6 +70,7 @@ export interface MarketInterface extends utils.Interface {
     "addAdmin(address)": FunctionFragment;
     "buy(uint32,uint32,uint32,(address,uint256))": FunctionFragment;
     "checkApproved(uint32,uint32)": FunctionFragment;
+    "ctime()": FunctionFragment;
     "getOrder(uint32,uint32)": FunctionFragment;
     "marketFee()": FunctionFragment;
     "put(uint32,uint32,uint256,uint32,(address,uint256))": FunctionFragment;
@@ -85,6 +86,7 @@ export interface MarketInterface extends utils.Interface {
       | "addAdmin"
       | "buy"
       | "checkApproved"
+      | "ctime"
       | "getOrder"
       | "marketFee"
       | "put"
@@ -112,6 +114,7 @@ export interface MarketInterface extends utils.Interface {
     functionFragment: "checkApproved",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
+  encodeFunctionData(functionFragment: "ctime", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getOrder",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
@@ -152,6 +155,7 @@ export interface MarketInterface extends utils.Interface {
     functionFragment: "checkApproved",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "ctime", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getOrder", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "marketFee", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "put", data: BytesLike): Result;
@@ -280,6 +284,8 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    ctime(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     getOrder(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -340,6 +346,8 @@ export interface Market extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  ctime(overrides?: CallOverrides): Promise<BigNumber>;
+
   getOrder(
     collectionId: PromiseOrValue<BigNumberish>,
     tokenId: PromiseOrValue<BigNumberish>,
@@ -399,6 +407,8 @@ export interface Market extends BaseContract {
       tokenId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    ctime(overrides?: CallOverrides): Promise<BigNumber>;
 
     getOrder(
       collectionId: PromiseOrValue<BigNumberish>,
@@ -498,6 +508,8 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    ctime(overrides?: CallOverrides): Promise<BigNumber>;
+
     getOrder(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -558,6 +570,8 @@ export interface Market extends BaseContract {
       tokenId: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
+
+    ctime(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getOrder(
       collectionId: PromiseOrValue<BigNumberish>,

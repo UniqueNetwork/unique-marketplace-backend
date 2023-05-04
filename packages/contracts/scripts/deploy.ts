@@ -46,7 +46,7 @@ export async function deploy(
 
   const incrementerTx = incrementer.deploy({
     data: bytecode,
-    arguments: [feeValue],
+    arguments: [feeValue, new Date().getTime()],
   });
 
   const tx = await web3.eth.accounts.signTransaction(
