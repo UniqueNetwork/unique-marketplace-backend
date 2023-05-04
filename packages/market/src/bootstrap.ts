@@ -7,6 +7,7 @@ import swaggerInit from './swagger';
 import { AppModule } from './app.module';
 import { pgNotifyClient } from '@app/common/pg-transport/pg-notify-client.symbol';
 import helmet from 'helmet';
+import { initSentry } from '@app/common/modules/sentry';
 
 export default async function (app: INestApplication, logger: Logger) {
   app = await NestFactory.create(AppModule, {
@@ -23,10 +24,9 @@ export default async function (app: INestApplication, logger: Logger) {
   const configService = app.get(ConfigService);
   // Swagger
   await swaggerInit(app, configService);
-
+  initSentry(app);
   app.enableCors({
-    allowedHeaders:
-      'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Observe, Signature, Authorization',
+    allowedHeaders: 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Observe, Signature, Authorization',
     origin: true,
     credentials: true,
   });
@@ -36,11 +36,7 @@ export default async function (app: INestApplication, logger: Logger) {
 
   await app.listen(configService.get('port'), () => {
     logger.log(`API application on port: ${yellow(configService.get('port'))}`);
-    logger.log(
-      `API application ${green('version:')} ${yellow(
-        configService.get('releaseVersion')
-      )} ${green('started!')}`
-    );
+    logger.log(`API application ${green('version:')} ${yellow(configService.get('releaseVersion'))} ${green('started!')}`);
   });
   return app;
 }
