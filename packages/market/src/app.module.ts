@@ -9,6 +9,8 @@ import { SettingsModule } from './settings/settings.module';
 import { CollectionsModule } from './collections/collections.module';
 import { TokensModule } from './tokens/tokens.module';
 import { AdminModule } from './admin/admin.module';
+import { HealthController } from '@app/common/modules/monitoring/controllers/health.controller';
+import { HealthService } from '@app/common/modules/monitoring/health';
 
 @Module({
   imports: [
