@@ -138,7 +138,7 @@ export class ContractEventsHandler {
     const offerStatus = tokenIsPurchasedArgs.item.amount === 0 ? OfferStatus.Completed : OfferStatus.Opened;
 
     const offer = await this.offerService.update(contractEntity, tokenIsPurchasedArgs.item, offerStatus);
-
+    console.dir({ extrinsic }, { depth: 10 });
     if (offer) {
       await this.offerEventService.create(
         offer,
