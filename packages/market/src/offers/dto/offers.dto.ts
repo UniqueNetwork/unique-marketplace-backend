@@ -22,8 +22,11 @@ export class OffersDto {
   @ApiProperty({ example: ContractDto })
   contract: ContractDto;
 
+  @ApiProperty({ example: 1 })
+  price_parsed: number;
+
   @ApiProperty({ example: 1_000_000_000_000_000_000 })
-  price: bigint;
+  price_raw: string;
 
   @ApiProperty({ example: '5GeoRAcsvhZoFz77H9SqT3Umu5uPcLZEqppN6ixohEY3nKEX' })
   seller: string;
@@ -131,16 +134,6 @@ export class PaginationResultDto<T> implements PaginationResult<T> {
   attributesCount?: Array<any>;
 }
 
-export class OfferSortingRequest {
-  @ApiProperty({
-    items: { type: 'string', default: 'desc(CreationDate)' },
-    description:
-      'Possible values: asc(Price), desc(Price), asc(TokenId), desc(TokenId), asc(CreationDate), desc(CreationDate), asc(Status), desc(Status)',
-    required: false,
-  })
-  public sort?: SortingParameter[];
-}
-
 export class TradeSortingRequest {
   @ApiProperty({
     items: { type: 'string', default: 'desc(TradeDate)' },
@@ -158,6 +151,16 @@ export class OfferAttributes {
   @ApiProperty({ description: 'Amount' })
   @Expose()
   amount: number;
+}
+
+export class OfferSortingRequest {
+  @ApiProperty({
+    items: { type: 'string', default: 'desc(CreationDate)' },
+    description:
+      'Possible values: asc(Price), desc(Price), asc(TokenId), desc(TokenId), asc(CreationDate), desc(CreationDate), asc(Status), desc(Status)',
+    required: false,
+  })
+  public sort?: SortingParameter[];
 }
 
 export class TokenDescriptionDto {
@@ -203,7 +206,7 @@ export class OfferEntityDto {
   @Expose()
   tokenId: number;
 
-  @ApiProperty({ description: 'Price', example: '100' })
+  @ApiProperty({ description: 'Price', example: '4000000000000' })
   @Expose()
   price: OfferPriceDto;
 

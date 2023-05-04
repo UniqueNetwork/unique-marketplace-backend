@@ -63,16 +63,14 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
   async getOffers(searchOptions: OffersFilter, pagination: PaginationRequest, sort): Promise<any> {
     let offers;
     let items = [];
-    let searchIndex = [];
+    let propertiesFilter = [];
     let collections = [];
-
     offers = await this.viewOffersService.filter(searchOptions, pagination, sort);
-    searchIndex = await this.searchIndex(this.parserCollectionIdTokenId(offers.items));
-    collections = await this.collections(this.getCollectionIds(offers.items));
-
-    items = this.parseItems(offers.items, searchIndex, collections) as any as Array<ViewOffers>;
     try {
-      //
+      propertiesFilter = await this.searchInProperties(this.parserCollectionIdTokenId(offers.items));
+      collections = await this.collections(this.getCollectionIds(offers.items));
+
+      items = this.parseItems(offers.items, propertiesFilter, collections) as any as Array<ViewOffers>;
     } catch (e) {
       this.logger.error(e.message);
 
@@ -93,15 +91,22 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     });
   }
 
+  /**
+   * Show one selected offer
+   * @param { collectionId: number; tokenId: number } filter - The ID of the collection and token
+   * @example
+   *
+   * this.getOne({ collectionId: number; tokenId: number })
+   */
   async getOne(filter: { collectionId: number; tokenId: number }): Promise<OfferEntityDto | null> {
     const { collectionId, tokenId } = filter;
 
     const source = await this.viewOffersService.filterByOne(collectionId, tokenId);
 
-    const searchIndex = await this.searchIndex(this.parserCollectionIdTokenId(source));
+    const properties_filter = await this.searchInProperties(this.parserCollectionIdTokenId(source));
     const collections = await this.collections(this.getCollectionIds(source));
 
-    const offers = this.parseItems(source, searchIndex, collections).pop() as any as ViewOffers;
+    const offers = this.parseItems(source, properties_filter, collections).pop() as any as ViewOffers;
 
     return offers && OfferEntityDto.fromOffersEntity(offers);
   }
@@ -172,14 +177,15 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     return this.collectionRepository.find({ where: { collectionId: In(ids) } });
   }
 
-  private async searchIndex(sqlValues: string): Promise<Array<Partial<PropertiesEntity>>> {
+  private async searchInProperties(sqlValues: string): Promise<Array<Partial<PropertiesEntity>>> {
     if (sqlValues) {
+      const properties = await this.connection.manager.getRepository(PropertiesEntity).metadata.tableName;
       const result = await this.connection.manager.query(
         `select
             si.collection_id,
             si.token_id,
             si.attributes
-        from new_properties si  inner join (${sqlValues}) t on
+        from ${properties} si  inner join (${sqlValues}) t on
         t.collection_id = si.collection_id and
         t.token_id = si.token_id;`,
       );
