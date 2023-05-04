@@ -14,8 +14,16 @@ import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { OffersService } from './offers.service';
 import { readApiDocs } from '../utils/utils';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
-import { OfferEntityDto, OffersDto, OffersFilter, OfferSortingRequest } from './dto/offers.dto';
+import {
+  OfferEntityDto,
+  OffersDto,
+  OffersFilter,
+  OfferSortingRequest,
+  OffersResultDto,
+  PaginationResultDto,
+} from './dto/offers.dto';
 import { OfferEntity } from '@app/common/modules/database';
+import { ParseOffersFilterPipe } from './pipes/offer-filter.pipe';
 
 @ApiTags('Offers')
 @Controller('offers')
@@ -27,12 +35,13 @@ export class OffersController {
     summary: 'Get offers, filters and seller',
     description: readApiDocs('offers-get.md'),
   })
+  @ApiResponse({ type: OffersResultDto, status: HttpStatus.OK })
   @ApiQuery({ name: 'page', example: 1 })
   @ApiQuery({ name: 'pageSize', example: 10 })
   async get(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
     @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe) pageSize: number = 10,
-    @Query() offerFilter: OffersFilter,
+    @Query(ParseOffersFilterPipe) offerFilter: OffersFilter,
     @Query() sort: OfferSortingRequest,
   ) {
     const limit = pageSize > 100 ? 100 : pageSize;
