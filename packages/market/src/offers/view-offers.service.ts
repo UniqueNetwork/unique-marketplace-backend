@@ -7,15 +7,16 @@ import { OfferAttributes, OffersDto, OffersFilter, OfferSortingRequest, Paginati
 import { BundleService } from './bundle.service';
 import { OfferTraits, TraitDto } from './dto/trait.dto';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
+import { SortingOrder, SortingParameter } from './interfaces/offers.interface';
 
-// type SortMapping<T> = Partial<Record<keyof OffersDto, keyof T>>;
-//
-// const offersMapping: SortMapping<OfferEntity> = {
-//   priceRaw: 'price_raw',
-//   priceParsed: 'price_parsed',
-//   tokenId: 'token_id',
-//   collectionId: 'collection_id',
-// };
+type SortMapping<T> = Partial<Record<keyof OffersDto, keyof T>>;
+
+const offersMapping = {
+  priceRaw: 'price_raw',
+  priceParsed: 'price_parsed',
+  token_id: 'token_id',
+  collection_id: 'collection_id',
+};
 
 const regex = /\S/;
 export function nullOrWhitespace(str: string | null | undefined): boolean {
@@ -45,7 +46,8 @@ export class ViewOffersService {
     @InjectRepository(ViewOffers) private viewOffersRepository: Repository<ViewOffers>,
     private readonly bundleService: BundleService,
   ) {
-    // this.offersSorts = this.prepareMapping(offersMapping, connection.getMetadata(OfferEntity).columns);
+    this.offersSorts = this.prepareMapping(offersMapping, connection.getMetadata(OfferEntity).columns);
+    console.dir(this.offersSorts, { depth: 10 });
   }
   prepareMapping = (input: Record<string, string>, columnMetadata: ColumnMetadata[]): Record<string, string> => {
     return Object.entries(input).reduce((acc, [key, value]) => {
@@ -67,7 +69,7 @@ export class ViewOffersService {
         .createQueryBuilder()
         .select(['key', 'traits as trait ', 'count(traits) over (partition by traits, key) as count'])
         .distinct()
-        .from(ViewOffers, 'v_offers_search')
+        .from(ViewOffers, 'view_offers')
         .where('collection_id = :collectionId', { collectionId })
         .andWhere('traits is not null')
         .andWhere('locale is not null')
@@ -117,14 +119,16 @@ export class ViewOffersService {
         .from((qb) => {
           qb.select(['total_items', 'offer_id'])
             .distinct()
-            .from(ViewOffers, 'v_offers_search')
+            .from(ViewOffers, 'view_offers')
             .where('collection_id in (:...collectionIds)', { collectionIds })
             .andWhere('total_items is not null');
 
           if (seller) {
-            qb.andWhere('offer_status = :status', { status: 'active' });
+            qb.andWhere('offer_status = :status', { status: 'Opened' });
           } else {
-            qb.andWhere('v_offers_search.offer_status in (:...offer_status)', { offer_status: ['active', 'removed_by_admin'] });
+            qb.andWhere('view_offers.offer_status in (:...offer_status)', {
+              offer_status: ['Opened'],
+            });
           }
           return qb;
         }, '_offers')
@@ -149,14 +153,17 @@ export class ViewOffersService {
     if ((collectionIds ?? []).length <= 0) {
       return query;
     }
-    return query.andWhere('v_offers_search.collection_id in (:...collectionIds)', { collectionIds });
+    if (typeof collectionIds === 'string') {
+      return query.andWhere('view_offers.collection_id = :collectionIds', { collectionIds });
+    }
+    return query.andWhere('view_offers.collection_id in (:...collectionIds)', { collectionIds });
   }
 
   private byMaxPrice(query: SelectQueryBuilder<ViewOffers>, maxPrice?: bigint): SelectQueryBuilder<ViewOffers> {
     if (!maxPrice) {
       return query;
     }
-    return query.andWhere('v_offers_search.offer_price <= :maxPrice', {
+    return query.andWhere('view_offers.offer_price_parsed <= :maxPrice', {
       maxPrice: priceTransformer.to(maxPrice),
     });
   }
@@ -165,33 +172,33 @@ export class ViewOffersService {
     if (!minPrice) {
       return query;
     }
-    return query.andWhere('v_offers_search.offer_price >= :minPrice', {
+    return query.andWhere('view_offers.offer_price_parsed >= :minPrice', {
       minPrice: priceTransformer.to(minPrice),
     });
   }
 
   private bySeller(query: SelectQueryBuilder<ViewOffers>, seller?: string): SelectQueryBuilder<ViewOffers> {
     if (nullOrWhitespace(seller)) {
-      query.andWhere('v_offers_search.offer_status = :status', { status: 'Opened' });
+      query.andWhere('view_offers.offer_status = :status', { status: 'Opened' });
       return query;
     }
     return query
-      .andWhere('v_offers_search.offer_seller = :seller', { seller })
-      .andWhere('v_offers_search.offer_status in (:...offer_status)', { offer_status: ['Opened'] });
+      .andWhere('view_offers.offer_seller = :seller', { seller })
+      .andWhere('view_offers.offer_status in (:...offer_status)', { offer_status: ['Opened'] });
   }
 
   private byLocale(query: SelectQueryBuilder<ViewOffers>, locale?: string): SelectQueryBuilder<ViewOffers> {
     if (nullOrWhitespace(locale)) {
       return query;
     }
-    return query.andWhere('v_offers_search.locale = :locale', { locale });
+    return query.andWhere('view_offers.locale = :locale', { locale });
   }
 
   private byTrait(query: SelectQueryBuilder<ViewOffers>, trait?: string): SelectQueryBuilder<ViewOffers> {
     if (nullOrWhitespace(trait)) {
       return query;
     }
-    return query.andWhere(`v_offers_search.traits ilike concat('%', cast(:trait as text), '%')`, { trait });
+    return query.andWhere(`view_offers.traits ilike concat('%', cast(:trait as text), '%')`, { trait });
   }
 
   private byNumberOfAttributes(
@@ -201,7 +208,10 @@ export class ViewOffersService {
     if ((numberOfAttributes ?? []).length <= 0) {
       return query;
     }
-    return query.andWhere('v_offers_search.total_items in (:...numberOfAttributes)', { numberOfAttributes });
+    if (typeof numberOfAttributes === 'string') {
+      return query.andWhere('view_offers.total_items = :numberOfAttributes', { numberOfAttributes });
+    }
+    return query.andWhere('view_offers.total_items in (:...numberOfAttributes)', { numberOfAttributes });
   }
 
   private byFindAttributes(
@@ -219,8 +229,8 @@ export class ViewOffersService {
         });
       } else {
         query
-          .andWhere('v_offers_search.collection_id in (:...collectionIds)', { collectionIds })
-          .andWhere('array [:...traits] <@ v_offers_search.list_items', { traits: attributes });
+          .andWhere(`view_offers.collection_id in (:...collectionIds)`, { collectionIds })
+          .andWhere('array [:...traits] <@ view_offers.list_items', { traits: attributes });
       }
     }
     return query;
@@ -253,15 +263,15 @@ export class ViewOffersService {
     return this.connection
       .createQueryBuilder()
       .select([
-        'v_offers_search_offer_id as offer_id',
-        'v_offers_search_offer_order_id as offer_order_id',
-        'v_offers_search_offer_status as offer_status',
-        'v_offers_search_collection_id as collection_id',
-        'v_offers_search_token_id as token_id',
-        'v_offers_search_offer_price_parsed as offer_price_parsed',
-        'v_offers_search_offer_price_raw as offer_price_raw',
-        'v_offers_search_offer_seller as offer_seller',
-        'v_offers_search_offer_created_at as offer_created_at',
+        'view_offers_offer_id as offer_id',
+        'view_offers_offer_order_id as offer_order_id',
+        'view_offers_offer_status as offer_status',
+        'view_offers_collection_id as collection_id',
+        'view_offers_token_id as token_id',
+        'view_offers_offer_price_parsed as offer_price_parsed',
+        'view_offers_offer_price_raw as offer_price_raw',
+        'view_offers_offer_seller as offer_seller',
+        'view_offers_offer_created_at as offer_created_at',
       ])
       .distinct()
       .from(`(${query.getQuery()})`, '_filter')
@@ -269,7 +279,7 @@ export class ViewOffersService {
   }
 
   private async countQuery(query: SelectQueryBuilder<ViewOffers>): Promise<number> {
-    const countQuery = this.connection
+    const countQuery = this.connection.manager
       .createQueryBuilder()
       .select('count(offer_id) as count')
       .from(`(${query.getQuery()})`, '_count')
@@ -280,7 +290,7 @@ export class ViewOffersService {
   }
 
   private sortBy(query: SelectQueryBuilder<ViewOffers>, sortBy: OfferSortingRequest): SelectQueryBuilder<ViewOffers> {
-    //    query = {}; //this.offersQuerySortHelper.applyFlatSort(query, sortBy);
+    query = this.applyFlatSort(query, sortBy);
     return query;
   }
 
@@ -291,13 +301,40 @@ export class ViewOffersService {
       .distinct()
       .from((qb) => {
         return qb
-          .select(['v_offers_search_key as key', 'v_offers_search_traits as traits'])
+          .select(['view_offers_key as key', 'view_offers_traits as traits'])
           .from(`(${query.getQuery()})`, '_filter')
           .setParameters(query.getParameters())
-          .where('v_offers_search_traits is not null')
-          .andWhere('v_offers_search_locale is not null');
+          .where('view_offers_traits is not null')
+          .andWhere('view_offers_locale is not null');
       }, '_filter');
     return attributes;
+  }
+
+  private getOrder(sortingParameter: SortingParameter): 'DESC' | 'ASC' {
+    return sortingParameter.order === SortingOrder.Desc ? 'DESC' : 'ASC';
+  }
+
+  private getFlatSort(sortingParameter: SortingParameter): string | undefined {
+    switch (sortingParameter.column) {
+      case 'price':
+        return 'offer_price_parsed';
+      case 'tokenid':
+        return 'token_id';
+      case 'creationDate':
+        return 'offer_created_at';
+    }
+  }
+
+  applyFlatSort(query: SelectQueryBuilder<any>, { sort = [] }: OfferSortingRequest) {
+    console.dir({ sort }, { depth: 10 });
+    for (const sortingParameter of sort) {
+      const sort = this.getFlatSort(sortingParameter);
+      if (sort) {
+        const order = this.getOrder(sortingParameter);
+        query.addOrderBy(sort, order);
+      }
+    }
+    return query;
   }
 
   private async byAttributesCount(query: SelectQueryBuilder<ViewOffers>): Promise<Array<OfferAttributes>> {
@@ -307,14 +344,14 @@ export class ViewOffersService {
       .distinct()
       .from((qb) => {
         return qb
-          .select(['v_offers_search_total_items as total_items', 'v_offers_search_offer_id as offer_id'])
+          .select(['view_offers_total_items as total_items', 'view_offers_offer_id as offer_id'])
           .from(`(${query.getQuery()})`, '_filter')
           .distinct()
           .setParameters(query.getParameters())
-          .where('v_offers_search_total_items is not null');
+          .where('view_offers_total_items is not null');
       }, '_filter')
-      .getRawMany()) as Array<OfferAttributes>;
-
+      .getRawMany()) as any as Array<OfferAttributes>;
+    console.dir(attributesCount, { depth: 10 });
     return attributesCount.map((item) => {
       return {
         numberOfAttributes: +item.numberOfAttributes,
@@ -329,17 +366,17 @@ export class ViewOffersService {
     tokenId: number,
   ): SelectQueryBuilder<any> {
     return query
-      .andWhere('v_offers_search.collection_id = :collectionId', { collectionId })
-      .andWhere('v_offers_search.token_id = :tokenId', { tokenId })
-      .andWhere('v_offers_search.offer_status in (:...status)', { status: ['active', 'removed_by_admin'] });
+      .andWhere('view_offers.collection_id = :collectionId', { collectionId })
+      .andWhere('view_offers.token_id = :tokenId', { tokenId })
+      .andWhere('view_offers.offer_status in (:...status)', { status: ['Opened', 'removed_by_admin'] });
   }
 
   public async filterByOne(collectionId: number, tokenId: number): Promise<any> {
     let queryFilter = this.viewOffersRepository
-      .createQueryBuilder('v_offers_search')
+      .createQueryBuilder('view_offers')
       .where({ collection_id: collectionId, token_id: tokenId });
-    //const bundle = await this.bundle(collectionId, tokenId);
-    // queryFilter = this.byCollectionTokenId(queryFilter, bundle.collectionId, bundle.tokenId);
+    const bundle = await this.bundle(collectionId, tokenId);
+    queryFilter = this.byCollectionTokenId(queryFilter, bundle.collectionId, bundle.tokenId);
     queryFilter = this.prepareQuery(queryFilter);
     const itemQuery = this.pagination(queryFilter, { page: 1, pageSize: 1 });
     const items = await itemQuery.query.getRawMany();
@@ -351,8 +388,9 @@ export class ViewOffersService {
   }
 
   public async filter(offersFilter: OffersFilter, pagination: PaginationRequest, sort: OfferSortingRequest): Promise<any> {
-    let queryFilter = this.viewOffersRepository.createQueryBuilder('v_offers_search');
-
+    let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
+    console.dir(offersFilter, { depth: 10 });
+    debugger;
     // Filert by collection id
     queryFilter = this.byCollectionId(queryFilter, offersFilter.collectionId);
     // Filter by max price
@@ -374,13 +412,13 @@ export class ViewOffersService {
     const attributes = await this.byAttributes(queryFilter).getRawMany();
 
     queryFilter = this.prepareQuery(queryFilter);
-
+    //
     const itemsCount = await this.countQuery(queryFilter);
-
+    //
     queryFilter = this.sortBy(queryFilter, sort);
-
+    //
     const itemQuery = this.pagination(queryFilter, pagination);
-
+    //
     const items = await itemQuery.query.getRawMany();
 
     return {

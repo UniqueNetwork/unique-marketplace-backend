@@ -55,8 +55,8 @@ export class BundleService {
       .createQueryBuilder()
       .select(['collection_id', 'token_id'])
       .distinct()
-      .from(PropertiesEntity, 'search_index')
-      .where('search_index.nested @? :nested', {
+      .from(PropertiesEntity, 'properties')
+      .where('properties.nested @? :nested', {
         nested: `$[*] ? (@.collectionId == ${+collectionId} && @.tokenId == ${+tokenId})`,
       })
       .getRawMany();
@@ -76,12 +76,12 @@ export class BundleService {
     const collections = items.map((item) => item.collectionId);
     const tokens = items.map((item) => item.tokenId);
     return this.connection.manager
-      .createQueryBuilder(ViewOffers, 'v_offers_search')
+      .createQueryBuilder(ViewOffers, 'view_offers')
       .select(['offer_id', 'collection_id', 'token_id'])
       .distinct()
-      .where('v_offers_search.collection_id in (:...collectionId)', { collectionId: collections })
-      .andWhere('v_offers_search.token_id in (:...tokenId)', { tokenId: tokens })
-      .andWhere('v_offers_search.offer_status in (:...status)', { status: ['active', 'removed_by_admin'] })
+      .where('view_offers.collection_id in (:...collectionId)', { collectionId: collections })
+      .andWhere('view_offers.token_id in (:...tokenId)', { tokenId: tokens })
+      .andWhere('view_offers.offer_status in (:...status)', { status: ['Opened'] })
       .getRawMany();
   }
 }
