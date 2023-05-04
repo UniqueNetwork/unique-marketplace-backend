@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { AddressService } from '@app/common/src/lib/address.service';
 import { CollectionStatus, CustomObject } from '@app/common/modules/types';
 import { OmitType } from '@nestjs/swagger';
+import { SignerConfig } from '@app/common/modules/config';
 
 interface CollectionDataDescription {
   mode: string;
@@ -61,8 +62,8 @@ export class SettingsService {
   }
 
   async getSettings(): Promise<SettingsDto> {
+    return await this.prepareSettings();
     try {
-      return await this.prepareSettings();
     } catch (e) {
       throw new BadRequestException(e.message);
     }
@@ -95,10 +96,15 @@ export class SettingsService {
   }
 
   /**
-   * Escrow seed to Substrate address
+   * Escrow seed to Substrate and Metamask address
    */
-  async escrowAddress(): Promise<string> {
-    const account = await this.addressService.substrateFromSeed(this.configService.get('signer.seed'));
-    return account.address;
+  async escrowAddress(): Promise<any> {
+    const accountSubstrate = await this.addressService.substrateFromSeed(
+      this.configService.get<SignerConfig>('signer').substrateSeed,
+    );
+    const accountMetamask = await this.addressService.substrateFromSeed(
+      this.configService.get<SignerConfig>('signer').substrateSeed,
+    );
+    return { substrate: accountSubstrate.address, metamask: accountMetamask.address };
   }
 }

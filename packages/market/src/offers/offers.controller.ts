@@ -65,9 +65,4 @@ export class OffersController {
       throw new NotFoundException(`No active offer for collection ${collectionId}, token ${tokenId}`);
     }
   }
-
-  @Post('/test_create')
-  async postOffers(@Body() offer: OffersDto) {
-    return this.offersService.testAddOffer(offer);
-  }
 }

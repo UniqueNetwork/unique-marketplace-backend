@@ -4,6 +4,11 @@ export declare namespace Market {
     tokenId: number;
     network?: string;
   }
+  export namespace FixPrice {
+    export interface Delete {
+      id: number;
+    }
+  }
 }
 
 export type CollectionToken = {
