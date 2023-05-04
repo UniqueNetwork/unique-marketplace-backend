@@ -27,8 +27,5 @@ export class SettingBlockchainUnique {
 
 export class SettingBlockchain {
   @ApiProperty({})
-  escrowAddress: string;
-
-  @ApiProperty({})
   unique: SettingBlockchainUnique;
 }

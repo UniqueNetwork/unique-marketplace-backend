@@ -134,6 +134,21 @@ export class PaginationResultDto<T> implements PaginationResult<T> {
   attributesCount?: Array<any>;
 }
 
+export class OffersResultDto {
+  @ApiProperty({ required: false, type: 'integer' })
+  page: number;
+  @ApiProperty({ required: false, type: 'integer' })
+  pageSize: number;
+  @ApiProperty({ required: false, type: 'integer' })
+  itemsCount: number;
+  @ApiProperty({ required: false })
+  items: OfferEntityDto[];
+  @ApiProperty({ required: false, type: 'array' })
+  attributes?: Array<any>;
+  @ApiProperty({ required: false, type: 'array' })
+  attributesCount?: Array<any>;
+}
+
 export class TradeSortingRequest {
   @ApiProperty({
     items: { type: 'string', default: 'desc(TradeDate)' },
@@ -206,7 +221,7 @@ export class OfferEntityDto {
   @Expose()
   tokenId: number;
 
-  @ApiProperty({ description: 'Price', example: '4000000000000' })
+  @ApiProperty({ description: 'Price', example: OfferPriceDto })
   @Expose()
   price: OfferPriceDto;
 
@@ -214,11 +229,11 @@ export class OfferEntityDto {
   @Expose()
   seller: string;
 
-  @ApiProperty({ description: 'Status offer' })
+  @ApiProperty({ description: 'Status offer', example: 'Opened' })
   @Expose()
   status: string;
 
-  @ApiProperty({ description: 'Data created' })
+  @ApiProperty({ description: 'Data created', example: new Date() })
   @Expose()
   creationAt: Date;
 

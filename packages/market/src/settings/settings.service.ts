@@ -49,7 +49,6 @@ export class SettingsService {
       marketType: 'marketType',
       administrators: [],
       blockchain: {
-        escrowAddress: await this.escrowAddress(),
         unique: {
           restUrl: this.configService.get('uniqueSdkRestUrl'),
           rpcUrl: this.configService.get('uniqueRpcUrl'),
@@ -62,8 +61,8 @@ export class SettingsService {
   }
 
   async getSettings(): Promise<SettingsDto> {
-    return await this.prepareSettings();
     try {
+      return await this.prepareSettings();
     } catch (e) {
       throw new BadRequestException(e.message);
     }
@@ -93,18 +92,5 @@ export class SettingsService {
     delete data.schema.attributesSchema;
     const { id, mode, name, description, owner, tokenPrefix, readOnly, schema } = data;
     return { id, name, description, tokenPrefix, mode, owner, readOnly, schema };
-  }
-
-  /**
-   * Escrow seed to Substrate and Metamask address
-   */
-  async escrowAddress(): Promise<any> {
-    const accountSubstrate = await this.addressService.substrateFromSeed(
-      this.configService.get<SignerConfig>('signer').substrateSeed,
-    );
-    const accountMetamask = await this.addressService.substrateFromSeed(
-      this.configService.get<SignerConfig>('signer').substrateSeed,
-    );
-    return { substrate: accountSubstrate.address, metamask: accountMetamask.address };
   }
 }

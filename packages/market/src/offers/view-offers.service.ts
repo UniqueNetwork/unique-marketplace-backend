@@ -153,9 +153,6 @@ export class ViewOffersService {
     if ((collectionIds ?? []).length <= 0) {
       return query;
     }
-    if (typeof collectionIds === 'string') {
-      return query.andWhere('view_offers.collection_id = :collectionIds', { collectionIds });
-    }
     return query.andWhere('view_offers.collection_id in (:...collectionIds)', { collectionIds });
   }
 
@@ -207,9 +204,6 @@ export class ViewOffersService {
   ): SelectQueryBuilder<ViewOffers> {
     if ((numberOfAttributes ?? []).length <= 0) {
       return query;
-    }
-    if (typeof numberOfAttributes === 'string') {
-      return query.andWhere('view_offers.total_items = :numberOfAttributes', { numberOfAttributes });
     }
     return query.andWhere('view_offers.total_items in (:...numberOfAttributes)', { numberOfAttributes });
   }
@@ -351,7 +345,6 @@ export class ViewOffersService {
           .where('view_offers_total_items is not null');
       }, '_filter')
       .getRawMany()) as any as Array<OfferAttributes>;
-    console.dir(attributesCount, { depth: 10 });
     return attributesCount.map((item) => {
       return {
         numberOfAttributes: +item.numberOfAttributes,
@@ -389,8 +382,6 @@ export class ViewOffersService {
 
   public async filter(offersFilter: OffersFilter, pagination: PaginationRequest, sort: OfferSortingRequest): Promise<any> {
     let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
-    console.dir(offersFilter, { depth: 10 });
-    debugger;
     // Filert by collection id
     queryFilter = this.byCollectionId(queryFilter, offersFilter.collectionId);
     // Filter by max price
