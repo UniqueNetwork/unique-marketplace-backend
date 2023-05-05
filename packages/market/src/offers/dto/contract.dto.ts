@@ -13,4 +13,7 @@ export class ContractDto implements ContractEntity {
 
   @ApiProperty({ example: 0 })
   version: number;
+
+  @ApiProperty({ example: 5 })
+  commission: number;
 }
