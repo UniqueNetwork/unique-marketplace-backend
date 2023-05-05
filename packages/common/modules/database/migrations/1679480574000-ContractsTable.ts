@@ -1,5 +1,5 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
-import { ContractEntity } from "../entities";
+import { ContractEntity } from '../entities';
 
 export class ContractsTable1677511684518 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
@@ -14,6 +14,7 @@ export class ContractsTable1677511684518 implements MigrationInterface {
             primaryKeyConstraintName: 'MARKET_CONTRACT_ADDRESS',
           },
           { name: 'version', type: 'integer', isUnique: true },
+          { name: 'commission', type: 'integer' },
           { name: 'created_at', type: 'integer' },
           { name: 'processed_at', type: 'integer' },
         ],

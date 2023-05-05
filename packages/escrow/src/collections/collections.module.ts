@@ -9,13 +9,7 @@ import { PropertiesTask } from '../tasks/properties.task';
 
 @Module({
   controllers: [CollectionsController],
-  providers: [
-    CollectionsService,
-    sdkProvider,
-    SdkService,
-    TokensTask,
-    CollectionTask,
-    PropertiesTask,
-  ],
+  providers: [CollectionsService, sdkProvider, SdkService, TokensTask, CollectionTask, PropertiesTask],
+  exports: [CollectionsService],
 })
 export class CollectionsModule {}

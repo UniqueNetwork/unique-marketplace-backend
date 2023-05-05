@@ -1,16 +1,8 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  JoinColumn,
-  ManyToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, JoinColumn, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { OfferEventType } from '../../types';
 import { OfferEntity } from './offer.entity';
 
-@Entity({ name: 'offer-events' })
+@Entity({ name: 'offer_events' })
 export class OfferEventEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -32,6 +24,18 @@ export class OfferEventEntity {
 
   @Column({ name: 'address', type: 'varchar', nullable: true })
   address: string;
+
+  @Column({ type: 'integer' })
+  amount: number;
+
+  @Column({ type: 'integer' })
+  commission: number;
+
+  @Column({ name: 'collection_mode', type: 'varchar' })
+  collectionMode: string;
+
+  @Column({ type: 'varchar' })
+  network: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

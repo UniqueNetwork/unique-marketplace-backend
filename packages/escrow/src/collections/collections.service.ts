@@ -90,4 +90,8 @@ export class CollectionsService {
       });
     }
   }
+
+  public get(collectionId: number) {
+    return this.collectionRepository.findOne({ where: { collectionId } });
+  }
 }

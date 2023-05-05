@@ -25,6 +25,7 @@ export abstract class DeployContractBase implements MigrationInterface {
     contractEntity.createdAt = blockNumber;
     contractEntity.processedAt = blockNumber;
     contractEntity.version = this.version;
+    contractEntity.commission = this.feeValue;
     await repository.save(contractEntity);
   }
 

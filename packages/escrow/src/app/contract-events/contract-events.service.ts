@@ -17,18 +17,15 @@ export class ContractEventsService implements OnModuleInit {
     @Inject(CollectionEventsHandler)
     private readonly collectionEventsHandler: CollectionEventsHandler,
     @Inject(ContractEventsHandler)
-    private readonly contractEventsHandler: ContractEventsHandler
+    private readonly contractEventsHandler: ContractEventsHandler,
   ) {
-    this.client = this.sdk.subscriptions.connect({
+    this.client = this.sdk.subscription.connect({
       reconnection: true,
       autoConnect: true,
       transports: ['websocket'],
     });
 
-    this.client.on(
-      'collections',
-      this.collectionEventsHandler.onEvent.bind(this.collectionEventsHandler)
-    );
+    this.client.on('collections', this.collectionEventsHandler.onEvent.bind(this.collectionEventsHandler));
     this.client.subscribeCollection();
   }
 
@@ -57,23 +54,15 @@ export class ContractEventsService implements OnModuleInit {
       });
 
     this.client.socket.on('connect_error', async (err) => {
-      this.logger.log(
-        `connect_error v${contract.version}:${contract.address}`,
-        err
-      );
+      this.logger.log(`connect_error v${contract.version}:${contract.address}`, err);
     });
     this.client.socket.on('connect', async () => {
       this.logger.log(`reconnect v${contract.version}:${contract.address}`);
-      const processedAt = await this.contractService.getProcessedBlock(
-        contract.address
-      );
+      const processedAt = await this.contractService.getProcessedBlock(contract.address);
       loadBlocks(processedAt);
     });
 
-    this.client.on(
-      'contract-logs',
-      this.contractEventsHandler.onEvent.bind(this.contractEventsHandler)
-    );
+    this.client.on('contract-logs', this.contractEventsHandler.onEvent.bind(this.contractEventsHandler));
     this.client.on('has-next', (room, data) => loadBlocks(data.nextId));
   }
 }

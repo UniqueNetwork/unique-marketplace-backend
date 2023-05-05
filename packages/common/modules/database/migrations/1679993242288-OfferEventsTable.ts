@@ -1,5 +1,5 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
-import { OfferEventEntity } from "../entities";
+import { OfferEventEntity } from '../entities';
 
 export class OfferEventsTable1679993242288 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
@@ -21,6 +21,10 @@ export class OfferEventsTable1679993242288 implements MigrationInterface {
           { name: 'meta', type: 'jsonb', default: "'{}'" },
           { name: 'block_number', type: 'integer' },
           { name: 'address', type: 'varchar', isNullable: true },
+          { name: 'amount', type: 'integer' },
+          { name: 'commission', type: 'integer' },
+          { name: 'collection_mode', type: 'varchar' },
+          { name: 'network', type: 'varchar' },
           {
             name: 'created_at',
             type: 'timestamp without time zone',

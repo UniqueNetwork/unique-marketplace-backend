@@ -11,9 +11,10 @@ import {
   TokenRevokeEventObject,
 } from '@app/contracts/assemblies/0/market';
 import { OfferEventType, OfferStatus } from '@app/common/modules/types';
-import { ContractEntity, ContractService, OfferService } from '@app/common/modules/database';
+import { ContractEntity, ContractService, OfferEntity, OfferEventEntity, OfferService } from '@app/common/modules/database';
 import { OfferEventService } from '@app/common/modules/database/services/offer-event.service';
 import { Sdk } from '@unique-nft/sdk/full';
+import { CollectionsService } from '../../../collections/collections.service';
 
 type LogEventHandler = (
   extrinsic: Extrinsic,
@@ -40,6 +41,8 @@ export class ContractEventsHandler {
     private readonly contractService: ContractService,
     @Inject(OfferEventService)
     private readonly offerEventService: OfferEventService,
+    @Inject(CollectionsService)
+    private readonly collectionsService: CollectionsService,
   ) {
     this.eventHandlers = {
       TokenIsUpForSale: this.tokenIsUpForSale.bind(this),
@@ -72,6 +75,7 @@ export class ContractEventsHandler {
       return;
     }
 
+    console.log('extrinsic', JSON.stringify(extrinsic, null, 2));
     await this.contractService.updateProcessedBlock(addressNormal, extrinsic.block.id);
 
     const abi = this.abiByAddress[addressNormal];
@@ -96,17 +100,32 @@ export class ContractEventsHandler {
     }
   }
 
+  private async createEventData(
+    offer: OfferEntity,
+    eventType: OfferEventType,
+    extrinsic: Extrinsic,
+    amount: number,
+  ): Promise<Omit<OfferEventEntity, 'id' | 'createdAt' | 'updatedAt'>> {
+    const collection = await this.collectionsService.get(offer.collectionId);
+    return {
+      offer,
+      eventType,
+      blockNumber: extrinsic.block.id,
+      address: extrinsic.signer,
+      amount,
+      commission: offer.contract.commission,
+      collectionMode: collection?.mode || '',
+      network: collection?.network || '',
+      meta: '{}',
+    };
+  }
+
   private async tokenIsUpForSale(extrinsic: Extrinsic, contractEntity: ContractEntity, tokenUpArgs: TokenIsUpForSaleEventObject) {
     const offer = await this.offerService.update(contractEntity, tokenUpArgs.item, OfferStatus.Opened, this.chain);
 
     if (offer) {
-      await this.offerEventService.create(
-        offer,
-        OfferEventType.Open,
-        extrinsic.block.id,
-        extrinsic.signer,
-        tokenUpArgs.item.amount,
-      );
+      const eventData = await this.createEventData(offer, OfferEventType.Open, extrinsic, tokenUpArgs.item.amount);
+      await this.offerEventService.create(eventData);
     }
   }
 
@@ -126,7 +145,8 @@ export class ContractEventsHandler {
     if (offer) {
       const eventType = tokenRevokeArgs.item.amount === 0 ? OfferEventType.Cancel : OfferEventType.Revoke;
 
-      await this.offerEventService.create(offer, eventType, extrinsic.block.id, extrinsic.signer, tokenRevokeArgs.amount);
+      const eventData = await this.createEventData(offer, eventType, extrinsic, tokenRevokeArgs.amount);
+      await this.offerEventService.create(eventData);
     }
   }
 
@@ -138,15 +158,10 @@ export class ContractEventsHandler {
     const offerStatus = tokenIsPurchasedArgs.item.amount === 0 ? OfferStatus.Completed : OfferStatus.Opened;
 
     const offer = await this.offerService.update(contractEntity, tokenIsPurchasedArgs.item, offerStatus);
-    console.dir({ extrinsic }, { depth: 10 });
+
     if (offer) {
-      await this.offerEventService.create(
-        offer,
-        OfferEventType.Buy,
-        extrinsic.block.id,
-        extrinsic.signer,
-        tokenIsPurchasedArgs.salesAmount,
-      );
+      const eventData = await this.createEventData(offer, OfferEventType.Buy, extrinsic, tokenIsPurchasedArgs.salesAmount);
+      await this.offerEventService.create(eventData);
     }
   }
 }
