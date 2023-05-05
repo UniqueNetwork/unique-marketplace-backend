@@ -5,7 +5,18 @@ import '@nomicfoundation/hardhat-chai-matchers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { UniqueNFT } from '@unique-nft/solidity-interfaces';
 import { Market } from '../../../typechain-types';
-import { createSdk, deploy, getAccounts, getCollectionContract, getCollectionData } from './utils';
+import {
+  createSdk,
+  deploy,
+  expectOrderStruct,
+  findEventObject,
+  getAccounts,
+  getCollectionContract,
+  getCollectionData,
+} from './utils';
+import { Address } from '@unique-nft/utils';
+import { TokenIsUpForSaleEventObject } from '../../../typechain-types/packages/contracts/src/Market';
+import { TokenIsApprovedEventObject, TokenIsPurchasedEventObject } from '../assemblies/0/market';
 
 describe.only('e2e', function () {
   let sdk: Sdk;
@@ -14,19 +25,22 @@ describe.only('e2e', function () {
   let buyAccount: SignerWithAddress;
   let uniqueNFT: UniqueNFT;
   let market: Market;
+  let marketVersion: number;
   let marketFee = 10;
 
   let collectionId: number;
   let tokenId: number;
 
-  async function expectOrder(amount: number) {
+  async function getAndExpectOrder(amount: number) {
     const order = await market.getOrder(collectionId, tokenId);
-
-    expect(order.collectionId).to.be.eq(collectionId);
-    expect(order.tokenId).to.be.eq(tokenId);
-    expect(order.price).to.be.eq(BigNumber.from(tokenPrice));
-    expect(order.amount).to.be.eq(amount);
-    expect(order.seller).to.be.eq(sellAccount.address);
+    expectOrderStruct(order, {
+      id: 1,
+      collectionId,
+      tokenId,
+      amount,
+      price: tokenPrice,
+      seller: Address.extract.ethCrossAccountId(sellAccount.address),
+    });
   }
 
   it('prepare', async () => {
@@ -43,33 +57,58 @@ describe.only('e2e', function () {
 
     uniqueNFT = await getCollectionContract(sellAccount, collectionId);
 
-    market = (await deploy(marketFee)) as Market;
+    [market, marketVersion] = await deploy(marketFee);
   });
 
   it('approve', async () => {
-    await expect(uniqueNFT.approve(market.address, tokenId)).to.emit(uniqueNFT, 'Approval');
+    const approved = await uniqueNFT.getApproved(tokenId);
+    if (approved !== market.address) {
+      await expect(uniqueNFT.approve(market.address, tokenId)).to.emit(uniqueNFT, 'Approval');
+    }
   });
 
   const tokenPrice = 100;
   const putAmount = 10;
   it('put', async () => {
-    await expect(
-      market.connect(sellAccount).put(collectionId, tokenId, tokenPrice, putAmount, {
+    const seller = Address.extract.ethCrossAccountId(sellAccount.address);
+
+    const result = await (
+      await market.connect(sellAccount).put(collectionId, tokenId, tokenPrice, putAmount, seller, {
         gasLimit: 10_000_000,
-      }),
-    )
-      .to.emit(market, 'TokenIsUpForSale')
-      .withArgs(1, [1, collectionId, tokenId, putAmount, tokenPrice, sellAccount.address]);
+      })
+    ).wait();
+
+    const eventObject = findEventObject<TokenIsUpForSaleEventObject>(result, 'TokenIsUpForSale');
+
+    expect(eventObject.version).to.eq(marketVersion);
+    expectOrderStruct(eventObject.item, {
+      id: 1,
+      collectionId,
+      tokenId,
+      amount: putAmount,
+      price: tokenPrice,
+      seller: seller,
+    });
   });
 
   it('check approved', async () => {
-    await expect(
-      market.connect(ownerAccount).checkApproved(collectionId, tokenId, {
+    const result = await (
+      await market.connect(ownerAccount).checkApproved(collectionId, tokenId, {
         gasLimit: 10_000_000,
-      }),
-    )
-      .to.emit(market, 'TokenIsApproved')
-      .withArgs(1, [1, collectionId, tokenId, putAmount, tokenPrice, sellAccount.address]);
+      })
+    ).wait();
+
+    const eventObject = findEventObject<TokenIsApprovedEventObject>(result, 'TokenIsApproved');
+
+    expect(eventObject.version).to.eq(marketVersion);
+    expectOrderStruct(eventObject.item, {
+      id: 1,
+      collectionId,
+      tokenId,
+      amount: putAmount,
+      price: tokenPrice,
+      seller: Address.extract.ethCrossAccountId(sellAccount.address),
+    });
   });
 
   let ownerBalanceBefore: BigNumber;
@@ -80,7 +119,7 @@ describe.only('e2e', function () {
   });
 
   it('check order before buy', async () => {
-    await expectOrder(putAmount);
+    await getAndExpectOrder(putAmount);
   });
 
   const buyAmount = 2;
@@ -88,25 +127,34 @@ describe.only('e2e', function () {
   const feeValue = Math.floor((buyTotalValue * marketFee) / 100);
   let buyUsePrice: BigNumber;
   it('buy', async () => {
-    const { effectiveGasPrice, cumulativeGasUsed, events } = await (
-      await market.connect(buyAccount).buy(collectionId, tokenId, buyAmount, buyAccount.address, 0, {
-        value: buyTotalValue,
-        gasLimit: 10_000_000,
-      })
+    const result = await (
+      await market
+        .connect(buyAccount)
+        .buy(collectionId, tokenId, buyAmount, Address.extract.ethCrossAccountId(buyAccount.address), {
+          value: buyTotalValue,
+          gasLimit: 10_000_000,
+        })
     ).wait();
 
-    const event = events?.find((log) => log.event === 'TokenIsPurchased');
+    const { effectiveGasPrice, cumulativeGasUsed } = result;
 
-    expect(event).to.deep.include({
-      event: 'TokenIsPurchased',
-      args: [1, [1, collectionId, tokenId, putAmount - buyAmount, BigNumber.from(tokenPrice), sellAccount.address], buyAmount],
+    const eventObject = findEventObject<TokenIsPurchasedEventObject>(result, 'TokenIsPurchased');
+    expect(eventObject.version).to.eq(marketVersion);
+    expect(eventObject.salesAmount).to.eq(buyAmount);
+    expectOrderStruct(eventObject.item, {
+      id: 1,
+      collectionId,
+      tokenId,
+      amount: putAmount - buyAmount,
+      price: tokenPrice,
+      seller: Address.extract.ethCrossAccountId(sellAccount.address),
     });
 
     buyUsePrice = effectiveGasPrice.mul(cumulativeGasUsed);
   });
 
   it('check order after buy', async () => {
-    await expectOrder(putAmount - buyAmount);
+    await getAndExpectOrder(putAmount - buyAmount);
   });
 
   it('check balances after buy', async function () {
@@ -127,23 +175,14 @@ describe.only('e2e', function () {
         gasLimit: 10_000_000,
       })
     ).wait();
-    /*
+
     await expect(
-      market
-        .connect(sellAccount)
-        .revoke(collectionId, tokenId, putAmount - buyAmount, {
-          gasLimit: 10_000_000,
-        })
+      market.connect(sellAccount).revoke(collectionId, tokenId, putAmount - buyAmount, {
+        gasLimit: 10_000_000,
+      }),
     )
-      .to.emit(market, "TokenRevoke")
-      .withArgs("1", [
-        collectionId,
-        tokenId,
-        tokenPrice,
-        0,
-        sellAccount.address,
-      ]);
-     */
+      .to.emit(market, 'TokenRevoke')
+      .withArgs(marketVersion, [collectionId, tokenId, tokenPrice, 0, sellAccount.address]);
   });
 
   it('withdraw', async () => {

@@ -6,6 +6,10 @@ import { Sdk } from '@unique-nft/sdk/full';
 import * as fs from 'fs';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { loadConfig } from '../scripts';
+import { Market } from '../../../typechain-types';
+import { ContractReceipt, Event } from '@ethersproject/contracts/src.ts';
+import { expect } from 'chai';
+import { BigNumber } from 'ethers';
 
 export async function createSdk() {
   const appConfig = loadConfig();
@@ -140,11 +144,11 @@ async function createFungible(sdk: Sdk, address: string): Promise<number> {
   return collectionId;
 }
 
-export async function deploy(fee: number = 10) {
+export async function deploy(fee: number = 10): Promise<[Market, number]> {
   const Market = await ethers.getContractFactory('Market');
-  const market = await Market.deploy(fee);
-
-  return market;
+  const market = (await Market.deploy(fee, Date.now())) as Market;
+  const version = await market.version();
+  return [market, version];
 }
 
 export async function getCollectionContract(owner: any, collectionId: number) {
@@ -177,4 +181,22 @@ export async function getAccounts(sdk: Sdk, collectionId: number, tokenId: numbe
   const buyAccount: SignerWithAddress = isOwner1 ? account2 : account1;
 
   return { ownerAccount, sellAccount, buyAccount };
+}
+
+export function findEventObject<T>(result: ContractReceipt, name: string): T {
+  const event = (result.events || []).find((event) => event.event === name);
+  if (!event) {
+    throw new Error(`Event ${name} not found`);
+  }
+  return event.args as T;
+}
+
+export function expectOrderStruct(receivedOrder: Market.OrderStruct, order: Market.OrderStruct) {
+  expect(receivedOrder.id).eq(order.id);
+  expect(receivedOrder.collectionId).eq(order.collectionId);
+  expect(receivedOrder.tokenId).eq(order.tokenId);
+  expect(receivedOrder.amount).eq(order.amount);
+  expect(receivedOrder.price).eq(BigNumber.from(order.price));
+  expect(receivedOrder.seller.eth).eq(order.seller.eth);
+  expect(receivedOrder.seller.sub).eq(BigNumber.from(order.seller.sub));
 }
