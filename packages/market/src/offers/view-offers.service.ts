@@ -368,8 +368,9 @@ export class ViewOffersService {
     let queryFilter = this.viewOffersRepository
       .createQueryBuilder('view_offers')
       .where({ collection_id: collectionId, token_id: tokenId });
-    const bundle = await this.bundle(collectionId, tokenId);
-    queryFilter = this.byCollectionTokenId(queryFilter, bundle.collectionId, bundle.tokenId);
+    // TODO: deal with the error by bundles, collector may be fail
+    // const bundle = await this.bundle(collectionId, tokenId);
+    // queryFilter = this.byCollectionTokenId(queryFilter, bundle.collectionId, bundle.tokenId);
     queryFilter = this.prepareQuery(queryFilter);
     const itemQuery = this.pagination(queryFilter, { page: 1, pageSize: 1 });
     const items = await itemQuery.query.getRawMany();
