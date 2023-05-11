@@ -57,7 +57,7 @@ export class BundleService {
       .distinct()
       .from(PropertiesEntity, 'properties')
       .where('properties.nested @? :nested', {
-        nested: `$[*] ? (@.collectionId == ${+collectionId} && @.tokenId == ${+tokenId})`,
+        nested: `$[*] ? (@.collection_id == ${+collectionId} && @.token_id == ${+tokenId})`,
       })
       .getRawMany();
     return ids.map((item) => {

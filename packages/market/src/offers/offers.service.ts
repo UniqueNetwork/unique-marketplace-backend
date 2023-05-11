@@ -108,7 +108,8 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
 
     const offers = this.parseItems(source, properties_filter, collections).pop() as any as ViewOffers;
 
-    return offers && OfferEntityDto.fromOffersEntity(offers);
+    console.dir(offers, { depth: 10 });
+    return null; //offers && OfferEntityDto.fromOffersEntity(offers);
   }
 
   private parserCollectionIdTokenId(items: Array<any>): string | null {
