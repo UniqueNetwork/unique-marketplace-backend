@@ -1,26 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAdminDto } from './dto/create-admin.dto';
-import { UpdateAdminDto } from './dto/update-admin.dto';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { AdminSessionEntity } from '@app/common/modules/database/entities/admin-sessions.entity';
+import { Repository } from 'typeorm';
+import { SdkMarketService } from '../sdk/sdk.service';
 
 @Injectable()
 export class AdminService {
-  create(createAdminDto: CreateAdminDto) {
-    return 'This action adds a new admin';
-  }
+  private logger: Logger = new Logger(AdminService.name);
+  constructor(
+    private sdkMarketService: SdkMarketService,
+    @InjectRepository(AdminSessionEntity) private adminRepository: Repository<AdminSessionEntity>,
+  ) {}
 
-  findAll() {
-    return `This action returns all admin`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} admin`;
-  }
-
-  update(id: number, updateAdminDto: UpdateAdminDto) {
-    return `This action updates a #${id} admin`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} admin`;
+  async saveSessions(account: string, collectionId: number, metadata?: any): Promise<void> {
+    const sessionId = await this.adminRepository.create({
+      address: account,
+      substrate_address: account,
+      collection_id: collectionId,
+      metadata,
+    });
+    console.dir(sessionId, { depth: 10 });
+    await this.adminRepository.save(sessionId);
   }
 }

@@ -10,26 +10,16 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CollectionsService } from './collections.service';
-import {
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CollectionStatus } from '@app/common/modules/types';
 import { BaseController } from '@app/common/src/lib/base.controller';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
-import {
-  AddTokensDto,
-  PaginateCollectionDto,
-  ResponseTokenDto,
-} from './dto/create-collection.dto';
-import { EventPattern, Payload } from '@nestjs/microservices';
+import { AddTokensDto, PaginateCollectionDto, ResponseTokenDto } from './dto/create-collection.dto';
 import { readApiDocs } from '../utils/utils';
-import fs from 'fs';
+import { LoginGuard } from '../admin/guards/login.guard';
 
 @ApiTags('Collections')
 @Controller('collections')
@@ -53,7 +43,7 @@ export class CollectionsController extends BaseController<CollectionsService> {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
     @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe)
-    limit: number = 10
+    limit: number = 10,
   ): Promise<PaginateCollectionDto> {
     limit = limit > 100 ? 100 : limit;
     return await this.collectionsService.findAll({
@@ -67,7 +57,10 @@ export class CollectionsController extends BaseController<CollectionsService> {
     summary: 'Adding the collection and its tokens to the database',
     description: readApiDocs('collection-add.md'),
   })
+  //@ApiBearerAuth()
+  //@UseGuards(LoginGuard)
   @ApiQuery({ name: 'collectionId', type: 'integer' })
+  @ApiQuery({ name: 'account', type: 'string', required: false })
   async addCollection(@Query('collectionId') collectionId: number) {
     return await this.collectionsService.addCollection(collectionId);
   }
@@ -79,20 +72,14 @@ export class CollectionsController extends BaseController<CollectionsService> {
     description: readApiDocs('tokens-for-sales.md'),
   })
   @ApiResponse({ status: HttpStatus.OK, type: ResponseTokenDto })
-  async addTokens(
-    @Param('collectionId') collectionId: number,
-    @Body() data: AddTokensDto
-  ): Promise<ResponseTokenDto> {
+  async addTokens(@Param('collectionId') collectionId: number, @Body() data: AddTokensDto): Promise<ResponseTokenDto> {
     return await this.collectionsService.allowedTokens(collectionId, data);
   }
 
   @Patch('/toggle')
   @ApiQuery({ name: 'id' })
   @ApiQuery({ name: 'status', enum: CollectionStatus })
-  async updateStatus(
-    @Query('id') id: number,
-    @Query('status') status: CollectionStatus
-  ) {
+  async updateStatus(@Query('id') id: number, @Query('status') status: CollectionStatus) {
     return await this.collectionsService.toggleCollection({
       collectionId: id,
       status: status,

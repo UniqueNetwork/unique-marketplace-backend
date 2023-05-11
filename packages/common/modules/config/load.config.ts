@@ -18,6 +18,7 @@ export const loadConfig = (): Config => ({
     metamaskSeed: process.env.METAMASK_SIGNER_SEED,
     substrateSeed: process.env.SUBSTRATE_SIGNER_SEED,
   },
+  signatureKey: process.env.SIGNATURE_KEY || '', // Sign and Verify key (sign the following data)
 
   cache: createCacheConfig(process.env),
 
