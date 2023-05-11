@@ -3,6 +3,11 @@ import { OfferEntity } from './offer.entity';
 import { OfferEventEntity } from './offer-event.entity';
 import { ContractEntity } from './contract.entity';
 
+export class PriceOriginType {
+  raw: string;
+  parsed: bigint;
+}
+
 @ViewEntity({
   expression: (dataSource: DataSource): SelectQueryBuilder<any> => {
     const queryBuilder = dataSource.createQueryBuilder(OfferEventEntity, 'event');
@@ -18,7 +23,6 @@ import { ContractEntity } from './contract.entity';
       'offer.amount AS total_amount',
       'offer.seller',
       'event.address AS buyer',
-      'jsonb_build_object("raw", offer.price_raw, "parsed", offer.price_parsed) AS price',
       'offer.price_raw',
       'offer.price_parsed',
       'contracts.address AS contract_address',
@@ -30,7 +34,7 @@ import { ContractEntity } from './contract.entity';
 
     queryBuilder.leftJoin(OfferEntity, 'offer', 'event.offer_id = offer."id"');
     queryBuilder.leftJoin(ContractEntity, 'contracts', 'offer.contract_address::text = contracts.address');
-    queryBuilder.where('event.event_type::text = "Buy"::text');
+    queryBuilder.where("event.event_type::text = 'Buy'::text");
     return queryBuilder;
   },
   name: 'view_trades',
@@ -68,9 +72,6 @@ export class TradeViewEntity {
 
   @ViewColumn()
   buyer: string;
-
-  @ViewColumn()
-  price: { raw: number; parsed: number };
 
   @ViewColumn()
   price_raw: number;
