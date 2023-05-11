@@ -75,7 +75,6 @@ export class ContractEventsHandler {
       return;
     }
 
-    console.log('extrinsic', JSON.stringify(extrinsic, null, 2));
     await this.contractService.updateProcessedBlock(addressNormal, extrinsic.block.id);
 
     const abi = this.abiByAddress[addressNormal];

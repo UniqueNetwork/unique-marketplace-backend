@@ -26,7 +26,9 @@ export class ContractEventsService implements OnModuleInit {
     });
 
     this.client.on('collections', this.collectionEventsHandler.onEvent.bind(this.collectionEventsHandler));
-    this.client.subscribeCollection();
+    this.client.socket.on('connect', async () => {
+      this.client.subscribeCollection();
+    });
   }
 
   async onModuleInit() {

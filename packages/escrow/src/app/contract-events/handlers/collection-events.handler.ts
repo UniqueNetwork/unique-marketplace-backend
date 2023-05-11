@@ -38,7 +38,7 @@ export class CollectionEventsHandler {
 
       if (method === 'Approved') {
         const { addressTo } = parsed;
-        if (this.abiByAddress[addressTo]) {
+        if (addressTo && this.abiByAddress[addressTo.toLowerCase()]) {
           await this.runCheckApproved(offer);
         }
       }
