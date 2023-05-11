@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ContractLogData, Extrinsic, Room } from '@unique-nft/sdk';
+import { ContractLogData, Extrinsic } from '@unique-nft/sdk';
 import { ethers } from 'ethers';
 import { LogDescription } from '@ethersproject/abi/src.ts/interface';
 import {
@@ -58,7 +58,7 @@ export class ContractEventsHandler {
     this.abiByAddress = abiByAddress;
   }
 
-  async onEvent(room: Room, data: ContractLogData) {
+  async onEvent(room, data: ContractLogData) {
     const { log, extrinsic } = data;
 
     const { address } = log;

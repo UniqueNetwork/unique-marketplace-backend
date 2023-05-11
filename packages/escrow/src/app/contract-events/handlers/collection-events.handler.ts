@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CollectionData, Room, Sdk } from '@unique-nft/sdk/full';
+import { CollectionData, Sdk } from '@unique-nft/sdk/full';
 import { OfferService, OfferEntity } from '@app/common/modules/database';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class CollectionEventsHandler {
     this.abiByAddress = abiByAddress;
   }
 
-  public async onEvent(room: Room, data: CollectionData) {
+  public async onEvent(room, data: CollectionData) {
     const { parsed } = data;
 
     const { collectionId, tokenId, event } = parsed;
