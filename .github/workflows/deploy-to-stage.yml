@@ -9,10 +9,10 @@ on:
 
 jobs:
   run-gitlab-pipeline:
-    name: Run gitlab pipeline
+    name: Run gitlab pipeline (k8s)
     runs-on: ubuntu-latest
     steps:
       - name: Trigger gitlab
         uses: wei/curl@v1
         with:
-          args: -X POST -F token=${{ secrets.UNIQUE_GITLAB_TOKEN }} -F ref=master -F variables[REMOTE_COMMIT]=${GITHUB_SHA} -F variables[DEPLOY_TO]=stage https://gitlab.uniquenetwork.dev/api/v4/projects/75/trigger/pipeline
+          args: -X POST -F token=${{ secrets.UNIQUE_GITLAB_TOKEN_K8S }} -F ref=master -F variables[REMOTE_COMMIT]=${GITHUB_SHA} -F variables[DEPLOY_TO]=stage https://gitlab.uniquenetwork.dev/api/v4/projects/77/trigger/pipeline
