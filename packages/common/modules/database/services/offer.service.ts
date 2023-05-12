@@ -50,7 +50,7 @@ export class OfferService {
       offer.status = status;
     }
 
-    offer.priceParsed = order.price.toBigInt() / 10n ** 18n;
+    offer.priceParsed = Number(order.price.toBigInt() / 10n ** 18n);
     offer.priceRaw = order.price.toString();
     offer.amount = order.amount;
     offer.contract = contract;
