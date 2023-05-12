@@ -54,5 +54,5 @@ export class OfferEventEntity {
   updatedAt: Date;
 
   @OneToOne(() => PropertiesEntity)
-  token_properties: PropertiesEntity;
+  token_properties?: PropertiesEntity;
 }

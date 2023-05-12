@@ -3,13 +3,13 @@ import { SdkMarketService } from '../../sdk/sdk.service';
 import { hexToU8a } from '@polkadot/util';
 import { encodeAddress, signatureVerify } from '@polkadot/util-crypto';
 import { ConfigService } from '@nestjs/config';
-import { AdminService } from '../admin.service';
+import { SessionService } from '../session.service';
 
 @Injectable()
 export class LoginGuard implements CanActivate {
   constructor(
     private sdkMarketService: SdkMarketService,
-    private adminService: AdminService,
+    private sessionService: SessionService,
     private configService: ConfigService,
   ) {}
 
@@ -36,7 +36,7 @@ export class LoginGuard implements CanActivate {
       if (req.query?.collectionId) {
         console.dir({ collection: req.query?.collectionId }, { depth: 10 });
         await this.sdkMarketService.checkCollectionOwner(signerAddress, req.query.collectionId);
-        await this.adminService.saveSessions(signerAddress, +req.query.collectionId);
+        await this.sessionService.saveSessions(signerAddress, +req.query.collectionId);
       }
       return true;
     } catch (e) {

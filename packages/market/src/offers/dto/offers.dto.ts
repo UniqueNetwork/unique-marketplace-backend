@@ -113,16 +113,9 @@ export class PaginationRequest {
 }
 
 export class PaginationResultDto<T> implements PaginationResult<T> {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  constructor(type: Function, paginationResult: PaginationResult<T>) {
-    this.type = type;
-    Object.assign(this, paginationResult);
-  }
-
   @Exclude()
   // eslint-disable-next-line @typescript-eslint/ban-types
   type: Function;
-
   @Type((options) => {
     return (options.newObject as PaginationResultDto<T>).type;
   })
@@ -132,6 +125,12 @@ export class PaginationResultDto<T> implements PaginationResult<T> {
   items: T[];
   attributes?: Array<any>;
   attributesCount?: Array<any>;
+
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  constructor(type: Function, paginationResult: PaginationResult<T>) {
+    this.type = type;
+    Object.assign(this, paginationResult);
+  }
 }
 
 export class OffersResultDto {
@@ -151,12 +150,26 @@ export class OffersResultDto {
 
 export class TradeSortingRequest {
   @ApiProperty({
-    items: { type: 'string', default: 'desc(TradeDate)' },
+    type: 'array',
+    items: {
+      type: 'string',
+      enum: [
+        'asc(Price)',
+        'desc(Price)',
+        'asc(TokenId)',
+        'desc(TokenId)',
+        'asc(CollectionId)',
+        'desc(CollectionId)',
+        'asc(TradeDate)',
+        'desc(TradeDate)',
+      ],
+    },
+    default: ['desc(TradeDate)'],
     description:
-      'Possible values: asc(Price), desc(Price), asc(TokenId), desc(TokenId), asc(CollectionId), desc(CollectionId), asc(TradeDate), desc(TradeDate), asc(Status), desc(Status).',
+      'Possible values: asc(Price), desc(Price), asc(TokenId), desc(TokenId), asc(CollectionId), desc(CollectionId), asc(TradeDate), desc(TradeDate)',
     required: false,
   })
-  public sort?: SortingParameter[];
+  public sort: SortingParameter[];
 }
 
 export class OfferAttributes {

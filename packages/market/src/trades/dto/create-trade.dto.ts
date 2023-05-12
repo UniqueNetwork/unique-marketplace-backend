@@ -1,8 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, plainToInstance, Type } from 'class-transformer';
-import { TokenDescriptionDto } from '../../offers/dto/offers.dto';
-import { TypeAttributToken } from '@app/common/modules/types';
-import { OfferEntity, OfferEventEntity } from '@app/common/modules/database';
+import { TradeViewEntity } from '@app/common/modules/database';
 
 export class CreateTradeDto {}
 
@@ -50,7 +48,13 @@ export class TradeOfferEvents {
   offerId: string;
 }
 
-export class MarketTradeDto {
+export class TradePriceDto {
+  parsed: number;
+  raw: string;
+  commission: number;
+}
+
+export class TradeOfferDto {
   @ApiProperty({ description: 'Collection ID' })
   @Expose()
   @Type(() => Number)
@@ -63,8 +67,8 @@ export class MarketTradeDto {
 
   @ApiProperty({ description: 'Price' })
   @Expose()
-  @Type(() => String)
-  price: string;
+  @Type(() => TradePriceDto)
+  price: TradePriceDto;
 
   @ApiProperty({ description: 'Seller' })
   @Expose()
@@ -90,77 +94,39 @@ export class MarketTradeDto {
   @Type(() => String)
   offerId: string;
 
-  @ApiProperty({ description: 'Token description' })
+  @ApiProperty({ description: 'Offer Id' })
   @Expose()
-  @Type(() => TokenDescriptionDto)
-  tokenDescription: TokenDescriptionDto;
+  @Type(() => Object)
+  tokenDescription: any;
 
-  // static fromTrade(trade: TradeOfferEvents): any {
-  //   console.dir(trade, { depth: 10 });
-  //   const plain: Record<string, any> = {
-  //     buyer: trade.seller,
-  //     seller: trade.seller,
-  //     collectionId: +trade.offer.collectionId,
-  //     creationDate: trade.offer.createdAt,
-  //     price: trade.offer.priceRaw,
-  //     tokenId: +trade.offer.tokenId,
-  //     tradeDate: trade.createdAt,
-  //     offerId: trade?.offer.id || null,
-  //   };
-  //
-  //   if (Array.isArray(trade?.) {
-  //     plain.tokenDescription = trade?.token_properties.reduce(
-  //       (acc, item) => {
-  //         if (item.type === TypeAttributToken.Prefix) {
-  //           acc.prefix = item.items.pop();
-  //         }
-  //         //TODO: Переделать сборку токена
-  //         if (item.key === 'collectionName') {
-  //           acc.collectionName = item.items.pop();
-  //         }
-  //
-  //         if (item.key === 'description') {
-  //           acc.description = item.items.pop();
-  //         }
-  //
-  //         if ([TypeAttributToken.ImageURL, TypeAttributToken.VideoURL].includes(item.type)) {
-  //           acc[`${item.key}`] = item.items.pop();
-  //         }
-  //
-  //         if (
-  //           (item.type === TypeAttributToken.String || item.type === TypeAttributToken.Enum) &&
-  //           !['collectionName', 'description'].includes(item.key)
-  //         ) {
-  //           acc.attributes.push({
-  //             key: item.key,
-  //             value: item.items.length === 1 ? item.items.pop() : item.items,
-  //             type: item.type,
-  //           });
-  //         }
-  //         return acc;
-  //       },
-  //       {
-  //         attributes: [],
-  //       },
-  //     );
-  //   }
-  //
-  //   return plainToInstance<MarketTradeDto, Record<string, any>>(MarketTradeDto, plain, {
-  //     excludeExtraneousValues: true,
-  //   });
-  //}
-}
+  static parseItem(trade: TradeViewEntity): TradeOfferDto {
+    const {
+      data: { collection, image, attributes, owners },
+    } = trade;
+    const item: Record<string, any> = {
+      tokenId: +trade.token_id,
+      collectionId: trade.collection_id,
+      offerId: trade.offer_id,
+      buyer: trade.buyer,
+      seller: trade.seller,
+      price: { parsed: +trade.price_parsed, raw: trade.price_raw, commission: trade.contract_commission },
+      contract: { address: trade.contract_address, commission: trade.contract_commission },
+      creationDate: trade.created_date,
+      tradeDate: trade.trade_date,
+      owners,
+      tokenDescription: {
+        collectionName: collection.name,
+        coverPicture: collection.schema.coverPicture.url,
+        mode: collection.mode,
+        prefix: collection.tokenPrefix,
+        description: collection.description,
+        image: image.fullUrl || image.url,
+        attributes,
+      },
+    };
 
-export class ResponseMarketTradeDto {
-  @ApiProperty({})
-  page: number;
-
-  @ApiProperty({})
-  pageSize: number;
-
-  @ApiProperty({})
-  itemsCount: number;
-
-  @ApiProperty({ type: [MarketTradeDto], format: 'array' })
-  items: [MarketTradeDto];
+    return plainToInstance<TradeOfferDto, Record<string, any>>(TradeOfferDto, item, {
+      excludeExtraneousValues: false,
+    });
+  }
 }

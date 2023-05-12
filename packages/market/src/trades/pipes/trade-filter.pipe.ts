@@ -20,10 +20,9 @@ export class ParseTradesFilterPipe implements PipeTransform<any, TransformationR
   }
 
   transform(value: UntypedRequest<TradesFilterDto>, metadata: ArgumentMetadata): TransformationResult<TradesFilterDto> {
-    if (metadata?.metatype?.name !== 'TradesFilter') {
+    if (metadata?.metatype?.name !== 'TradesFilterDto') {
       return value;
     }
-
     return {
       collectionId: this.parseCollectionIdRequest(value.collectionId),
       tokenId: this.parseCollectionIdRequest(value.tokenId),

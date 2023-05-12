@@ -14,6 +14,7 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
   private logger: Logger = new Logger(CollectionsService.name);
 
   private readonly MAX_TOKEN_NUMBER = 2147483647;
+
   constructor(
     @Inject(pgNotifyClient) private client: PgTransportClient,
     @InjectRepository(CollectionEntity)

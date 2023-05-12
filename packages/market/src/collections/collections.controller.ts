@@ -65,6 +65,19 @@ export class CollectionsController extends BaseController<CollectionsService> {
     return await this.collectionsService.addCollection(collectionId);
   }
 
+  @Patch('test/add')
+  @ApiOperation({
+    summary: 'Adding the collection and its tokens to the database',
+    description: readApiDocs('collection-add.md'),
+  })
+  @ApiBearerAuth()
+  @UseGuards(LoginGuard)
+  @ApiQuery({ name: 'collectionId', type: 'integer' })
+  @ApiQuery({ name: 'account', type: 'string', required: false })
+  async addCollectionTest(@Query('collectionId') collectionId: number) {
+    return { collectionId: collectionId };
+  }
+
   @Patch('/allowed/tokens/:collectionId')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

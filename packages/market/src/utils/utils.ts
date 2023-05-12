@@ -23,6 +23,18 @@ export function queryArray(name: string, itemType: string) {
   };
 }
 
+export function equalsIgnoreCase(a: string | undefined | null, b: string | undefined | null): boolean {
+  if (a == null) {
+    return b == null;
+  }
+
+  if (b == null) {
+    return false;
+  }
+
+  return a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0;
+}
+
 export async function paginate<T>(query: SelectQueryBuilder<T>, parameter: PaginationRequest): Promise<PaginationResult<T>> {
   const page = parameter.page ?? 1;
   const pageSize = parameter.pageSize ?? 10;

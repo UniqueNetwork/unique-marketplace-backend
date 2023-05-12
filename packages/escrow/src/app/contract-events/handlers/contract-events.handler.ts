@@ -34,7 +34,6 @@ export class ContractEventsHandler {
 
   constructor(
     private sdk: Sdk,
-
     @Inject(OfferService)
     private readonly offerService: OfferService,
     @Inject(ContractService)
@@ -104,7 +103,7 @@ export class ContractEventsHandler {
     eventType: OfferEventType,
     extrinsic: Extrinsic,
     amount: number,
-  ): Promise<Omit<OfferEventEntity, 'id' | 'createdAt' | 'updatedAt'>> {
+  ): Promise<Omit<OfferEventEntity, 'id' | 'createdAt' | 'updatedAt' | 'token_properties'>> {
     const collection = await this.collectionsService.get(offer.collectionId);
     return {
       offer,
