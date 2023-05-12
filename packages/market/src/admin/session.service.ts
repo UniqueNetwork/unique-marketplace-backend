@@ -5,8 +5,9 @@ import { Repository } from 'typeorm';
 import { SdkMarketService } from '../sdk/sdk.service';
 
 @Injectable()
-export class AdminService {
-  private logger: Logger = new Logger(AdminService.name);
+export class SessionService {
+  private logger: Logger = new Logger(SessionService.name);
+
   constructor(
     private sdkMarketService: SdkMarketService,
     @InjectRepository(AdminSessionEntity) private adminRepository: Repository<AdminSessionEntity>,
