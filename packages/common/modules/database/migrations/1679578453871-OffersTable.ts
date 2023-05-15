@@ -1,5 +1,5 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
-import { ContractEntity, OfferEntity } from "../entities";
+import { ContractEntity, OfferEntity } from '../entities';
 
 export class OffersTable1679578453871 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
@@ -16,7 +16,7 @@ export class OffersTable1679578453871 implements MigrationInterface {
           { name: 'order_id', type: 'integer' },
           { name: 'collection_id', type: 'integer' },
           { name: 'token_id', type: 'integer' },
-          { name: 'price_parsed', type: 'bigint' },
+          { name: 'price_parsed', type: 'float8' },
           { name: 'price_raw', type: 'varchar' },
           { name: 'amount', type: 'integer' },
           { name: 'contract_address', type: 'varchar' },

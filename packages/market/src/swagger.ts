@@ -4,25 +4,14 @@ import { ConfigService } from '@nestjs/config';
 import * as utils from './utils/utils';
 import { version } from '../../../package.json';
 
-export default async function swaggerInit(
-  app: INestApplication,
-  config: ConfigService
-) {
+export default async function swaggerInit(app: INestApplication, config: ConfigService) {
   const fileDocumentSecondary = utils.readApiDocs('description.md');
   const description = [fileDocumentSecondary].filter((el) => el).join('\n\n');
   const documentBuild = new DocumentBuilder()
     .setTitle(config.get('market.name'))
     .setDescription(description)
     .setVersion(`v${version}`)
-    .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-      'accessToken'
-    )
-    .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-      'refreshToken'
-    )
-    .addApiKey({ type: 'apiKey', in: 'header', name: 'x-api-key' }, 'apiKey')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, documentBuild, {
@@ -32,6 +21,6 @@ export default async function swaggerInit(
 
   SwaggerModule.setup('swagger', app, document, {
     explorer: true,
-    customSiteTitle: config.get('market.title')
+    customSiteTitle: config.get('market.title'),
   });
 }

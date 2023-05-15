@@ -27,12 +27,6 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     super({});
   }
 
-  async testAddOffer(offer: OffersDto) {
-    const offers = await this.offersRepository.create(offer);
-    await this.offersRepository.insert(offers);
-    return offers;
-  }
-
   getOfferById(id: string): Promise<OfferEntity> {
     return this.offersRepository.findOne({ where: { id } });
   }

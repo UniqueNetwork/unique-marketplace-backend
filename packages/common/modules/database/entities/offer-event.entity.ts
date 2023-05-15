@@ -1,6 +1,16 @@
-import { Entity, Column, PrimaryGeneratedColumn, JoinColumn, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  JoinColumn,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
+} from 'typeorm';
 import { OfferEventType } from '../../types';
 import { OfferEntity } from './offer.entity';
+import { PropertiesEntity } from './properties.entity';
 
 @Entity({ name: 'offer_events' })
 export class OfferEventEntity {
@@ -10,7 +20,7 @@ export class OfferEventEntity {
   @JoinColumn({
     name: 'offer_id',
   })
-  @ManyToOne(() => OfferEntity, (offer) => offer.orderId)
+  @ManyToOne(() => OfferEntity, (offer) => offer.id)
   offer: OfferEntity;
 
   @Column({ name: 'event_type', type: 'varchar' })
@@ -42,4 +52,7 @@ export class OfferEventEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @OneToOne(() => PropertiesEntity)
+  token_properties?: PropertiesEntity;
 }

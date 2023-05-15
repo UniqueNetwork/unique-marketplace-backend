@@ -2,23 +2,33 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Config } from '../config';
-import { ContractEntity, OfferEntity, OfferEventEntity, ViewOffers, SettingEntity } from './entities';
 import {
+  ContractEntity,
+  OfferEntity,
+  OfferEventEntity,
+  ViewOffers,
+  SettingEntity,
+  CollectionEntity,
+  TokensEntity,
+  PropertiesEntity,
+  AdminSessionEntity,
+  TradeViewEntity,
+} from './entities';
+import {
+  AdminSessionsTable1683194096000,
   CollectionsTable1681108635456,
   ContractsTable1677511684518,
   DeployContractV0_1677512245943,
   OfferEventsTable1679993242288,
   OffersTable1679578453871,
+  PropertiesTable1681310408929,
   SettingsTable1677511684518,
+  TokensTable1681310408111,
+  ViewOffers1682699159580,
+  ViewTrades1683809743000,
 } from './migrations';
 import { ContractService, OfferService } from './services';
 import { OfferEventService } from './services/offer-event.service';
-import { CollectionEntity } from './entities/collection.entity';
-import { TokensEntity } from './entities/tokens.entity';
-import { PropertiesEntity } from './entities/properties.entity';
-import { TokensTable1681310408111 } from './migrations/1681310408111-TokensTable';
-import { PropertiesTable1681310408929 } from './migrations/1681310408929-PropertiesTable';
-import { ViewOffers1682699159580 } from './migrations/1682699159580-ViewOffers';
 
 const entities = [
   SettingEntity,
@@ -29,6 +39,8 @@ const entities = [
   CollectionEntity,
   TokensEntity,
   PropertiesEntity,
+  AdminSessionEntity,
+  TradeViewEntity,
 ];
 const migrations = [
   SettingsTable1677511684518,
@@ -40,6 +52,8 @@ const migrations = [
   TokensTable1681310408111,
   PropertiesTable1681310408929,
   ViewOffers1682699159580,
+  AdminSessionsTable1683194096000,
+  ViewTrades1683809743000,
 ];
 
 function typeOrmModulesFactory(

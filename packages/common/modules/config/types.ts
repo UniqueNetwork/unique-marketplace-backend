@@ -11,7 +11,7 @@ export type Config = {
   cache: CacheConfig;
 
   signer?: SignerConfig;
-
+  signatureKey?: string;
   releaseVersion: string;
 
   sentryDsnUrl?: string;

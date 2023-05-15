@@ -94,6 +94,7 @@ export interface IRelation {
   on: string;
   join?: JOIN_TYPE;
 }
+
 export interface IRelations {
   [relationsName: string]: IRelation;
 }

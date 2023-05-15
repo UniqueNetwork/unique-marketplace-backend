@@ -4,3 +4,8 @@ export * from './offer-event.entity';
 export * from './setting.entity';
 export * from './collection.entity';
 export * from './offers-view.entity';
+export * from './properties.entity';
+export * from './tokens.entity';
+export * from './offers-view.entity';
+export * from './admin-sessions.entity';
+export * from './trade-view.entity';
