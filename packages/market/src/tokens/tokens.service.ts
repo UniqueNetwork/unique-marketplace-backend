@@ -1,11 +1,11 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository, SelectQueryBuilder } from 'typeorm';
-import { CollectionEntity, PropertiesEntity, TokensViewer, TradeViewEntity, ViewOffers } from '@app/common/modules/database';
+import { CollectionEntity, PropertiesEntity, TokensViewer } from '@app/common/modules/database';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 import { OfferPrice, OffersFilterType, OffersItemType, SortingRequest } from '@app/common/modules/types/requests';
 import { TokensViewDto, TokensViewFilterDto } from './dto/tokens.dto';
-import { paginate } from 'nestjs-typeorm-paginate';
+import { paginate, paginateRaw, paginateRawAndEntities } from 'nestjs-typeorm-paginate';
 import { HelperService } from '@app/common/src/lib/helper.service';
 import { OfferAttributes } from '../offers/dto/offers.dto';
 import { TraitDto } from '../offers/dto/trait.dto';
@@ -42,12 +42,13 @@ export class TokensService {
     let propertiesFilter = [];
     let collections = [];
 
-    try {
-      tokens = await this.filter(collectionId, tokensFilterDto, paginationRequest, sort);
-      propertiesFilter = await this.searchInProperties(this.parserCollectionIdTokenId(tokens.items));
-      collections = await this.collections(this.getCollectionIds(tokens.items));
+    tokens = await this.filter(collectionId, tokensFilterDto, paginationRequest, sort);
 
-      items = this.parseItems(tokens.items, propertiesFilter, collections) as any as Array<TokensViewer>;
+    propertiesFilter = await this.searchInProperties(this.parserCollectionIdTokenId(tokens.items));
+    collections = await this.collections(this.getCollectionIds(tokens.items));
+
+    items = this.parseItems(tokens.items, propertiesFilter, collections) as any as Array<TokensViewer>;
+    try {
     } catch (e) {
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
@@ -58,7 +59,7 @@ export class TokensService {
 
     return {
       ...tokens.meta,
-      items: items,
+      items,
       attributes: tokens.attributes,
       attributesCount: tokens.attributesCount,
     };
@@ -75,10 +76,7 @@ export class TokensService {
    */
   async filter(collectionId: number, tokensFilterDto: TokensViewFilterDto, pagination: PaginationRouting, sort: SortingRequest) {
     let paginationResult;
-    let queryFilter = this.tokenViewRepository.createQueryBuilder('view_tokens');
-    queryFilter
-      .andWhere('view_tokens.collection_id = :collectionId', { collectionId })
-      .orderBy('view_tokens.offer_order_id', 'ASC');
+    let queryFilter: SelectQueryBuilder<TokensViewer> = this.tokenViewRepository.createQueryBuilder('view_tokens');
     // Filter by max price
     queryFilter = this.byMaxPrice(queryFilter, tokensFilterDto.maxPrice);
     // Filter by min price
@@ -97,11 +95,11 @@ export class TokensService {
 
     const attributes = await this.byAttributes(queryFilter).getRawMany();
 
-    //queryFilter = this.prepareQuery(queryFilter);
+    queryFilter = this.prepareQuery(queryFilter, collectionId);
 
     queryFilter = this.sortBy(queryFilter, sort);
 
-    paginationResult = await paginate(queryFilter, pagination);
+    paginationResult = await paginateRaw<TokensViewer>(queryFilter, pagination);
     return {
       meta: paginationResult.meta,
       items: paginationResult.items,
@@ -150,7 +148,7 @@ export class TokensService {
         }
       });
     } else {
-      query.addOrderBy('view_tokens.offer_order_id', 'ASC');
+      //query.addOrderBy('view_tokens.offer_id', 'ASC');
     }
     return query;
   }
@@ -289,6 +287,8 @@ export class TokensService {
     searchIndex: Partial<PropertiesEntity>[],
     collections: Array<CollectionEntity>,
   ): Array<OffersItemType> {
+    const collectionData = new Map();
+
     function isEmpty(value: string | number): number | string | null {
       if (value === null || value === undefined || value === '') {
         return null;
@@ -298,6 +298,8 @@ export class TokensService {
 
     function convertorFlatToObject(): (previousValue: any, currentValue: any, currentIndex: number, array: any[]) => any {
       return (acc, item) => {
+        collectionData.set(item.token_id.toString(), item);
+
         const token = searchIndex.find((index) => index.collection_id === item.collection_id && index.token_id === item.token_id);
         const collection = collections.find((collection) => collection.collectionId === item.collection_id);
         const schemaData = collection?.data['schema'];
@@ -311,9 +313,9 @@ export class TokensService {
           collectionId: isEmpty(schemaData?.collectionId),
         };
         const obj = {
-          collection_id: +item.collection_id,
-          token_id: +item.token_id,
-          order: item.order_id,
+          collectionId: +item.collection_id,
+          tokenId: +item.token_id,
+          orderId: item.offer_id,
           status: item.offer_status,
           price: price,
           seller: item.offer_seller,
@@ -365,22 +367,24 @@ export class TokensService {
     return null;
   }
 
-  private prepareQuery(query: SelectQueryBuilder<TokensViewer>): SelectQueryBuilder<any> {
-    return this.connection
+  private prepareQuery(queryFilter: SelectQueryBuilder<TokensViewer>, collectionId: number) {
+    return (queryFilter = this.connection.manager
       .createQueryBuilder()
-      .select([
-        'view_tokens_offer_id as offer_id',
-        'view_tokens_offer_order_id as offer_order_id',
-        'view_tokens_offer_status as offer_status',
-        'view_tokens_collection_id as collection_id',
-        'view_tokens_token_id as token_id',
-        'view_tokens_offer_price_parsed as offer_price_parsed',
-        'view_tokens_offer_price_raw as offer_price_raw',
-        'view_tokens_offer_seller as offer_seller',
-        'view_tokens_offer_created_at as offer_created_at',
+      .addSelect([
+        'view_tokens_offer_id AS offer_id',
+        'view_tokens_offer_order_id AS offer_order_id',
+        'view_tokens_offer_status AS offer_status',
+        'view_tokens_collection_id AS collection_id',
+        'view_tokens_token_id AS token_id',
+        'view_tokens_offer_price_parsed AS offer_price_parsed',
+        'view_tokens_offer_price_raw AS offer_price_raw',
+        'view_tokens_offer_seller AS offer_seller',
+        'view_tokens_offer_created_at AS offer_created_at',
       ])
       .distinct()
-      .from(`(${query.getQuery()})`, '_filter')
-      .setParameters(query.getParameters());
+      .andWhere('view_tokens_collection_id = :collectionId', { collectionId })
+      .from(`(${queryFilter.getQuery()})`, '_sub')
+      .addOrderBy('view_tokens_offer_status', 'ASC')
+      .setParameters(queryFilter.getParameters()) as SelectQueryBuilder<TokensViewer>);
   }
 }

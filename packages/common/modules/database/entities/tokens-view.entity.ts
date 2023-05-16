@@ -10,7 +10,7 @@ import { PropertiesEntity } from './properties.entity';
       return col.propertyName === 'type';
     });
     queryBuilder.select([
-      'DISTINCT token.collection_id',
+      'token.collection_id',
       'token.token_id',
       'offer.id as offer_id',
       'offer.order_id as offer_order_id',
@@ -29,7 +29,31 @@ import { PropertiesEntity } from './properties.entity';
       'properties_filter.total_items',
       'properties_filter.list_items',
     ]);
-    queryBuilder.leftJoin(OfferEntity, 'offer', 'offer.collection_id = token.collection_id AND offer.token_id = token.token_id');
+    // queryBuilder.leftJoin(OfferEntity, 'offer', 'offer.collection_id = token.collection_id AND offer.token_id = token.token_id');
+    queryBuilder.innerJoin(
+      (selectQueryBuilder: SelectQueryBuilder<TokensEntity>) => {
+        const offerQuaryBuilder = selectQueryBuilder.subQuery();
+        offerQuaryBuilder.select([
+          'offers.id',
+          'offers.order_id',
+          'offers.collection_id',
+          'offers.token_id',
+          'offers.price_parsed',
+          'offers.price_raw',
+          'offers.amount',
+          'offers.contract_address',
+          'offers.status',
+          'offers.seller',
+          'offers.created_at',
+          'offers.updated_at',
+        ]);
+        offerQuaryBuilder.from(OfferEntity, 'offers');
+        offerQuaryBuilder.where(`offers.status::text = 'Opened'::text`);
+        return offerQuaryBuilder;
+      },
+      'offer',
+      'offer.collection_id = token.collection_id AND offer.token_id = token.token_id',
+    );
     queryBuilder.leftJoin(
       (selectQueryBuilder: SelectQueryBuilder<TokensEntity>) => {
         const propsQueryBuilder = selectQueryBuilder.subQuery();
@@ -52,7 +76,9 @@ import { PropertiesEntity } from './properties.entity';
       'properties_filter',
       'token.collection_id = properties_filter.collection_id AND token.token_id = properties_filter.token_id',
     );
-
+    queryBuilder.groupBy(`CASE
+            WHEN offer.order_id IS NOT NULL THEN 0
+            ELSE 1`);
     return queryBuilder;
   },
   name: 'view_tokens',
