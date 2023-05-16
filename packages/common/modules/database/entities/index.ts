@@ -9,3 +9,4 @@ export * from './tokens.entity';
 export * from './offers-view.entity';
 export * from './admin-sessions.entity';
 export * from './trade-view.entity';
+export * from './tokens-view.entity';
