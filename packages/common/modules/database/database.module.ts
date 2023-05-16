@@ -13,6 +13,7 @@ import {
   PropertiesEntity,
   AdminSessionEntity,
   TradeViewEntity,
+  TokensViewer,
 } from './entities';
 import {
   AdminSessionsTable1683194096000,
@@ -26,6 +27,7 @@ import {
   TokensTable1681310408111,
   ViewOffers1682699159580,
   ViewTrades1683809743000,
+  ViewTokens1684221119187,
 } from './migrations';
 import { ContractService, OfferService } from './services';
 import { OfferEventService } from './services/offer-event.service';
@@ -41,6 +43,7 @@ const entities = [
   PropertiesEntity,
   AdminSessionEntity,
   TradeViewEntity,
+  TokensViewer,
 ];
 const migrations = [
   SettingsTable1677511684518,
@@ -54,6 +57,7 @@ const migrations = [
   ViewOffers1682699159580,
   AdminSessionsTable1683194096000,
   ViewTrades1683809743000,
+  ViewTokens1684221119187,
 ];
 
 function typeOrmModulesFactory(

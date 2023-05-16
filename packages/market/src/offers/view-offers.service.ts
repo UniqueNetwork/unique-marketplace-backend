@@ -8,6 +8,7 @@ import { BundleService } from './bundle.service';
 import { OfferTraits, TraitDto } from './dto/trait.dto';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { SortingOrder, SortingParameter } from './interfaces/offers.interface';
+import { HelperService } from '@app/common/src/lib/helper.service';
 
 type SortMapping<T> = Partial<Record<keyof OffersDto, keyof T>>;
 
@@ -17,11 +18,6 @@ const offersMapping = {
   token_id: 'token_id',
   collection_id: 'collection_id',
 };
-
-const regex = /\S/;
-export function nullOrWhitespace(str: string | null | undefined): boolean {
-  return str == null || !regex.test(str);
-}
 
 const priceTransformer: ValueTransformer = {
   to: (value) => {
@@ -49,6 +45,7 @@ export class ViewOffersService {
     this.offersSorts = this.prepareMapping(offersMapping, connection.getMetadata(OfferEntity).columns);
     console.dir(this.offersSorts, { depth: 10 });
   }
+
   prepareMapping = (input: Record<string, string>, columnMetadata: ColumnMetadata[]): Record<string, string> => {
     return Object.entries(input).reduce((acc, [key, value]) => {
       const meta = columnMetadata.find((m) => m.propertyName === value);
@@ -87,22 +84,6 @@ export class ViewOffersService {
       collectionId,
       attributes: this.parseAttributes(attributes),
     };
-  }
-
-  private parseAttributes(attributes: any[]): TraitDto[] {
-    return attributes.reduce((previous, current) => {
-      const tempObj = {
-        key: current['trait'],
-        count: +current['count'],
-      };
-
-      if (!previous[current['key']]) {
-        previous[current['key']] = [];
-      }
-
-      previous[current['key']].push(tempObj);
-      return previous;
-    }, {});
   }
 
   /**
@@ -149,6 +130,93 @@ export class ViewOffersService {
     }
   }
 
+  applyFlatSort(query: SelectQueryBuilder<any>, { sort = [] }: OfferSortingRequest) {
+    console.dir({ sort }, { depth: 10 });
+    for (const sortingParameter of sort) {
+      const sort = this.getFlatSort(sortingParameter);
+      if (sort) {
+        const order = this.getOrder(sortingParameter);
+        query.addOrderBy(sort, order);
+      }
+    }
+    return query;
+  }
+
+  public async filterByOne(collectionId: number, tokenId: number): Promise<any> {
+    let queryFilter = this.viewOffersRepository
+      .createQueryBuilder('view_offers')
+      .where({ collection_id: collectionId, token_id: tokenId });
+    // TODO: deal with the error by bundles, collector may be fail
+    // const bundle = await this.bundle(collectionId, tokenId);
+    // queryFilter = this.byCollectionTokenId(queryFilter, bundle.collectionId, bundle.tokenId);
+    queryFilter = this.prepareQuery(queryFilter);
+    const itemQuery = this.pagination(queryFilter, { page: 1, pageSize: 1 });
+    const items = await itemQuery.query.getRawMany();
+    return items;
+  }
+
+  public async bundle(collectionId: number, tokenId: number): Promise<{ collectionId: number; tokenId: number }> {
+    return this.bundleService.bundle(collectionId, tokenId);
+  }
+
+  public async filter(offersFilter: OffersFilter, pagination: PaginationRequest, sort: OfferSortingRequest): Promise<any> {
+    let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
+    // Filert by collection id
+    queryFilter = this.byCollectionId(queryFilter, offersFilter.collectionId);
+    // Filter by max price
+    queryFilter = this.byMaxPrice(queryFilter, offersFilter.maxPrice);
+    // Filter by min price
+    queryFilter = this.byMinPrice(queryFilter, offersFilter.minPrice);
+    // Filter by seller address
+    queryFilter = this.bySeller(queryFilter, offersFilter.seller);
+    // Filter by search
+    queryFilter = this.bySearch(queryFilter, offersFilter.searchText, offersFilter.searchLocale);
+
+    // Filter by traits
+    queryFilter = this.byFindAttributes(queryFilter, offersFilter.collectionId, offersFilter.attributes);
+    // Does not contain a search by the number of attributes
+    const attributesCount = await this.byAttributesCount(queryFilter);
+    // Exceptions to the influence of the search by the number of attributes
+    queryFilter = this.byNumberOfAttributes(queryFilter, offersFilter.numberOfAttributes);
+
+    const attributes = await this.byAttributes(queryFilter).getRawMany();
+
+    queryFilter = this.prepareQuery(queryFilter);
+    //
+    const itemsCount = await this.countQuery(queryFilter);
+    //
+    queryFilter = this.sortBy(queryFilter, sort);
+    //
+    const itemQuery = this.pagination(queryFilter, pagination);
+    //
+    const items = await itemQuery.query.getRawMany();
+
+    return {
+      items,
+      itemsCount,
+      page: itemQuery.page,
+      pageSize: itemQuery.pageSize,
+      attributes: this.parseAttributes(attributes),
+      attributesCount,
+    };
+  }
+
+  private parseAttributes(attributes: any[]): TraitDto[] {
+    return attributes.reduce((previous, current) => {
+      const tempObj = {
+        key: current['trait'],
+        count: +current['count'],
+      };
+
+      if (!previous[current['key']]) {
+        previous[current['key']] = [];
+      }
+
+      previous[current['key']].push(tempObj);
+      return previous;
+    }, {});
+  }
+
   private byCollectionId(query: SelectQueryBuilder<ViewOffers>, collectionIds?: number[]): SelectQueryBuilder<ViewOffers> {
     if ((collectionIds ?? []).length <= 0) {
       return query;
@@ -175,7 +243,7 @@ export class ViewOffersService {
   }
 
   private bySeller(query: SelectQueryBuilder<ViewOffers>, seller?: string): SelectQueryBuilder<ViewOffers> {
-    if (nullOrWhitespace(seller)) {
+    if (HelperService.nullOrWhitespace(seller)) {
       query.andWhere('view_offers.offer_status = :status', { status: 'Opened' });
       return query;
     }
@@ -185,14 +253,14 @@ export class ViewOffersService {
   }
 
   private byLocale(query: SelectQueryBuilder<ViewOffers>, locale?: string): SelectQueryBuilder<ViewOffers> {
-    if (nullOrWhitespace(locale)) {
+    if (HelperService.nullOrWhitespace(locale)) {
       return query;
     }
     return query.andWhere('view_offers.locale = :locale', { locale });
   }
 
   private byTrait(query: SelectQueryBuilder<ViewOffers>, trait?: string): SelectQueryBuilder<ViewOffers> {
-    if (nullOrWhitespace(trait)) {
+    if (HelperService.nullOrWhitespace(trait)) {
       return query;
     }
     return query.andWhere(`view_offers.traits ilike concat('%', cast(:trait as text), '%')`, { trait });
@@ -319,18 +387,6 @@ export class ViewOffersService {
     }
   }
 
-  applyFlatSort(query: SelectQueryBuilder<any>, { sort = [] }: OfferSortingRequest) {
-    console.dir({ sort }, { depth: 10 });
-    for (const sortingParameter of sort) {
-      const sort = this.getFlatSort(sortingParameter);
-      if (sort) {
-        const order = this.getOrder(sortingParameter);
-        query.addOrderBy(sort, order);
-      }
-    }
-    return query;
-  }
-
   private async byAttributesCount(query: SelectQueryBuilder<ViewOffers>): Promise<Array<OfferAttributes>> {
     const attributesCount = (await this.connection.manager
       .createQueryBuilder()
@@ -362,64 +418,5 @@ export class ViewOffersService {
       .andWhere('view_offers.collection_id = :collectionId', { collectionId })
       .andWhere('view_offers.token_id = :tokenId', { tokenId })
       .andWhere('view_offers.offer_status in (:...status)', { status: ['Opened', 'removed_by_admin'] });
-  }
-
-  public async filterByOne(collectionId: number, tokenId: number): Promise<any> {
-    let queryFilter = this.viewOffersRepository
-      .createQueryBuilder('view_offers')
-      .where({ collection_id: collectionId, token_id: tokenId });
-    // TODO: deal with the error by bundles, collector may be fail
-    // const bundle = await this.bundle(collectionId, tokenId);
-    // queryFilter = this.byCollectionTokenId(queryFilter, bundle.collectionId, bundle.tokenId);
-    queryFilter = this.prepareQuery(queryFilter);
-    const itemQuery = this.pagination(queryFilter, { page: 1, pageSize: 1 });
-    const items = await itemQuery.query.getRawMany();
-    return items;
-  }
-
-  public async bundle(collectionId: number, tokenId: number): Promise<{ collectionId: number; tokenId: number }> {
-    return this.bundleService.bundle(collectionId, tokenId);
-  }
-
-  public async filter(offersFilter: OffersFilter, pagination: PaginationRequest, sort: OfferSortingRequest): Promise<any> {
-    let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
-    // Filert by collection id
-    queryFilter = this.byCollectionId(queryFilter, offersFilter.collectionId);
-    // Filter by max price
-    queryFilter = this.byMaxPrice(queryFilter, offersFilter.maxPrice);
-    // Filter by min price
-    queryFilter = this.byMinPrice(queryFilter, offersFilter.minPrice);
-    // Filter by seller address
-    queryFilter = this.bySeller(queryFilter, offersFilter.seller);
-    // Filter by search
-    queryFilter = this.bySearch(queryFilter, offersFilter.searchText, offersFilter.searchLocale);
-
-    // Filter by traits
-    queryFilter = this.byFindAttributes(queryFilter, offersFilter.collectionId, offersFilter.attributes);
-    // Does not contain a search by the number of attributes
-    const attributesCount = await this.byAttributesCount(queryFilter);
-    // Exceptions to the influence of the search by the number of attributes
-    queryFilter = this.byNumberOfAttributes(queryFilter, offersFilter.numberOfAttributes);
-
-    const attributes = await this.byAttributes(queryFilter).getRawMany();
-
-    queryFilter = this.prepareQuery(queryFilter);
-    //
-    const itemsCount = await this.countQuery(queryFilter);
-    //
-    queryFilter = this.sortBy(queryFilter, sort);
-    //
-    const itemQuery = this.pagination(queryFilter, pagination);
-    //
-    const items = await itemQuery.query.getRawMany();
-
-    return {
-      items,
-      itemsCount,
-      page: itemQuery.page,
-      pageSize: itemQuery.pageSize,
-      attributes: this.parseAttributes(attributes),
-      attributesCount,
-    };
   }
 }

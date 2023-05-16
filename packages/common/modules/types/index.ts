@@ -5,6 +5,16 @@ export type CustomObject = {
   [key: string]: any | Object | Array<string> | boolean | number | string | undefined;
 };
 
+export type UntypedRequest<T> = {
+  [key in keyof T]: T[key] extends Array<infer V>
+    ? string[]
+    : T[key] extends Array<infer V> | undefined
+    ? string[]
+    : T[key] extends Array<infer V> | null
+    ? string[]
+    : string;
+};
+
 export enum OfferStatus {
   Opened = 'Opened',
   Canceled = 'Canceled',

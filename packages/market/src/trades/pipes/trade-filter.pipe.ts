@@ -1,7 +1,8 @@
 import { ArgumentMetadata, BadRequestException, HttpStatus, Injectable, Optional, PipeTransform } from '@nestjs/common';
 import { ErrorHttpStatusCode, HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
-import { nullOrWhitespace, QueryParamArray, TransformationResult, UntypedRequest } from '../../offers/pipes/offer-filter.pipe';
+import { nullOrWhitespace, QueryParamArray, TransformationResult } from '../../offers/pipes/offer-filter.pipe';
 import { TradesFilterDto } from '../dto/create-trade.dto';
+import { UntypedRequest } from '@app/common/modules/types';
 
 export interface ParseTradesFilterPipeOptions {
   errorHttpStatusCode?: ErrorHttpStatusCode;

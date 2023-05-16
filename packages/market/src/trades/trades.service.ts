@@ -1,6 +1,6 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { TradeOfferDto, TradesFilterDto } from './dto/create-trade.dto';
-import { TradeSortingRequest } from '../offers/dto/offers.dto';
+
 import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 
 import { TradeViewEntity } from '@app/common/modules/database';
@@ -9,6 +9,7 @@ import { paginate } from 'nestjs-typeorm-paginate';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 import { nullOrWhitespace } from '../offers/pipes/offer-filter.pipe';
 import { SortingOrder, SortingParameter } from '../offers/interfaces/offers.interface';
+import { SortingRequest } from '@app/common/modules/types/requests';
 
 /**
  * Service for managing trades.
@@ -33,7 +34,7 @@ export class TradesService {
     tradesFilter: TradesFilterDto,
     accountId: string | undefined,
     paginationRequest: PaginationRouting,
-    sort: TradeSortingRequest,
+    sort: SortingRequest,
   ): Promise<any> {
     let tradesQuery: SelectQueryBuilder<TradeViewEntity>;
     let paginationResult;
@@ -79,7 +80,7 @@ export class TradesService {
    * @param sort - The sorting parameters for the trades.
    * @returns The sorted query builder.
    */
-  sortBy(query: SelectQueryBuilder<TradeViewEntity>, sort: TradeSortingRequest): SelectQueryBuilder<TradeViewEntity> {
+  sortBy(query: SelectQueryBuilder<TradeViewEntity>, sort: SortingRequest): SelectQueryBuilder<TradeViewEntity> {
     if (sort && sort.sort) {
       const sortParameters: SortingParameter[] = Array.isArray(sort.sort)
         ? sort.sort

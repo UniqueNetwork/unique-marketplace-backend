@@ -1,16 +1,7 @@
 import { ArgumentMetadata, BadRequestException, HttpStatus, Injectable, Optional, PipeTransform } from '@nestjs/common';
 import { OffersFilter } from '../dto/offers.dto';
 import { ErrorHttpStatusCode, HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
-
-export type UntypedRequest<T> = {
-  [key in keyof T]: T[key] extends Array<infer V>
-    ? string[]
-    : T[key] extends Array<infer V> | undefined
-    ? string[]
-    : T[key] extends Array<infer V> | null
-    ? string[]
-    : string;
-};
+import { UntypedRequest } from '@app/common/modules/types';
 
 export interface ParseOffersFilterPipeOptions {
   errorHttpStatusCode?: ErrorHttpStatusCode;
@@ -20,6 +11,7 @@ export interface ParseOffersFilterPipeOptions {
 export type QueryParamArray = string | string[] | undefined;
 
 const regex = /\S/;
+
 export function nullOrWhitespace(str: string | null | undefined): boolean {
   return str == null || !regex.test(str);
 }

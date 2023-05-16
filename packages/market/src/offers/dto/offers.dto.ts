@@ -148,30 +148,6 @@ export class OffersResultDto {
   attributesCount?: Array<any>;
 }
 
-export class TradeSortingRequest {
-  @ApiProperty({
-    type: 'array',
-    items: {
-      type: 'string',
-      enum: [
-        'asc(Price)',
-        'desc(Price)',
-        'asc(TokenId)',
-        'desc(TokenId)',
-        'asc(CollectionId)',
-        'desc(CollectionId)',
-        'asc(TradeDate)',
-        'desc(TradeDate)',
-      ],
-    },
-    default: ['desc(TradeDate)'],
-    description:
-      'Possible values: asc(Price), desc(Price), asc(TokenId), desc(TokenId), asc(CollectionId), desc(CollectionId), asc(TradeDate), desc(TradeDate)',
-    required: false,
-  })
-  public sort: SortingParameter[];
-}
-
 export class OfferAttributes {
   @ApiProperty({ description: 'Number Of Attributes' })
   @Expose()
