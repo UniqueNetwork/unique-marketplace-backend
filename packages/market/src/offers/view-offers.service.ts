@@ -43,7 +43,6 @@ export class ViewOffersService {
     private readonly bundleService: BundleService,
   ) {
     this.offersSorts = this.prepareMapping(offersMapping, connection.getMetadata(OfferEntity).columns);
-    console.dir(this.offersSorts, { depth: 10 });
   }
 
   prepareMapping = (input: Record<string, string>, columnMetadata: ColumnMetadata[]): Record<string, string> => {
