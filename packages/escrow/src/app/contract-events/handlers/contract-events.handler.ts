@@ -108,11 +108,15 @@ export class ContractEventsHandler {
     extrinsic: Extrinsic,
     amount: number,
   ): Promise<Omit<OfferEventEntity, 'id' | 'createdAt' | 'updatedAt' | 'token_properties'>> {
+    // todo fix this blockId
+    // @ts-ignore
+    const blockId = extrinsic.blockId || extrinsic.block?.id || 0;
+
     const collection = await this.collectionsService.get(offer.collectionId);
     return {
       offer,
       eventType,
-      blockNumber: extrinsic.block.id,
+      blockNumber: blockId,
       address: extrinsic.signer,
       amount,
       commission: offer.contract.commission,
