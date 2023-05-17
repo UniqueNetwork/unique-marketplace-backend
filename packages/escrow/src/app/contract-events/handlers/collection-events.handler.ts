@@ -26,6 +26,8 @@ export class CollectionEventsHandler {
 
     const { method } = event;
 
+    console.log('collection:onEvent', collectionId, tokenId, method);
+
     if (tokenId) {
       const offer = await this.offerService.find(collectionId, tokenId);
       if (!offer) {
@@ -60,6 +62,7 @@ export class CollectionEventsHandler {
   }
 
   private async runCheckApproved(offer: OfferEntity) {
+    console.log('runCheckApproved', this.queueIsBusy);
     if (this.queueIsBusy) {
       this.approveQueue.push(offer);
       return;
@@ -82,6 +85,7 @@ export class CollectionEventsHandler {
       },
     };
     const result = await contract.send.submitWaitResult(args);
+    console.log('check approved result', result);
 
     if (result.parsed.isExecutedFailed) {
       try {

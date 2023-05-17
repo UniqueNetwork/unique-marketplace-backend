@@ -45,16 +45,15 @@ export class OfferService {
       offer.collectionId = order.collectionId;
       offer.tokenId = order.tokenId;
       offer.seller = isEthereumSeller ? order.seller.eth : order.seller.sub.toHexString();
-      offer.status = OfferStatus.Opened;
-    } else {
-      offer.status = status;
     }
 
     offer.priceParsed = Number(order.price.toBigInt() / 10n ** 18n);
     offer.priceRaw = order.price.toString();
     offer.amount = order.amount;
     offer.contract = contract;
+    offer.status = status;
 
+    console.log('save data', offer);
     await this.offerEntityRepository.save(offer);
 
     return offer;

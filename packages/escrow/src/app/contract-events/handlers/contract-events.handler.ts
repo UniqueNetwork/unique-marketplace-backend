@@ -73,7 +73,7 @@ export class ContractEventsHandler {
       this.logger.error(`Not found ContractEntity ${addressNormal}`);
       return;
     }
-    console.log('onEvent', extrinsic);
+    console.log('onEvent', log);
 
     // todo fix this blockId
     // @ts-ignore
@@ -87,6 +87,7 @@ export class ContractEventsHandler {
     const decoded: LogDescription = contract.parseLog(log);
 
     const { name, args } = decoded;
+    console.log(' name', name);
 
     if (name === 'Log') {
       const logArgs: LogEventObject = args as unknown as LogEventObject;
@@ -128,7 +129,7 @@ export class ContractEventsHandler {
 
   private async tokenIsUpForSale(extrinsic: Extrinsic, contractEntity: ContractEntity, tokenUpArgs: TokenIsUpForSaleEventObject) {
     const offer = await this.offerService.update(contractEntity, tokenUpArgs.item, OfferStatus.Opened, this.chain);
-
+    console.log('tokenIsUpForSale', offer);
     if (offer) {
       const eventData = await this.createEventData(offer, OfferEventType.Open, extrinsic, tokenUpArgs.item.amount);
       await this.offerEventService.create(eventData);

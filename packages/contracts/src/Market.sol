@@ -31,8 +31,8 @@ contract Market {
     uint32 public marketFee;
     uint64 public ctime;
     address selfAddress;
-    address ownerAddress;
-    mapping(address => bool) admins;
+    address public ownerAddress;
+    mapping(address => bool) public admins;
 
     event TokenIsUpForSale(uint32 version, Order item);
     event TokenRevoke(uint32 version, Order item, uint32 amount);
