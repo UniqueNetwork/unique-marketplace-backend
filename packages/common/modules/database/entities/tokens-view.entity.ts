@@ -30,7 +30,7 @@ import { PropertiesEntity } from './properties.entity';
       'properties_filter.list_items',
     ]);
     // queryBuilder.leftJoin(OfferEntity, 'offer', 'offer.collection_id = token.collection_id AND offer.token_id = token.token_id');
-    queryBuilder.innerJoin(
+    queryBuilder.leftJoin(
       (selectQueryBuilder: SelectQueryBuilder<TokensEntity>) => {
         const offerQuaryBuilder = selectQueryBuilder.subQuery();
         offerQuaryBuilder.select([
