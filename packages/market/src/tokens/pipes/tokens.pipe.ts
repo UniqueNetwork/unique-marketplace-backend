@@ -23,11 +23,12 @@ export class ParseTokensFilterPipe implements PipeTransform<any, TransformationR
    * @param {ArgumentMetadata} metadata
    */
   transform(value: UntypedRequest<TokensViewFilterDto>, metadata: ArgumentMetadata): TransformationResult<TokensViewFilterDto> {
-    if (metadata?.metatype?.name !== 'OffersFilter') {
+    if (metadata?.metatype?.name !== 'TokensViewFilterDto') {
       return value;
     }
 
     return {
+      tokenId: HelperService.parseCollectionIdRequest(value.tokenId),
       maxPrice: HelperService.parseBigIntRequest(value.maxPrice, () => {
         throw this.exceptionFactory(`Failed to parse maxPrice. Expected a big integer value, got ${value.maxPrice}`);
       }),
