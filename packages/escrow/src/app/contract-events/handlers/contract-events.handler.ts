@@ -73,8 +73,12 @@ export class ContractEventsHandler {
       this.logger.error(`Not found ContractEntity ${addressNormal}`);
       return;
     }
+    console.log('onEvent', extrinsic);
 
-    await this.contractService.updateProcessedBlock(addressNormal, extrinsic.block.id);
+    // todo fix this blockId
+    // @ts-ignore
+    const blockId = extrinsic.blockId || extrinsic.block?.id || 0;
+    await this.contractService.updateProcessedBlock(addressNormal, blockId);
 
     const abi = this.abiByAddress[addressNormal];
 
