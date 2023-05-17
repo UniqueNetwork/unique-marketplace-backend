@@ -132,16 +132,16 @@ export class TokensService {
             : sortParameter;
         switch (column) {
           case 'Price':
-            query.addOrderBy('view_tokens.offer_price_parsed', order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            query.addOrderBy('view_tokens_offer_price_parsed', order === SortingOrder.Asc ? 'ASC' : 'DESC');
             break;
           case 'TokenId':
-            query.addOrderBy('view_tokens.token_id', order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            query.addOrderBy('view_tokens_token_id', order === SortingOrder.Asc ? 'ASC' : 'DESC');
             break;
           case 'CollectionId':
-            query.addOrderBy('view_tokens.collection_id', order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            query.addOrderBy('view_tokens_collection_id', order === SortingOrder.Asc ? 'ASC' : 'DESC');
             break;
           case 'CreationDate':
-            query.addOrderBy('view_tokens.offer_created_at', order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            query.addOrderBy('view_tokens_offer_created_at', order === SortingOrder.Asc ? 'ASC' : 'DESC');
             break;
           default:
             break;
@@ -383,7 +383,7 @@ export class TokensService {
       ])
       .distinct()
       .andWhere('view_tokens_collection_id = :collectionId', { collectionId })
-      .from(`(${queryFilter.getQuery()})`, '_sub')
+      .from(`(${queryFilter.getQuery()})`, 'view_tokens')
       .addOrderBy('view_tokens_offer_status', 'ASC')
       .setParameters(queryFilter.getParameters()) as SelectQueryBuilder<TokensViewer>);
   }

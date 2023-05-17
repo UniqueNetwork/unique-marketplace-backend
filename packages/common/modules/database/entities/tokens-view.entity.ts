@@ -34,18 +34,18 @@ import { PropertiesEntity } from './properties.entity';
       (selectQueryBuilder: SelectQueryBuilder<TokensEntity>) => {
         const offerQuaryBuilder = selectQueryBuilder.subQuery();
         offerQuaryBuilder.select([
-          'offers.id',
-          'offers.order_id',
-          'offers.collection_id',
-          'offers.token_id',
-          'offers.price_parsed',
-          'offers.price_raw',
-          'offers.amount',
-          'offers.contract_address',
-          'offers.status',
-          'offers.seller',
-          'offers.created_at',
-          'offers.updated_at',
+          'offers.id as id',
+          'offers.order_id as order_id',
+          'offers.collection_id as collection_id',
+          'offers.token_id as token_id',
+          'offers.price_parsed as price_parsed',
+          'offers.price_raw as price_raw',
+          'offers.amount as amount',
+          'offers.contract_address as contract_address',
+          'offers.status as status',
+          'offers.seller as seller',
+          'offers.created_at as created_at',
+          'offers.updated_at as updated_at',
         ]);
         offerQuaryBuilder.from(OfferEntity, 'offers');
         offerQuaryBuilder.where(`offers.status::text = 'Opened'::text`);
@@ -76,7 +76,11 @@ import { PropertiesEntity } from './properties.entity';
       'properties_filter',
       'token.collection_id = properties_filter.collection_id AND token.token_id = properties_filter.token_id',
     );
-
+    queryBuilder.orderBy(
+      `CASE
+            WHEN offer.order_id IS NOT NULL THEN 0
+            ELSE 1 END`,
+    );
     return queryBuilder;
   },
   name: 'view_tokens',
