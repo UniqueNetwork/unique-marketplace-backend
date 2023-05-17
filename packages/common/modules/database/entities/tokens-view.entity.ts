@@ -76,9 +76,7 @@ import { PropertiesEntity } from './properties.entity';
       'properties_filter',
       'token.collection_id = properties_filter.collection_id AND token.token_id = properties_filter.token_id',
     );
-    queryBuilder.groupBy(`CASE
-            WHEN offer.order_id IS NOT NULL THEN 0
-            ELSE 1`);
+
     return queryBuilder;
   },
   name: 'view_tokens',
