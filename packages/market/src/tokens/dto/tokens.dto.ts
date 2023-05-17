@@ -25,6 +25,10 @@ export class TokensViewDto {
 }
 
 export class TokensViewFilterDto {
+  @ApiProperty({ description: 'Token ID', example: 16 })
+  @Expose()
+  tokenId: number[];
+
   @ApiProperty({ required: false, type: String })
   @Type(() => BigInt)
   @IsOptional()

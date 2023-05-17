@@ -10,10 +10,12 @@ import { TraitDto } from './dto/trait.dto';
 import { ViewOffersService } from './view-offers.service';
 import { PropertiesEntity } from '@app/common/modules/database/entities/properties.entity';
 import { OfferPrice, OffersFilterType, OffersItemType } from './interfaces/offers.interface';
+import { PaginationRouting } from '@app/common/src/lib/base.constants';
 
 @Injectable()
 export class OffersService extends BaseService<OfferEntity, OffersDto> {
   private logger = new Logger(OffersService.name);
+
   constructor(
     private connection: DataSource,
     @InjectRepository(OfferEntity)
@@ -43,18 +45,14 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     });
   }
 
-  private getCollectionIds(items: Array<any>): Array<number> {
-    return [...new Set(items.map((item) => +item.collection_id))].filter((id) => id !== null && id !== 0);
-  }
-
   /**
    * `Show all Offers with filters`
    * Returns all offers with descriptions of tokens, collection schemes and attributes by tokens
    * @param {OffersFilter} searchOptions - Search options
-   * @param {PaginationRequest} pagination - Pagination request page and pageSize
+   * @param {PaginationRouting} pagination - Pagination request page and pageSize
    * @param sort
    */
-  async getOffers(searchOptions: OffersFilter, pagination: PaginationRequest, sort): Promise<any> {
+  async getOffers(searchOptions: OffersFilter, pagination: PaginationRouting, sort): Promise<any> {
     let offers;
     let items = [];
     let propertiesFilter = [];
@@ -75,14 +73,12 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
       });
     }
 
-    return new PaginationResultDto(OfferEntityDto, {
-      page: offers.page,
-      pageSize: offers.pageSize,
-      itemsCount: offers.itemsCount,
+    return {
+      ...offers.meta,
       items: items.map(OfferEntityDto.fromOffersEntity),
       attributes: offers.attributes as Array<TraitDto>,
       attributesCount: offers.attributesCount,
-    });
+    };
   }
 
   /**
@@ -103,6 +99,14 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     const offers = this.parseItems(source, properties_filter, collections).pop() as any as ViewOffers;
 
     return offers && OfferEntityDto.fromOffersEntity(offers);
+  }
+
+  async collections(ids: Array<number>): Promise<Array<CollectionEntity>> {
+    return this.collectionRepository.find({ where: { collectionId: In(ids) } });
+  }
+
+  private getCollectionIds(items: Array<any>): Array<number> {
+    return [...new Set(items.map((item) => +item.collection_id))].filter((id) => id !== null && id !== 0);
   }
 
   private parserCollectionIdTokenId(items: Array<any>): string | null {
@@ -126,6 +130,7 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
       }
       return value;
     }
+
     function convertorFlatToObject(): (previousValue: any, currentValue: any, currentIndex: number, array: any[]) => any {
       return (acc, item) => {
         const token = searchIndex.find((index) => index.collection_id === item.collection_id && index.token_id === item.token_id);
@@ -165,10 +170,6 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     }
 
     return items.reduce(convertorFlatToObject(), []);
-  }
-
-  async collections(ids: Array<number>): Promise<Array<CollectionEntity>> {
-    return this.collectionRepository.find({ where: { collectionId: In(ids) } });
   }
 
   private async searchInProperties(sqlValues: string): Promise<Array<Partial<PropertiesEntity>>> {

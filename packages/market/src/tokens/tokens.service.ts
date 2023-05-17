@@ -5,7 +5,7 @@ import { CollectionEntity, PropertiesEntity, TokensViewer } from '@app/common/mo
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 import { OfferPrice, OffersFilterType, OffersItemType, SortingRequest } from '@app/common/modules/types/requests';
 import { TokensViewDto, TokensViewFilterDto } from './dto/tokens.dto';
-import { paginate, paginateRaw, paginateRawAndEntities } from 'nestjs-typeorm-paginate';
+import { paginateRaw } from 'nestjs-typeorm-paginate';
 import { HelperService } from '@app/common/src/lib/helper.service';
 import { OfferAttributes } from '../offers/dto/offers.dto';
 import { TraitDto } from '../offers/dto/trait.dto';
@@ -77,6 +77,8 @@ export class TokensService {
   async filter(collectionId: number, tokensFilterDto: TokensViewFilterDto, pagination: PaginationRouting, sort: SortingRequest) {
     let paginationResult;
     let queryFilter: SelectQueryBuilder<TokensViewer> = this.tokenViewRepository.createQueryBuilder('view_tokens');
+
+    queryFilter = this.byTokenId(queryFilter, tokensFilterDto.tokenId);
     // Filter by max price
     queryFilter = this.byMaxPrice(queryFilter, tokensFilterDto.maxPrice);
     // Filter by min price
@@ -100,6 +102,7 @@ export class TokensService {
     queryFilter = this.sortBy(queryFilter, sort);
 
     paginationResult = await paginateRaw<TokensViewer>(queryFilter, pagination);
+    console.dir(paginationResult, { depth: 3 });
     return {
       meta: paginationResult.meta,
       items: paginationResult.items,
@@ -386,5 +389,12 @@ export class TokensService {
       .from(`(${queryFilter.getQuery()})`, 'view_tokens')
       .addOrderBy('view_tokens_offer_status', 'ASC')
       .setParameters(queryFilter.getParameters()) as SelectQueryBuilder<TokensViewer>);
+  }
+
+  private byTokenId(query: SelectQueryBuilder<TokensViewer>, tokenIds?: number[]): SelectQueryBuilder<TokensViewer> {
+    if ((tokenIds ?? []).length <= 0) {
+      return query;
+    }
+    return query.andWhere('view_tokens.token_id in (:...tokenIds)', { tokenIds });
   }
 }

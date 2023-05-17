@@ -3,8 +3,6 @@ import { TokensService } from './tokens.service';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { readApiDocs } from '../utils/utils';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
-import { OffersFilter } from '../offers/dto/offers.dto';
-import { ParseOffersFilterPipe } from '../offers/pipes/offer-filter.pipe';
 import { SortingRequest } from '@app/common/modules/types/requests';
 import { ParseTokensFilterPipe } from './pipes/tokens.pipe';
 import { TokensViewDto, TokensViewFilterDto } from './dto/tokens.dto';
@@ -22,6 +20,7 @@ export class TokensController {
   @ApiResponse({ type: TokensViewDto, status: HttpStatus.OK })
   @ApiQuery({ name: 'page', example: 1 })
   @ApiQuery({ name: 'pageSize', example: 10 })
+  @ApiQuery({ name: 'tokenId', required: false })
   async get(
     @Param('collectionId') collectionId: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
