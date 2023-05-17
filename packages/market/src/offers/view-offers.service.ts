@@ -3,14 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OfferEntity, ViewOffers } from '@app/common/modules/database';
 import { DataSource, Repository, SelectQueryBuilder, ValueTransformer } from 'typeorm';
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
-import { OfferAttributes, OffersDto, OffersFilter, OfferSortingRequest, PaginationRequest } from './dto/offers.dto';
+import { OfferAttributes, OffersFilter, OfferSortingRequest, PaginationRequest } from './dto/offers.dto';
 import { BundleService } from './bundle.service';
 import { OfferTraits, TraitDto } from './dto/trait.dto';
-import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
+import { paginateRaw } from 'nestjs-typeorm-paginate';
 import { SortingOrder, SortingParameter } from './interfaces/offers.interface';
 import { HelperService } from '@app/common/src/lib/helper.service';
-
-type SortMapping<T> = Partial<Record<keyof OffersDto, keyof T>>;
+import { PaginationRouting } from '@app/common/src/lib/base.constants';
 
 const offersMapping = {
   priceRaw: 'price_raw',
@@ -158,7 +157,7 @@ export class ViewOffersService {
     return this.bundleService.bundle(collectionId, tokenId);
   }
 
-  public async filter(offersFilter: OffersFilter, pagination: PaginationRequest, sort: OfferSortingRequest): Promise<any> {
+  public async filter(offersFilter: OffersFilter, pagination: PaginationRouting, sort: OfferSortingRequest): Promise<any> {
     let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
     // Filert by collection id
     queryFilter = this.byCollectionId(queryFilter, offersFilter.collectionId);
@@ -181,20 +180,15 @@ export class ViewOffersService {
     const attributes = await this.byAttributes(queryFilter).getRawMany();
 
     queryFilter = this.prepareQuery(queryFilter);
-    //
-    const itemsCount = await this.countQuery(queryFilter);
-    //
+
     queryFilter = this.sortBy(queryFilter, sort);
     //
-    const itemQuery = this.pagination(queryFilter, pagination);
+    const itemQuery = await paginateRaw(queryFilter, pagination);
     //
-    const items = await itemQuery.query.getRawMany();
 
     return {
-      items,
-      itemsCount,
-      page: itemQuery.page,
-      pageSize: itemQuery.pageSize,
+      meta: itemQuery.meta,
+      items: itemQuery.items,
       attributes: this.parseAttributes(attributes),
       attributesCount,
     };
