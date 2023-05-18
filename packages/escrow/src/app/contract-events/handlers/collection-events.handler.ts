@@ -84,15 +84,12 @@ export class CollectionEventsHandler {
         tokenId: offer.tokenId,
       },
     };
-    const result = await contract.send.submitWaitResult(args);
-    console.log('check approved result', result);
+    try {
+      await contract.call(args);
 
-    if (result.parsed.isExecutedFailed) {
-      try {
-        await contract.call(args);
-      } catch (err) {
-        console.error('checkApproved call error', err);
-      }
+      await contract.send.submitWaitResult(args);
+    } catch (err) {
+      console.log('checkApproved err', err);
     }
 
     this.queueIsBusy = false;

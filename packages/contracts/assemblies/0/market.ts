@@ -68,11 +68,13 @@ export declare namespace Market {
 export interface MarketInterface extends utils.Interface {
   functions: {
     "addAdmin(address)": FunctionFragment;
+    "admins(address)": FunctionFragment;
     "buy(uint32,uint32,uint32,(address,uint256))": FunctionFragment;
     "checkApproved(uint32,uint32)": FunctionFragment;
     "ctime()": FunctionFragment;
     "getOrder(uint32,uint32)": FunctionFragment;
     "marketFee()": FunctionFragment;
+    "ownerAddress()": FunctionFragment;
     "put(uint32,uint32,uint256,uint32,(address,uint256))": FunctionFragment;
     "removeAdmin(address)": FunctionFragment;
     "revoke(uint32,uint32,uint32)": FunctionFragment;
@@ -84,11 +86,13 @@ export interface MarketInterface extends utils.Interface {
   getFunction(
     nameOrSignatureOrTopic:
       | "addAdmin"
+      | "admins"
       | "buy"
       | "checkApproved"
       | "ctime"
       | "getOrder"
       | "marketFee"
+      | "ownerAddress"
       | "put"
       | "removeAdmin"
       | "revoke"
@@ -99,6 +103,10 @@ export interface MarketInterface extends utils.Interface {
 
   encodeFunctionData(
     functionFragment: "addAdmin",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "admins",
     values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
@@ -120,6 +128,10 @@ export interface MarketInterface extends utils.Interface {
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(functionFragment: "marketFee", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "ownerAddress",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "put",
     values: [
@@ -150,6 +162,7 @@ export interface MarketInterface extends utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "addAdmin", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "admins", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "checkApproved",
@@ -158,6 +171,10 @@ export interface MarketInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "ctime", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getOrder", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "marketFee", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "ownerAddress",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "put", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "removeAdmin",
@@ -270,6 +287,11 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    admins(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -293,6 +315,8 @@ export interface Market extends BaseContract {
     ): Promise<[Market.OrderStructOutput]>;
 
     marketFee(overrides?: CallOverrides): Promise<[number]>;
+
+    ownerAddress(overrides?: CallOverrides): Promise<[string]>;
 
     put(
       collectionId: PromiseOrValue<BigNumberish>,
@@ -332,6 +356,11 @@ export interface Market extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  admins(
+    arg0: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   buy(
     collectionId: PromiseOrValue<BigNumberish>,
     tokenId: PromiseOrValue<BigNumberish>,
@@ -355,6 +384,8 @@ export interface Market extends BaseContract {
   ): Promise<Market.OrderStructOutput>;
 
   marketFee(overrides?: CallOverrides): Promise<number>;
+
+  ownerAddress(overrides?: CallOverrides): Promise<string>;
 
   put(
     collectionId: PromiseOrValue<BigNumberish>,
@@ -394,6 +425,11 @@ export interface Market extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    admins(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -417,6 +453,8 @@ export interface Market extends BaseContract {
     ): Promise<Market.OrderStructOutput>;
 
     marketFee(overrides?: CallOverrides): Promise<number>;
+
+    ownerAddress(overrides?: CallOverrides): Promise<string>;
 
     put(
       collectionId: PromiseOrValue<BigNumberish>,
@@ -494,6 +532,11 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    admins(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -517,6 +560,8 @@ export interface Market extends BaseContract {
     ): Promise<BigNumber>;
 
     marketFee(overrides?: CallOverrides): Promise<BigNumber>;
+
+    ownerAddress(overrides?: CallOverrides): Promise<BigNumber>;
 
     put(
       collectionId: PromiseOrValue<BigNumberish>,
@@ -557,6 +602,11 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    admins(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -580,6 +630,8 @@ export interface Market extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     marketFee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    ownerAddress(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     put(
       collectionId: PromiseOrValue<BigNumberish>,
