@@ -31,7 +31,7 @@ export class OfferEntity {
   @Column({ name: 'amount', type: 'integer' })
   amount: number;
 
-  @Column({ name: 'price_parsed', type: 'float8' })
+  @Column({ name: 'price_parsed', type: 'numeric', precision: 8, scale: 5 })
   priceParsed: number;
 
   @Column({ name: 'price_raw', type: 'bigint' })
