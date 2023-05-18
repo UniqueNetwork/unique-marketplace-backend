@@ -33,7 +33,7 @@ export class CollectionsService {
    * {@link CollectionsController}
    * @param data
    */
-  async addNewCollection(data): Promise<void> {
+  async addNewCollection(data: { collectionId: number }): Promise<void> {
     const { collectionId } = data;
     try {
       const [collection, tokens, chain] = await Promise.all([

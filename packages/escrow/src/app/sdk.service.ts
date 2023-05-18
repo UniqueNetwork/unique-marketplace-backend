@@ -87,10 +87,10 @@ export class SdkService {
    * Get a list of token numbers
    * @param collectionId
    */
-  async getTokensCollection(collectionId: string): Promise<any> {
+  async getTokensCollection(collectionId: number): Promise<any> {
     const token: ResponseTokenSchema = await this.sdk.stateQuery.execute(
       { endpoint: 'rpc', module: 'unique', method: 'collectionTokens' },
-      { args: [collectionId] },
+      { args: [String(collectionId)] },
     );
     const list = token.json.sort((a, b) => a - b);
 
