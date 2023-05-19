@@ -223,12 +223,15 @@ contract Market {
         }
 
         IERC721 erc721 = getErc721(collectionId);
+
+        address ethAddress;
         if (order.seller.eth != address(0)) {
-          if (erc721.ownerOf(tokenId) != order.seller.eth) {
-            revert SellerIsNotOwner();
-          }
+          ethAddress = order.seller.eth;
         } else {
-          // todo check mirror of order.seller.sub
+          ethAddress = payable(address(uint160(order.seller.sub >> 96)));
+        }
+        if (erc721.ownerOf(tokenId) != ethAddress) {
+          revert SellerIsNotOwner();
         }
 
         order.amount -= amount;

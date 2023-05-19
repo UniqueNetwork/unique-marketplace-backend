@@ -59,6 +59,10 @@ export class OfferService {
     return offer;
   }
 
+  async updateStatus(id: string, status: OfferStatus) {
+    await this.offerEntityRepository.update({ id }, { status });
+  }
+
   async find(collectionId: number, tokenId: number): Promise<OfferEntity | null> {
     return this.offerEntityRepository.findOne({
       where: {
