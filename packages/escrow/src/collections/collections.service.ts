@@ -11,30 +11,36 @@ import { CollectionSchemaAndChain } from '@app/common/modules/types';
 @Injectable()
 export class CollectionsService {
   private logger: Logger = new Logger(CollectionsService.name);
+
   constructor(
     /** Unique SDK */
     private readonly sdkService: SdkService,
-
     /** Collection Repository */
     @InjectRepository(CollectionEntity)
     private collectionRepository: Repository<CollectionEntity>,
-
     /** Token Repository */
     @InjectRepository(TokensEntity)
     private tokensRepository: Repository<TokensEntity>,
-
     /** Graphile Worker */
     private readonly graphileWorker: WorkerService,
   ) {}
 
   /**
    * `Adding collection and tokens to database`
-   * @description
+   * @description Save the collection to the database as well as all the tokens for the collection,
+   * check if the collection is present in the database, then do not update the data.
+   *
+   * `ATTENTION!! Updating data on the collection occurs only through sdk.subscribeCollection`
+   *
    * {@link CollectionsController}
    * @param data
    */
   async addNewCollection(data: { collectionId: number }): Promise<void> {
     const { collectionId } = data;
+    const collectionData = await this.collectionRepository.findOne({ where: { collectionId: collectionId } });
+    if (collectionData) {
+      return;
+    }
     try {
       const [collection, tokens, chain] = await Promise.all([
         this.sdkService.getSchemaCollection(collectionId),
@@ -51,6 +57,10 @@ export class CollectionsService {
     } catch (e) {
       this.logger.error(e.message);
     }
+  }
+
+  public get(collectionId: number) {
+    return this.collectionRepository.findOne({ where: { collectionId } });
   }
 
   /**
@@ -89,9 +99,5 @@ export class CollectionsService {
         });
       });
     }
-  }
-
-  public get(collectionId: number) {
-    return this.collectionRepository.findOne({ where: { collectionId } });
   }
 }
