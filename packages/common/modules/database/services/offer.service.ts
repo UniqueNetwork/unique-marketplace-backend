@@ -6,6 +6,7 @@ import { ContractEntity, OfferEntity } from '../entities';
 import { Market } from '@app/contracts/assemblies/0/market';
 import { OfferStatus } from '../../types';
 import { ChainPropertiesResponse } from '@unique-nft/sdk/full';
+import { BigNumber } from 'ethers';
 
 @Injectable()
 export class OfferService {
@@ -46,8 +47,9 @@ export class OfferService {
       offer.tokenId = order.tokenId;
       offer.seller = isEthereumSeller ? order.seller.eth : order.seller.sub.toHexString();
     }
-
-    offer.priceParsed = Number(order.price.toBigInt() / 10n ** 18n);
+    const priceOrder: BigNumber = BigNumber.from(order.price);
+    const priceDir = parseFloat(priceOrder.toString()) / 1e18;
+    offer.priceParsed = priceDir.toFixed(5);
     offer.priceRaw = order.price.toString();
     offer.amount = order.amount;
     offer.contract = contract;
@@ -75,5 +77,14 @@ export class OfferService {
         collectionId,
       },
     });
+  }
+
+  getAmount(strNum: string) {
+    const result = BigNumber.from(strNum);
+    const dividedBy = result.div(BigNumber.from('1000000000000000000'));
+    const dividedByFloat = parseFloat(dividedBy.toString());
+    const dividedByFixed = dividedByFloat.toFixed(5);
+
+    return dividedByFixed;
   }
 }
