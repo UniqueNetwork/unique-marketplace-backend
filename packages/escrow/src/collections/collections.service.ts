@@ -37,10 +37,12 @@ export class CollectionsService {
    */
   async addNewCollection(data: { collectionId: number }): Promise<void> {
     const { collectionId } = data;
+    this.logger.verbose(`Collection ID: ${collectionId} active`);
     const collectionData = await this.collectionRepository.findOne({ where: { collectionId: collectionId } });
-    if (collectionData) {
+    if (collectionData != null) {
       return;
     }
+    this.logger.verbose(`Collection ID: ${collectionId} save to database!`);
     try {
       const [collection, tokens, chain] = await Promise.all([
         this.sdkService.getSchemaCollection(collectionId),
