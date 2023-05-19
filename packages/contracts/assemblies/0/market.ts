@@ -188,7 +188,7 @@ export interface MarketInterface extends utils.Interface {
   events: {
     "Log(string)": EventFragment;
     "TokenIsApproved(uint32,tuple)": EventFragment;
-    "TokenIsPurchased(uint32,tuple,uint32)": EventFragment;
+    "TokenIsPurchased(uint32,tuple,uint32,tuple)": EventFragment;
     "TokenIsUpForSale(uint32,tuple)": EventFragment;
     "TokenRevoke(uint32,tuple,uint32)": EventFragment;
   };
@@ -222,9 +222,10 @@ export interface TokenIsPurchasedEventObject {
   version: number;
   item: Market.OrderStructOutput;
   salesAmount: number;
+  buyer: CrossAddressStructOutput;
 }
 export type TokenIsPurchasedEvent = TypedEvent<
-  [number, Market.OrderStructOutput, number],
+  [number, Market.OrderStructOutput, number, CrossAddressStructOutput],
   TokenIsPurchasedEventObject
 >;
 
@@ -497,15 +498,17 @@ export interface Market extends BaseContract {
     ): TokenIsApprovedEventFilter;
     TokenIsApproved(version?: null, item?: null): TokenIsApprovedEventFilter;
 
-    "TokenIsPurchased(uint32,tuple,uint32)"(
+    "TokenIsPurchased(uint32,tuple,uint32,tuple)"(
       version?: null,
       item?: null,
-      salesAmount?: null
+      salesAmount?: null,
+      buyer?: null
     ): TokenIsPurchasedEventFilter;
     TokenIsPurchased(
       version?: null,
       item?: null,
-      salesAmount?: null
+      salesAmount?: null,
+      buyer?: null
     ): TokenIsPurchasedEventFilter;
 
     "TokenIsUpForSale(uint32,tuple)"(

@@ -37,7 +37,7 @@ contract Market {
     event TokenIsUpForSale(uint32 version, Order item);
     event TokenRevoke(uint32 version, Order item, uint32 amount);
     event TokenIsApproved(uint32 version, Order item);
-    event TokenIsPurchased(uint32 version, Order item, uint32 salesAmount);
+    event TokenIsPurchased(uint32 version, Order item, uint32 salesAmount, CrossAddress buyer);
     event Log(string message);
 
     error InvalidArgument(string info);
@@ -331,7 +331,7 @@ contract Market {
             payable(msg.sender).transfer(msg.value - totalValue);
         }
 
-        emit TokenIsPurchased(version, order, amount);
+        emit TokenIsPurchased(version, order, amount, buyer);
     }
 
     function withdraw(address transferTo) public onlyOwner {

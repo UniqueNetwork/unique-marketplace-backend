@@ -3,6 +3,7 @@ import { ContractLogData, Extrinsic } from '@unique-nft/sdk';
 import { ethers } from 'ethers';
 import { LogDescription } from '@ethersproject/abi/src.ts/interface';
 import {
+  CrossAddressStructOutput,
   LogEventObject,
   MarketEventNames,
   TokenIsApprovedEventObject,
@@ -14,6 +15,7 @@ import { OfferEventType, OfferStatus } from '@app/common/modules/types';
 import { ContractEntity, ContractService, OfferEntity, OfferEventEntity, OfferService } from '@app/common/modules/database';
 import { OfferEventService } from '@app/common/modules/database/services/offer-event.service';
 import { Sdk } from '@unique-nft/sdk/full';
+import { Address } from '@unique-nft/utils';
 import { CollectionsService } from '../../../collections/collections.service';
 
 type LogEventHandler = (
@@ -108,6 +110,7 @@ export class ContractEventsHandler {
     eventType: OfferEventType,
     extrinsic: Extrinsic,
     amount: number,
+    crossAddress: CrossAddressStructOutput,
   ): Promise<Omit<OfferEventEntity, 'id' | 'createdAt' | 'updatedAt' | 'token_properties'>> {
     // todo fix this blockId
     // @ts-ignore
@@ -118,7 +121,7 @@ export class ContractEventsHandler {
       offer,
       eventType,
       blockNumber: blockId,
-      address: extrinsic.signer,
+      address: crossAddress ? Address.extract.addressNormalized(crossAddress) : null,
       amount,
       commission: offer.contract.commission,
       collectionMode: collection?.mode || '',
@@ -131,7 +134,13 @@ export class ContractEventsHandler {
     const offer = await this.offerService.update(contractEntity, tokenUpArgs.item, OfferStatus.Opened, this.chain);
     console.log('tokenIsUpForSale', offer);
     if (offer) {
-      const eventData = await this.createEventData(offer, OfferEventType.Open, extrinsic, tokenUpArgs.item.amount);
+      const eventData = await this.createEventData(
+        offer,
+        OfferEventType.Open,
+        extrinsic,
+        tokenUpArgs.item.amount,
+        tokenUpArgs.item.seller,
+      );
       await this.offerEventService.create(eventData);
     }
   }
@@ -152,7 +161,13 @@ export class ContractEventsHandler {
     if (offer) {
       const eventType = tokenRevokeArgs.item.amount === 0 ? OfferEventType.Cancel : OfferEventType.Revoke;
 
-      const eventData = await this.createEventData(offer, eventType, extrinsic, tokenRevokeArgs.amount);
+      const eventData = await this.createEventData(
+        offer,
+        eventType,
+        extrinsic,
+        tokenRevokeArgs.amount,
+        tokenRevokeArgs.item.seller,
+      );
       await this.offerEventService.create(eventData);
     }
   }
@@ -167,7 +182,13 @@ export class ContractEventsHandler {
     const offer = await this.offerService.update(contractEntity, tokenIsPurchasedArgs.item, offerStatus);
 
     if (offer) {
-      const eventData = await this.createEventData(offer, OfferEventType.Buy, extrinsic, tokenIsPurchasedArgs.salesAmount);
+      const eventData = await this.createEventData(
+        offer,
+        OfferEventType.Buy,
+        extrinsic,
+        tokenIsPurchasedArgs.salesAmount,
+        tokenIsPurchasedArgs.buyer,
+      );
       await this.offerEventService.create(eventData);
     }
   }
