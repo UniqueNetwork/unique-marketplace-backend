@@ -1,6 +1,6 @@
-import { DataSource, SelectQueryBuilder, ViewColumn, ViewEntity } from "typeorm";
-import { OfferEntity } from "./offer.entity";
-import { PropertiesEntity } from "./properties.entity";
+import { DataSource, SelectQueryBuilder, ViewColumn, ViewEntity } from 'typeorm';
+import { OfferEntity } from './offer.entity';
+import { PropertiesEntity } from './properties.entity';
 
 @ViewEntity({
   expression: (dataSource: DataSource): SelectQueryBuilder<any> => {
@@ -30,25 +30,29 @@ import { PropertiesEntity } from "./properties.entity";
       'properties_filter.list_items',
     ]);
 
-    queryBuilder.leftJoin((selectQueryBuilder: SelectQueryBuilder<OfferEntity>) => {
-      const propsQueryBuilder = selectQueryBuilder.subQuery();
-      propsQueryBuilder.select([
-        'collection_id',
-        'network',
-        'token_id',
-        'is_trait',
-        'locale',
-        'unnest(prop.items) AS traits',
-        'key',
-        'count_item',
-        'total_items',
-        'list_items',
-      ]);
-      propsQueryBuilder.from(PropertiesEntity, 'prop');
-      propsQueryBuilder.where(`prop.type <> 'ImageURL'::${enumName}`);
-      return propsQueryBuilder;
-    }, 'properties_filter', 'offer.collection_id = properties_filter.collection_id AND offer.token_id = properties_filter.token_id');
-
+    queryBuilder.leftJoin(
+      (selectQueryBuilder: SelectQueryBuilder<OfferEntity>) => {
+        const propsQueryBuilder = selectQueryBuilder.subQuery();
+        propsQueryBuilder.select([
+          'collection_id',
+          'network',
+          'token_id',
+          'is_trait',
+          'locale',
+          'unnest(prop.items) AS traits',
+          'key',
+          'count_item',
+          'total_items',
+          'list_items',
+        ]);
+        propsQueryBuilder.from(PropertiesEntity, 'prop');
+        propsQueryBuilder.where(`prop.type <> 'ImageURL'::${enumName}`);
+        return propsQueryBuilder;
+      },
+      'properties_filter',
+      'offer.collection_id = properties_filter.collection_id AND offer.token_id = properties_filter.token_id',
+    );
+    queryBuilder.where(`offer.status::text = 'Opened'::text`);
     return queryBuilder;
   },
   name: 'view_offers',
