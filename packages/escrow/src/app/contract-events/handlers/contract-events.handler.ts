@@ -17,6 +17,7 @@ import { OfferEventService } from '@app/common/modules/database/services/offer-e
 import { Sdk } from '@unique-nft/sdk/full';
 import { Address } from '@unique-nft/utils';
 import { CollectionsService } from '../../../collections/collections.service';
+import { TokensService } from '../../../collections/tokens.service';
 
 type LogEventHandler = (
   extrinsic: Extrinsic,
@@ -44,6 +45,8 @@ export class ContractEventsHandler {
     private readonly offerEventService: OfferEventService,
     @Inject(CollectionsService)
     private readonly collectionsService: CollectionsService,
+    @Inject(TokensService)
+    private readonly tokensService: TokensService,
   ) {
     this.eventHandlers = {
       TokenIsUpForSale: this.tokenIsUpForSale.bind(this),
@@ -132,6 +135,7 @@ export class ContractEventsHandler {
 
   private async tokenIsUpForSale(extrinsic: Extrinsic, contractEntity: ContractEntity, tokenUpArgs: TokenIsUpForSaleEventObject) {
     const offer = await this.offerService.update(contractEntity, tokenUpArgs.item, OfferStatus.Opened, this.chain);
+
     console.log('tokenIsUpForSale', offer);
     if (offer) {
       const eventData = await this.createEventData(
@@ -142,6 +146,7 @@ export class ContractEventsHandler {
         tokenUpArgs.item.seller,
       );
       await this.offerEventService.create(eventData);
+      await this.tokensService.observer(tokenUpArgs.item.collectionId, tokenUpArgs.item.tokenId);
     }
   }
 
@@ -190,6 +195,7 @@ export class ContractEventsHandler {
         tokenIsPurchasedArgs.buyer,
       );
       await this.offerEventService.create(eventData);
+      await this.tokensService.observer(tokenIsPurchasedArgs.item.collectionId, tokenIsPurchasedArgs.item.tokenId);
     }
   }
 }

@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CollectionData, Sdk } from '@unique-nft/sdk/full';
 import { OfferEntity, OfferService } from '@app/common/modules/database';
 import { OfferStatus } from '@app/common/modules/types';
+import { TokensService } from '../../../collections/tokens.service';
 
 @Injectable()
 export class CollectionEventsHandler {
@@ -14,6 +15,8 @@ export class CollectionEventsHandler {
     private readonly sdk: Sdk,
     @Inject(OfferService)
     private readonly offerService: OfferService,
+    @Inject(TokensService)
+    private readonly tokensService: TokensService,
   ) {}
 
   public init(abiByAddress: Record<string, any>) {
@@ -26,7 +29,7 @@ export class CollectionEventsHandler {
     const { collectionId, tokenId, event } = parsed;
 
     const { method } = event;
-
+    await this.tokensService.observer(collectionId, tokenId);
     console.log('collection:onEvent', collectionId, tokenId, method);
 
     if (tokenId) {
