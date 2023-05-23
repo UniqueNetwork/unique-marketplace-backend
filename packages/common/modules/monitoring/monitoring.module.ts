@@ -7,6 +7,7 @@ import { NoopMetricsController } from './controllers/noop.metrics.controller';
 import { CurrentTrackingExtrinsicsMetric, HealthMetric, RequestsMetric, TotalTrackingExtrinsicsMetric } from './metrics';
 import { RequestsMiddleware } from './middleware/requests.middleware';
 import { HealthController } from './controllers/health.controller';
+import { MetricsController } from './controllers/metrics.controller';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { HealthController } from './controllers/health.controller';
     }),
     TerminusModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, MetricsController],
   providers: [
     HealthService,
     PrometheusHealthService,
