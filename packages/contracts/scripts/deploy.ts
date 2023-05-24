@@ -31,7 +31,12 @@ export async function getContractSource(version: number) {
 export async function deploy(version: number, feeValue: number, rpcUrl: string, metamaskSeed: string, substrateSeed: string) {
   const { abi, bytecode } = await getContractSource(version);
 
-  const privateKey = ethers.Wallet.fromMnemonic(metamaskSeed).privateKey;
+  const wallet = ethers.Wallet.fromMnemonic(metamaskSeed);
+
+  const balance = await ethers.getDefaultProvider(rpcUrl).getBalance(wallet.address);
+  console.log(`deploy with a account: ${wallet.address}, with a balance: ${ethers.utils.formatEther(balance)}`);
+
+  const privateKey = wallet.privateKey;
 
   const web3 = new Web3(rpcUrl);
 
