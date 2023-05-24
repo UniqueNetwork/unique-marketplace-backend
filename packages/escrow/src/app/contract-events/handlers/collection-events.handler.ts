@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CollectionData, Sdk } from '@unique-nft/sdk/full';
-import { OfferService, OfferEntity } from '@app/common/modules/database';
+import { OfferEntity, OfferService } from '@app/common/modules/database';
+import { OfferStatus } from '@app/common/modules/types';
+import { TokensService } from '../../../collections/tokens.service';
 
 @Injectable()
 export class CollectionEventsHandler {
@@ -13,6 +15,8 @@ export class CollectionEventsHandler {
     private readonly sdk: Sdk,
     @Inject(OfferService)
     private readonly offerService: OfferService,
+    @Inject(TokensService)
+    private readonly tokensService: TokensService,
   ) {}
 
   public init(abiByAddress: Record<string, any>) {
@@ -25,7 +29,7 @@ export class CollectionEventsHandler {
     const { collectionId, tokenId, event } = parsed;
 
     const { method } = event;
-
+    await this.tokensService.observer(collectionId, tokenId);
     console.log('collection:onEvent', collectionId, tokenId, method);
 
     if (tokenId) {
@@ -62,9 +66,32 @@ export class CollectionEventsHandler {
   }
 
   private async runCheckApproved(offer: OfferEntity) {
-    console.log('runCheckApproved', this.queueIsBusy);
+    const { isAllowed } = await this.sdk.token.allowance({
+      collectionId: offer.collectionId,
+      tokenId: offer.tokenId,
+      from: offer.seller,
+      to: offer.contract.address,
+    });
+    console.log('runCheckApproved', isAllowed);
+    if (!isAllowed && offer.status === OfferStatus.Opened) {
+      await this.offerService.updateStatus(offer.id, OfferStatus.Canceled);
+    }
+
+    await this.runContractCheckApproved(offer);
+  }
+
+  private async runContractCheckApproved(offer: OfferEntity) {
+    console.log('runContractCheckApproved', this.queueIsBusy);
     if (this.queueIsBusy) {
-      this.approveQueue.push(offer);
+      const exists = this.approveQueue.find(
+        (o) =>
+          o.collectionId === offer.collectionId && o.tokenId === offer.tokenId && o.contract.address === offer.contract.address,
+      );
+
+      if (!exists) {
+        this.approveQueue.push(offer);
+      }
+
       return;
     }
     this.queueIsBusy = true;
@@ -84,6 +111,7 @@ export class CollectionEventsHandler {
         tokenId: offer.tokenId,
       },
     };
+
     try {
       await contract.call(args);
 
@@ -93,6 +121,7 @@ export class CollectionEventsHandler {
     }
 
     this.queueIsBusy = false;
+
     if (this.approveQueue.length) {
       this.runCheckApproved(this.approveQueue.shift());
     }

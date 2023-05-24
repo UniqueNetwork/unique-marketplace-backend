@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
+import { Address } from '@unique-nft/utils';
 import { ContractEntity, OfferEntity } from '../entities';
 import { Market } from '@app/contracts/assemblies/0/market';
 import { OfferStatus } from '../../types';
@@ -38,14 +39,12 @@ export class OfferService {
         return null;
       }
 
-      const isEthereumSeller = order.seller.eth && order.seller.eth != '0x0000000000000000000000000000000000000000';
-
       offer = this.offerEntityRepository.create();
       offer.id = uuid();
       offer.orderId = order.id;
       offer.collectionId = order.collectionId;
       offer.tokenId = order.tokenId;
-      offer.seller = isEthereumSeller ? order.seller.eth : order.seller.sub.toHexString();
+      offer.seller = Address.extract.addressNormalized(order.seller);
     }
     const priceOrder: BigNumber = BigNumber.from(order.price);
     const priceDir = parseFloat(priceOrder.toString()) / 1e18;
@@ -59,6 +58,10 @@ export class OfferService {
     await this.offerEntityRepository.save(offer);
 
     return offer;
+  }
+
+  async updateStatus(id: string, status: OfferStatus) {
+    await this.offerEntityRepository.update({ id }, { status });
   }
 
   async find(collectionId: number, tokenId: number): Promise<OfferEntity | null> {
