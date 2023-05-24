@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { UniqueNFT, CrossAddress } from "@unique-nft/solidity-interfaces/contracts/UniqueNFT.sol";
 import "@unique-nft/solidity-interfaces/contracts/CollectionHelpers.sol";
 import "./utils.sol";
+import "./royalty/UniqueRoyaltyHelper.sol";
 
 contract Market {
     using ERC165Checker for address;
@@ -106,16 +107,6 @@ contract Market {
 
         return IERC721(collectionAddress);
     }
-
-    function getUniqueNFT(uint32 collectionId) private view returns (UniqueNFT) {
-      address collectionAddress = collectionHelpers.collectionAddress(
-        collectionId
-      );
-
-      UniqueNFT nft = UniqueNFT(collectionAddress);
-      return nft;
-    }
-
 
     // ################################################################
     // Set new contract owner                                         #
@@ -312,26 +303,50 @@ contract Market {
             orders[collectionId][tokenId] = order;
         }
 
-        UniqueNFT nft = getUniqueNFT(order.collectionId);
+        address collectionAddress = collectionHelpers.collectionAddress(collectionId);
+        UniqueNFT nft = UniqueNFT(collectionAddress);
+
         nft.transferFromCross(
           order.seller,
           buyer,
           order.tokenId
         );
 
-        address payable eth;
-        if (order.seller.eth != address(0)) {
-          eth = payable(order.seller.eth);
-        } else {
-          eth = payable(address(uint160(order.seller.sub >> 96)));
-        }
-        eth.transfer(totalValue - feeValue);
+        uint256 totalRoyalty = sendRoyalties(collectionAddress, tokenId, order.price);
+
+        sendMoney(order.seller, totalValue - feeValue - totalRoyalty);
 
         if (msg.value > totalValue) {
             payable(msg.sender).transfer(msg.value - totalValue);
         }
 
         emit TokenIsPurchased(version, order, amount, buyer);
+    }
+
+    function sendMoney(CrossAddress memory to, uint256 money) private {
+      address payable eth;
+      if (to.eth != address(0)) {
+        eth = payable(to.eth);
+      } else {
+        eth = payable(address(uint160(to.sub >> 96)));
+      }
+      eth.transfer(money);
+    }
+
+    function sendRoyalties(address collection, uint tokenId, uint sellPrice) private returns (uint256) {
+      RoyaltyAmount[] memory royalties = UniqueRoyaltyHelper.calculate(collection, tokenId, sellPrice);
+
+      uint256 totalRoyalty = 0;
+
+      for (uint256 i=0; i<royalties.length; i++) {
+        RoyaltyAmount memory royalty = royalties[i];
+
+        totalRoyalty += royalty.amount;
+
+        sendMoney(royalty.crossAddress, royalty.amount);
+      }
+
+      return totalRoyalty;
     }
 
     function withdraw(address transferTo) public onlyOwner {
