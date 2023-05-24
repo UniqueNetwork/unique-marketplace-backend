@@ -16,7 +16,6 @@ export abstract class DeployContractBase implements MigrationInterface {
       config.uniqueRpcUrl,
       config.signer.metamaskSeed,
       config.signer.substrateSeed,
-      config.uniqueSdkRestUrl,
     );
 
     const repository = queryRunner.connection.getRepository(ContractEntity);
