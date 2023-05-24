@@ -32,9 +32,9 @@ export class OfferEntity {
   amount: number;
 
   @Column({ name: 'price_parsed', type: 'numeric', precision: 8, scale: 5 })
-  priceParsed: string;
+  priceParsed: number;
 
-  @Column({ name: 'price_raw', type: 'bigint' })
+  @Column({ name: 'price_raw', type: 'varchar', length: '128' })
   priceRaw: string;
 
   @JoinColumn({

@@ -14,7 +14,7 @@ export class MarketTradeToOfferEvents1684739540519 implements MigrationInterface
     try {
       const eventsTable = queryRunner.manager.getRepository(OfferEventEntity).metadata.tableName;
       await queryRunner.query(`
-        INSERT INTO ${eventsTable} (offer_id, event_type, block_number, address, amount, commission, collection_mode, network, created_at,updated_at )
+        INSERT INTO ${eventsTable} (offer_id, event_type, meta, block_number, address, amount, commission, collection_mode, network, created_at,updated_at )
         SELECT ID AS offer_id, 'Buy' AS event_type,
         jsonb_build_object (
         'contract','0x5c03d3976Ad16F50451d95113728E0229C50cAB8',

@@ -47,8 +47,9 @@ export class OfferService {
       offer.seller = Address.extract.addressNormalized(order.seller);
     }
     const priceOrder: BigNumber = BigNumber.from(order.price);
-    const priceDir = parseFloat(priceOrder.toString()) / 1e18;
-    offer.priceParsed = priceDir.toFixed(5);
+    const priceDir = parseFloat(priceOrder.toString()) / 10 ** 18;
+    //const priceDir = parseInt(priceOrder) / Math.pow(10, 18);
+    offer.priceParsed = parseFloat(priceDir.toFixed(5));
     offer.priceRaw = order.price.toString();
     offer.amount = order.amount;
     offer.contract = contract;
