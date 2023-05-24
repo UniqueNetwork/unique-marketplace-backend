@@ -10,12 +10,13 @@ export class MarketTradeToOffers1684739540151 implements MigrationInterface {
       console.log('Table market_trade does not exist.');
       return;
     }
-    const contractTable = queryRunner.manager.getRepository(ContractEntity).metadata.tableName;
-    await queryRunner.query(`
-        INSERT INTO ${contractTable} (address,version,commission, created_at, processed_at) VALUES ('0x5c03d3976Ad16F50451d95113728E0229C50cAB8',-1,10,1,1);
-      `);
     await queryRunner.startTransaction();
+
     try {
+      const contractTable = queryRunner.manager.getRepository(ContractEntity).metadata.tableName;
+      await queryRunner.query(`
+        INSERT INTO ${contractTable} (address, version,commission, created_at, processed_at) VALUES ('0x5c03d3976Ad16F50451d95113728E0229C50cAB8',-1,10,1,1);
+      `);
       const offersTable = queryRunner.manager.getRepository(OfferEntity).metadata.tableName;
       await queryRunner.query(`
         INSERT INTO ${offersTable} (id, order_id, collection_id, token_id, price_parsed, price_raw, amount, seller, contract_address, status, created_at, updated_at)
