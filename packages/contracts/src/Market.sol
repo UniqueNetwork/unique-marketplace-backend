@@ -38,7 +38,13 @@ contract Market {
     event TokenIsUpForSale(uint32 version, Order item);
     event TokenRevoke(uint32 version, Order item, uint32 amount);
     event TokenIsApproved(uint32 version, Order item);
-    event TokenIsPurchased(uint32 version, Order item, uint32 salesAmount, CrossAddress buyer);
+    event TokenIsPurchased(
+      uint32 version,
+      Order item,
+      uint32 salesAmount,
+      CrossAddress buyer,
+      RoyaltyAmount[] royalties
+    );
     event Log(string message);
 
     error InvalidArgument(string info);
@@ -312,15 +318,16 @@ contract Market {
           order.tokenId
         );
 
-        uint256 totalRoyalty = sendRoyalties(collectionAddress, tokenId, order.price);
+        (uint256 totalRoyalty, RoyaltyAmount[] memory royalties) = sendRoyalties(collectionAddress, tokenId, totalValue);
 
         sendMoney(order.seller, totalValue - feeValue - totalRoyalty);
 
         if (msg.value > totalValue) {
+            // todo, send money to signer or buyer ?
             payable(msg.sender).transfer(msg.value - totalValue);
         }
 
-        emit TokenIsPurchased(version, order, amount, buyer);
+        emit TokenIsPurchased(version, order, amount, buyer, royalties);
     }
 
     function sendMoney(CrossAddress memory to, uint256 money) private {
@@ -333,7 +340,7 @@ contract Market {
       eth.transfer(money);
     }
 
-    function sendRoyalties(address collection, uint tokenId, uint sellPrice) private returns (uint256) {
+    function sendRoyalties(address collection, uint tokenId, uint sellPrice) private returns (uint256, RoyaltyAmount[] memory) {
       RoyaltyAmount[] memory royalties = UniqueRoyaltyHelper.calculate(collection, tokenId, sellPrice);
 
       uint256 totalRoyalty = 0;
@@ -346,7 +353,7 @@ contract Market {
         sendMoney(royalty.crossAddress, royalty.amount);
       }
 
-      return totalRoyalty;
+      return (totalRoyalty, royalties);
     }
 
     function withdraw(address transferTo) public onlyOwner {

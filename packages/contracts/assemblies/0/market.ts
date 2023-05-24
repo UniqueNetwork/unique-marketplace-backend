@@ -38,6 +38,16 @@ export type CrossAddressStructOutput = [string, BigNumber] & {
   sub: BigNumber;
 };
 
+export type RoyaltyAmountStruct = {
+  crossAddress: CrossAddressStruct;
+  amount: PromiseOrValue<BigNumberish>;
+};
+
+export type RoyaltyAmountStructOutput = [
+  CrossAddressStructOutput,
+  BigNumber
+] & { crossAddress: CrossAddressStructOutput; amount: BigNumber };
+
 export declare namespace Market {
   export type OrderStruct = {
     id: PromiseOrValue<BigNumberish>;
@@ -188,7 +198,7 @@ export interface MarketInterface extends utils.Interface {
   events: {
     "Log(string)": EventFragment;
     "TokenIsApproved(uint32,tuple)": EventFragment;
-    "TokenIsPurchased(uint32,tuple,uint32,tuple)": EventFragment;
+    "TokenIsPurchased(uint32,tuple,uint32,tuple,tuple[])": EventFragment;
     "TokenIsUpForSale(uint32,tuple)": EventFragment;
     "TokenRevoke(uint32,tuple,uint32)": EventFragment;
   };
@@ -223,9 +233,16 @@ export interface TokenIsPurchasedEventObject {
   item: Market.OrderStructOutput;
   salesAmount: number;
   buyer: CrossAddressStructOutput;
+  royalties: RoyaltyAmountStructOutput[];
 }
 export type TokenIsPurchasedEvent = TypedEvent<
-  [number, Market.OrderStructOutput, number, CrossAddressStructOutput],
+  [
+    number,
+    Market.OrderStructOutput,
+    number,
+    CrossAddressStructOutput,
+    RoyaltyAmountStructOutput[]
+  ],
   TokenIsPurchasedEventObject
 >;
 
@@ -498,17 +515,19 @@ export interface Market extends BaseContract {
     ): TokenIsApprovedEventFilter;
     TokenIsApproved(version?: null, item?: null): TokenIsApprovedEventFilter;
 
-    "TokenIsPurchased(uint32,tuple,uint32,tuple)"(
+    "TokenIsPurchased(uint32,tuple,uint32,tuple,tuple[])"(
       version?: null,
       item?: null,
       salesAmount?: null,
-      buyer?: null
+      buyer?: null,
+      royalties?: null
     ): TokenIsPurchasedEventFilter;
     TokenIsPurchased(
       version?: null,
       item?: null,
       salesAmount?: null,
-      buyer?: null
+      buyer?: null,
+      royalties?: null
     ): TokenIsPurchasedEventFilter;
 
     "TokenIsUpForSale(uint32,tuple)"(

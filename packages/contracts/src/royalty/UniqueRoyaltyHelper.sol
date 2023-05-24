@@ -18,35 +18,35 @@ struct RoyaltyAmount {
 }
 
 library UniqueRoyaltyHelper {
-    function encodePart(UniqueRoyaltyPart memory part) public pure returns (bytes memory) {
+    function encodePart(UniqueRoyaltyPart memory part) internal pure returns (bytes memory) {
         (uint256 encodedMeta, uint256 encodedAddress) = UniqueRoyalty.encodePart(part);
 
         return abi.encodePacked(encodedMeta, encodedAddress);
     }
 
-    function decodePart(bytes memory data) public pure returns (UniqueRoyaltyPart memory) {
+    function decodePart(bytes memory data) internal pure returns (UniqueRoyaltyPart memory) {
         return UniqueRoyalty.decodePart(data);
     }
 
     // todo - implement smth better - check royalties sum is lte 100%
-    function validatePart(bytes memory b) public pure returns (bool isValid) {
+    function validatePart(bytes memory b) internal pure returns (bool isValid) {
         isValid = b.length == 64;
     }
 
-    function encode(UniqueRoyaltyPart[] memory royalties) public pure returns (bytes memory) {
+    function encode(UniqueRoyaltyPart[] memory royalties) internal pure returns (bytes memory) {
         return UniqueRoyalty.encode(royalties);
     }
 
-    function decode(bytes memory data) public pure returns (UniqueRoyaltyPart[] memory) {
+    function decode(bytes memory data) internal pure returns (UniqueRoyaltyPart[] memory) {
         return UniqueRoyalty.decode(data);
     }
 
     // todo - implement smth better - check royalties sum is lte 100%
-    function validate(bytes memory b) public pure returns (bool) {
+    function validate(bytes memory b) internal pure returns (bool) {
         return b.length % 64 == 0;
     }
 
-    function getTokenRoyalty(address collection, uint tokenId) public view returns (UniqueRoyaltyPart[] memory) {
+    function getTokenRoyalty(address collection, uint tokenId) internal view returns (UniqueRoyaltyPart[] memory) {
         try ICollection(collection).property(tokenId, ROYALTIES_PROPERTY) returns (bytes memory encoded) {
             return UniqueRoyalty.decode(encoded);
         } catch {
@@ -54,7 +54,7 @@ library UniqueRoyaltyHelper {
         }
     }
 
-    function getCollectionRoyalty(address collection) public view returns (UniqueRoyaltyPart[] memory) {
+    function getCollectionRoyalty(address collection) internal view returns (UniqueRoyaltyPart[] memory) {
         try ICollection(collection).collectionProperty(ROYALTIES_PROPERTY) returns (bytes memory encoded) {
             return UniqueRoyalty.decode(encoded);
         } catch {
@@ -62,7 +62,7 @@ library UniqueRoyaltyHelper {
         }
     }
 
-    function getRoyalty(address collection, uint tokenId) public view returns (UniqueRoyaltyPart[] memory royalty) {
+    function getRoyalty(address collection, uint tokenId) internal view returns (UniqueRoyaltyPart[] memory royalty) {
         royalty = getTokenRoyalty(collection, tokenId);
 
         if (royalty.length == 0) {
@@ -70,7 +70,7 @@ library UniqueRoyaltyHelper {
         }
     }
 
-    function calculateRoyalties(UniqueRoyaltyPart[] memory royalties, bool isPrimarySale, uint sellPrice) public pure returns (RoyaltyAmount[] memory) {
+    function calculateRoyalties(UniqueRoyaltyPart[] memory royalties, bool isPrimarySale, uint sellPrice) internal pure returns (RoyaltyAmount[] memory) {
         RoyaltyAmount[] memory royaltyAmounts = new RoyaltyAmount[](royalties.length);
         uint amountsCount = 0;
 
@@ -93,13 +93,13 @@ library UniqueRoyaltyHelper {
         return royaltyAmounts;
     }
 
-    function calculateForPrimarySale(address collection, uint tokenId, uint sellPrice) public view returns (RoyaltyAmount[] memory) {
+    function calculateForPrimarySale(address collection, uint tokenId, uint sellPrice) internal view returns (RoyaltyAmount[] memory) {
         UniqueRoyaltyPart[] memory royalties = getRoyalty(collection, tokenId);
 
         return calculateRoyalties(royalties, true, sellPrice);
     }
 
-    function calculate(address collection, uint tokenId, uint sellPrice) public view returns (RoyaltyAmount[] memory) {
+    function calculate(address collection, uint tokenId, uint sellPrice) internal view returns (RoyaltyAmount[] memory) {
         UniqueRoyaltyPart[] memory royalties = getRoyalty(collection, tokenId);
 
         return calculateRoyalties(royalties, false, sellPrice);
