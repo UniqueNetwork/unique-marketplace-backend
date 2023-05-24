@@ -8,12 +8,18 @@ import { Address } from '@unique-nft/utils';
 const assembliesBasePath = './packages/contracts/assemblies';
 
 export function getContractAbi(version: number): Array<any> {
+  if (version === -1) {
+    return;
+  }
   const versionDir = `${assembliesBasePath}/${version}`;
   const abiFilename = `${versionDir}/abi.json`;
   return JSON.parse(fs.readFileSync(abiFilename).toString());
 }
 
 export async function getContractSource(version: number) {
+  if (version === -1) {
+    return;
+  }
   const versionDir = `${assembliesBasePath}/${version}`;
 
   const abiFilename = `${versionDir}/abi.json`;
