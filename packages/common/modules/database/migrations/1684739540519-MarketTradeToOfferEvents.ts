@@ -25,7 +25,8 @@ export class MarketTradeToOfferEvents1684739540519 implements MigrationInterface
         'buy_block_number',block_number_buy,
         'commission', commission,
         'original_price', origin_price ) AS meta,
-        block_number_buy AS block_number, address_buyer AS address, 1 AS amount, 10 AS commission, 'NFT' AS collection_mode, network, buy_created_at AS created_at, ask_created_at AS updated_at
+        block_number_buy AS block_number, address_buyer AS address, 1 AS amount, 10 AS commission,
+        'NFT' AS collection_mode, network, buy_created_at AS created_at, ask_created_at AS updated_at
         FROM market_trade
     `);
 
