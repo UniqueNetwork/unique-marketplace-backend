@@ -28,14 +28,7 @@ export async function getContractSource(version: number) {
   };
 }
 
-export async function deploy(
-  version: number,
-  feeValue: number,
-  rpcUrl: string,
-  metamaskSeed: string,
-  substrateSeed: string,
-  restUrl: string,
-) {
+export async function deploy(version: number, feeValue: number, rpcUrl: string, metamaskSeed: string, substrateSeed: string) {
   const { abi, bytecode } = await getContractSource(version);
 
   const privateKey = ethers.Wallet.fromMnemonic(metamaskSeed).privateKey;
@@ -62,7 +55,7 @@ export async function deploy(
     throw Error('Failed to publish contract');
   }
 
-  await addToAdmin(metamaskSeed, substrateSeed, rpcUrl, restUrl, contractAddress, abi);
+  await addToAdmin(metamaskSeed, substrateSeed, rpcUrl, contractAddress, abi);
 
   return {
     contractAddress,
@@ -94,7 +87,6 @@ async function addToAdmin(
   metamaskSeed: string,
   substrateSeed: string,
   rpcUrl: string,
-  restUrl: string,
   contractAddress: string,
   contractAbi: any,
 ) {
@@ -112,7 +104,7 @@ async function addToAdmin(
   const contract = new ethers.Contract(contractAddress, contractAbi, ownerWallet);
 
   const tx = await contract.addAdmin(adminEthereumAddress, {
-    gasLimit: 10_000_000,
+    gasLimit: 60_000,
   });
   await tx.wait();
 }
