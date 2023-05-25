@@ -8,12 +8,18 @@ import { Address } from '@unique-nft/utils';
 const assembliesBasePath = './packages/contracts/assemblies';
 
 export function getContractAbi(version: number): Array<any> {
+  if (version === -1) {
+    return;
+  }
   const versionDir = `${assembliesBasePath}/${version}`;
   const abiFilename = `${versionDir}/abi.json`;
   return JSON.parse(fs.readFileSync(abiFilename).toString());
 }
 
 export async function getContractSource(version: number) {
+  if (version === -1) {
+    return;
+  }
   const versionDir = `${assembliesBasePath}/${version}`;
 
   const abiFilename = `${versionDir}/abi.json`;
@@ -31,7 +37,12 @@ export async function getContractSource(version: number) {
 export async function deploy(version: number, feeValue: number, rpcUrl: string, metamaskSeed: string, substrateSeed: string) {
   const { abi, bytecode } = await getContractSource(version);
 
-  const privateKey = ethers.Wallet.fromMnemonic(metamaskSeed).privateKey;
+  const wallet = ethers.Wallet.fromMnemonic(metamaskSeed);
+
+  const balance = await ethers.getDefaultProvider(rpcUrl).getBalance(wallet.address);
+  console.log(`deploy with a account: ${wallet.address}, with a balance: ${ethers.utils.formatEther(balance)}`);
+
+  const privateKey = wallet.privateKey;
 
   const web3 = new Web3(rpcUrl);
 

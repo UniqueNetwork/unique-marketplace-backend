@@ -6,7 +6,7 @@ import { buildVersion } from './packages/contracts/tasks';
 const appConfig = loadConfig();
 
 const config: HardhatUserConfig = {
-  solidity: '0.8.17',
+  solidity: '0.8.19',
   paths: {
     sources: './packages/contracts/src',
     tests: './packages/contracts/test',
@@ -32,6 +32,4 @@ const config: HardhatUserConfig = {
 
 export default config;
 
-task('build:version', 'Build a new contracts version')
-  .addParam('build', 'new version, example: 1.0.0')
-  .setAction(buildVersion);
+task('build:version', 'Build a new contracts version').addParam('build', 'new version, example: 1.0.0').setAction(buildVersion);
