@@ -25,7 +25,7 @@ export class MarketTradeToOffers1684739540151 implements MigrationInterface {
           1 AS order_id,
           collection_id,
           token_id,
-          CAST(price / 1000000000000.0 AS numeric(20,5)) as price_parsed,
+          CAST(price / 1000000000000.0 AS numeric(38,18)) as price_parsed,
           price AS price_raw,
           1 as amount,
           address_seller AS seller,
