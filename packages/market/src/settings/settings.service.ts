@@ -6,8 +6,6 @@ import { CollectionEntity, ContractEntity, SettingEntity } from '@app/common/mod
 import { Repository } from 'typeorm';
 import { AddressService } from '@app/common/src/lib/address.service';
 import { CollectionStatus, CustomObject } from '@app/common/modules/types';
-import { OmitType } from '@nestjs/swagger';
-import { SignerConfig } from '@app/common/modules/config';
 
 interface CollectionDataDescription {
   mode: string;
@@ -89,7 +87,7 @@ export class SettingsService {
    * @param data
    */
   collectionDataTransformation(data): CollectionDataDescription {
-    delete data.schema.attributesSchema;
+    delete data.schema?.attributesSchema;
     const { id, mode, name, description, owner, tokenPrefix, readOnly, schema } = data;
     return { id, name, description, tokenPrefix, mode, owner, readOnly, schema };
   }

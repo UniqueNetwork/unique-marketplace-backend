@@ -240,6 +240,36 @@
         "internalType": "struct CrossAddress",
         "name": "buyer",
         "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "eth",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "sub",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CrossAddress",
+            "name": "crossAddress",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RoyaltyAmount[]",
+        "name": "royalties",
+        "type": "tuple[]"
       }
     ],
     "name": "TokenIsPurchased",
