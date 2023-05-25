@@ -36,6 +36,7 @@ export class TradesService {
     paginationRequest: PaginationRouting,
     sort: SortingRequest,
   ): Promise<any> {
+    console.dir({ tradesFilter, accountId, paginationRequest, sort }, { depth: 10 });
     let tradesQuery: SelectQueryBuilder<TradeViewEntity>;
     let paginationResult;
 
