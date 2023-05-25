@@ -31,7 +31,7 @@ export class OfferEntity {
   @Column({ name: 'amount', type: 'integer' })
   amount: number;
 
-  @Column({ name: 'price_parsed', type: 'numeric', precision: 8, scale: 5 })
+  @Column({ name: 'price_parsed', type: 'numeric', precision: 38, scale: 18 })
   priceParsed: number;
 
   @Column({ name: 'price_raw', type: 'varchar', length: '128' })
