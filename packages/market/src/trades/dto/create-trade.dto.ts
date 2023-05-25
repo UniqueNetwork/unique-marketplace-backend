@@ -100,9 +100,7 @@ export class TradeOfferDto {
   tokenDescription: any;
 
   static parseItem(trade: TradeViewEntity): TradeOfferDto {
-    const {
-      data: { collection, image, attributes, owners },
-    } = trade;
+    const { data } = trade;
     const item: Record<string, any> = {
       tokenId: +trade.token_id,
       collectionId: trade.collection_id,
@@ -113,15 +111,15 @@ export class TradeOfferDto {
       contract: { address: trade.contract_address, commission: trade.contract_commission },
       creationDate: trade.created_date,
       tradeDate: trade.trade_date,
-      owners,
+      owners: data?.owners,
       tokenDescription: {
-        collectionName: collection.name,
-        coverPicture: collection.schema.coverPicture.url,
-        mode: collection.mode,
-        prefix: collection.tokenPrefix,
-        description: collection.description,
-        image: image.fullUrl || image.url,
-        attributes,
+        collectionName: data?.collection?.name,
+        coverPicture: data?.collection?.schema.coverPicture.url,
+        mode: data?.collection?.mode,
+        prefix: data?.collection?.tokenPrefix,
+        description: data?.collection?.description,
+        image: data?.image.fullUrl || data?.image.url,
+        attributes: data?.attributes,
       },
     };
 
