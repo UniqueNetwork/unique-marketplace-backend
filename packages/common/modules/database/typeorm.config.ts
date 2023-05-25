@@ -4,7 +4,7 @@ import * as path from 'path';
 
 dotenv.config();
 const migrationsDir = path.join(__dirname, '..', 'migrations');
-const entitiesDir = path.join(__dirname, '..', 'migrations');
+const entitiesDir = path.join(__dirname, '..', 'entities');
 const isTestMode = process.env.NODE_ENV === 'test';
 
 const typeormConfig: DataSourceOptions = {

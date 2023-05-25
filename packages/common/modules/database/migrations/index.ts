@@ -10,3 +10,5 @@ export * from './1682699159580-ViewOffers';
 export * from './1683194096000-AdminSessionsTable';
 export * from './1683809743000-ViewTrades';
 export * from './1684221119187-ViewTokens';
+export * from './1684739540151-MarketTradeToOffers';
+export * from './1684739540519-MarketTradeToOfferEvents';

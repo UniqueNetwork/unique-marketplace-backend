@@ -28,6 +28,8 @@ import {
   ViewOffers1682699159580,
   ViewTrades1683809743000,
   ViewTokens1684221119187,
+  MarketTradeToOffers1684739540151,
+  MarketTradeToOfferEvents1684739540519,
 } from './migrations';
 import { ContractService, OfferService } from './services';
 import { OfferEventService } from './services/offer-event.service';
@@ -58,6 +60,8 @@ const migrations = [
   AdminSessionsTable1683194096000,
   ViewTrades1683809743000,
   ViewTokens1684221119187,
+  MarketTradeToOffers1684739540151,
+  MarketTradeToOfferEvents1684739540519,
 ];
 
 function typeOrmModulesFactory(
