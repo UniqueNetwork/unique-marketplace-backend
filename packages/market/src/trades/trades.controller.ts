@@ -12,7 +12,7 @@ import { SortingRequest } from '@app/common/modules/types/requests';
 export class TradesController {
   constructor(private readonly tradesService: TradesService) {}
 
-  @Get('/')
+  @Get('/:address')
   @ApiOperation({
     summary: 'Get trades with sort and filters',
     description: readApiDocs('trades.md'),
@@ -20,9 +20,9 @@ export class TradesController {
   @ApiResponse({ status: HttpStatus.OK })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'pageSize', required: false })
-  @ApiQuery({ name: 'accountId', required: false })
+  @ApiParam({ name: 'address', required: false })
   get(
-    @Query('accountId') accountId: string,
+    @Param('address') accountId: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
     @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
     @Query() sort: SortingRequest,
