@@ -42,10 +42,10 @@ export class ParseOffersFilterPipe implements PipeTransform<any, TransformationR
 
     return {
       collectionId: this.parseCollectionIdRequest(value.collectionId),
-      maxPrice: this.parseBigIntRequest(value.maxPrice, () => {
+      maxPrice: this.parseNumberRequest(value.maxPrice, () => {
         throw this.exceptionFactory(`Failed to parse maxPrice. Expected a big integer value, got ${value.maxPrice}`);
       }),
-      minPrice: this.parseBigIntRequest(value.minPrice, () => {
+      minPrice: this.parseNumberRequest(value.minPrice, () => {
         throw this.exceptionFactory(`Failed to parse minPrice. Expected a big integer value, got ${value.minPrice}`);
       }),
       searchLocale: value.searchLocale,
@@ -70,6 +70,17 @@ export class ParseOffersFilterPipe implements PipeTransform<any, TransformationR
     }
     try {
       return BigInt(request);
+    } catch (e) {
+      onError();
+    }
+  }
+
+  parseNumberRequest(request: string | undefined, onError: () => void): number | undefined {
+    if (request === undefined || request === null) {
+      return undefined;
+    }
+    try {
+      return parseFloat(request);
     } catch (e) {
       onError();
     }

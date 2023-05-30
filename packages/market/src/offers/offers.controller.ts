@@ -1,29 +1,13 @@
-import {
-  Body,
-  Controller,
-  DefaultValuePipe,
-  Get,
-  HttpStatus,
-  NotFoundException,
-  Param,
-  ParseIntPipe,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Controller, DefaultValuePipe, Get, HttpStatus, NotFoundException, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { OffersService } from './offers.service';
 import { readApiDocs } from '../utils/utils';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
-import {
-  OfferEntityDto,
-  OffersDto,
-  OffersFilter,
-  OfferSortingRequest,
-  OffersResultDto,
-  PaginationResultDto,
-} from './dto/offers.dto';
+import { OfferEntityDto, OffersFilter, OffersResultDto } from './dto/offers.dto';
 import { OfferEntity } from '@app/common/modules/database';
 import { ParseOffersFilterPipe } from './pipes/offer-filter.pipe';
+import { SortingOfferRequest } from '@app/common/modules/types/requests';
+import { ParseSortFilterPipe } from './pipes/sort-order.pipe';
 
 @ApiTags('Offers')
 @Controller('offers')
@@ -42,11 +26,12 @@ export class OffersController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
     @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe) pageSize: number = 10,
     @Query(ParseOffersFilterPipe) offerFilter: OffersFilter,
-    @Query() sort: OfferSortingRequest,
+    @Query(ParseSortFilterPipe) sortFilter: SortingOfferRequest,
   ) {
     const limit = pageSize > 100 ? 100 : pageSize;
     const pagination = { page, limit } as PaginationRouting;
-    return await this.offersService.getOffers(offerFilter, pagination, sort);
+    console.dir({ offerFilter, sortFilter }, { depth: 10 });
+    return await this.offersService.getOffers(offerFilter, pagination, sortFilter);
   }
 
   @Get(':id')
