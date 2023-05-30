@@ -3,13 +3,13 @@ import { TradeOfferDto, TradesFilterDto } from './dto/create-trade.dto';
 
 import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 
-import { TradeViewEntity } from '@app/common/modules/database';
+import { TradeViewEntity, ViewOffers } from '@app/common/modules/database';
 import { InjectRepository } from '@nestjs/typeorm';
 import { paginate } from 'nestjs-typeorm-paginate';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 import { nullOrWhitespace } from '../offers/pipes/offer-filter.pipe';
 import { SortingOrder, SortingParameter } from '../offers/interfaces/offers.interface';
-import { SortingRequest } from '@app/common/modules/types/requests';
+import { SortingOfferRequest, SortingRequest } from '@app/common/modules/types/requests';
 
 /**
  * Service for managing trades.
@@ -43,9 +43,9 @@ export class TradesService {
     tradesQuery = this.tradeViewRepository.createQueryBuilder('trade');
 
     try {
+      tradesQuery = this.filterByAccountId(tradesQuery, accountId);
       tradesQuery = this.filterByCollectionIds(tradesQuery, tradesFilter.collectionId);
       tradesQuery = this.filterByTokenIds(tradesQuery, tradesFilter.tokenId);
-      tradesQuery = this.filterByAccountId(tradesQuery, accountId);
       tradesQuery = this.filterBySearchText(tradesQuery, tradesFilter.searchText);
       //   tradesQuery = this.filterByTraits(tradesQuery, tradesFilter.traits, tradesFilter.collectionId);
 
@@ -81,43 +81,32 @@ export class TradesService {
    * @param sort - The sorting parameters for the trades.
    * @returns The sorted query builder.
    */
-  sortBy(query: SelectQueryBuilder<TradeViewEntity>, sort: SortingRequest): SelectQueryBuilder<TradeViewEntity> {
-    if (sort && sort.sort) {
-      const sortParameters: SortingParameter[] = Array.isArray(sort.sort)
-        ? sort.sort
-        : [
-            {
-              column: 'Price',
-              order: SortingOrder.Asc,
-            },
-          ];
-      sortParameters.forEach((sortParameter) => {
-        const { column, order } =
-          typeof sortParameter === 'string'
-            ? {
-                column: (sortParameter as string).split('(')[1].replace(')', ''),
-                order: (sortParameter as string).startsWith('asc') ? SortingOrder.Asc : SortingOrder.Desc,
-              }
-            : sortParameter;
-        switch (column) {
+  sortBy(query: SelectQueryBuilder<TradeViewEntity>, sortFilter: SortingOfferRequest): SelectQueryBuilder<TradeViewEntity> {
+    if (!sortFilter || !sortFilter.sort) {
+      return query;
+    }
+
+    const { sort } = sortFilter;
+    if (sort) {
+      sort.map((filter) => {
+        switch (filter.column) {
           case 'Price':
-            query.addOrderBy('trade.price_parsed', order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            query.addOrderBy('trade.price_parsed', filter.order === SortingOrder.Asc ? 'ASC' : 'DESC');
             break;
           case 'TokenId':
-            query.addOrderBy('trade.token_id', order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            query.addOrderBy('trade.token_id', filter.order === SortingOrder.Asc ? 'ASC' : 'DESC');
             break;
           case 'CollectionId':
-            query.addOrderBy('trade.collection_id', order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            query.addOrderBy('trade.collection_id', filter.order === SortingOrder.Asc ? 'ASC' : 'DESC');
             break;
-          case 'TradeDate':
-            query.addOrderBy('trade.trade_date', order === SortingOrder.Asc ? 'ASC' : 'DESC');
+          case 'CreationDate':
+            query.addOrderBy('trade.trade_date', filter.order === SortingOrder.Asc ? 'ASC' : 'DESC');
             break;
           default:
+            query.addOrderBy('trade.trade_date', 'DESC');
             break;
         }
       });
-    } else {
-      query.addOrderBy('trade.trade_date', 'DESC');
     }
     return query;
   }

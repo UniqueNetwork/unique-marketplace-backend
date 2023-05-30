@@ -57,16 +57,16 @@ export class OffersFilter {
   public collectionId?: number[];
 
   @ApiProperty({ required: false, type: String })
-  @Type(() => BigInt)
+  @Type(() => Number)
   @IsOptional()
   //@Min(0)
-  public minPrice?: bigint;
+  public minPrice?: number;
 
   @ApiProperty({ required: false, type: String })
-  @Type(() => BigInt)
+  @Type(() => Number)
   // @Max(9223372036854775807)
   @IsOptional()
-  public maxPrice?: bigint;
+  public maxPrice?: number;
 
   @ApiProperty({ required: false })
   public seller?: string;
@@ -97,8 +97,7 @@ export class OffersFilter {
 
   @ApiProperty({
     items: { type: 'string', default: 'desc(CreationDate)' },
-    description:
-      'Possible values: asc(Price), desc(Price), asc(TokenId), desc(TokenId), asc(CreationDate), desc(CreationDate), asc(Status), desc(Status)',
+    description: 'Possible values: asc(Price), desc(Price), asc(TokenId), desc(TokenId), asc(CreationDate), desc(CreationDate)',
     required: false,
   })
   public sort?: SortingParameter[];

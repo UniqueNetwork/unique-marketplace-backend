@@ -33,18 +33,6 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     return this.offersRepository.findOne({ where: { id } });
   }
 
-  getOffersByCursor(cursor: {
-    collectionId: OfferEntity['collectionId'];
-    tokenId: OfferEntity['tokenId'];
-  }): Promise<OfferEntity[]> {
-    return this.offersRepository.find({
-      where: {
-        ...cursor,
-        // todo status
-      },
-    });
-  }
-
   /**
    * `Show all Offers with filters`
    * Returns all offers with descriptions of tokens, collection schemes and attributes by tokens
@@ -57,8 +45,9 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     let items = [];
     let propertiesFilter = [];
     let collections = [];
-    offers = await this.viewOffersService.filter(searchOptions, pagination, sort);
+
     try {
+      offers = await this.viewOffersService.filter(searchOptions, pagination, sort);
       propertiesFilter = await this.searchInProperties(this.parserCollectionIdTokenId(offers.items));
       collections = await this.collections(this.getCollectionIds(offers.items));
 

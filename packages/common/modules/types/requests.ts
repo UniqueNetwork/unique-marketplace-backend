@@ -35,6 +35,30 @@ export class SortingRequest {
   public sort: SortingParameter[];
 }
 
+export class SortingOfferRequest {
+  @ApiProperty({
+    type: 'array',
+    items: {
+      type: 'string',
+      enum: [
+        'asc(Price)',
+        'desc(Price)',
+        'asc(TokenId)',
+        'desc(TokenId)',
+        'asc(CollectionId)',
+        'desc(CollectionId)',
+        'asc(CreationDate)',
+        'asc(CreationDate)',
+      ],
+    },
+    default: ['desc(CreationDate)'],
+    description:
+      'Possible values: asc(Price), desc(Price), asc(TokenId), desc(TokenId), asc(CollectionId), desc(CollectionId), asc(CreationDate), asc(CreationDate)',
+    required: false,
+  })
+  public sort: SortingParameter[];
+}
+
 export type OffersFilterType = {
   offer_id: string;
   offer_status: string;
