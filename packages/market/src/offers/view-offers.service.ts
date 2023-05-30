@@ -1,6 +1,6 @@
 import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OfferEntity, ViewOffers } from '@app/common/modules/database';
+import { OfferEntity, TradeViewEntity, ViewOffers } from '@app/common/modules/database';
 import { DataSource, Repository, SelectQueryBuilder, ValueTransformer } from 'typeorm';
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import { OfferAttributes, OffersFilter, OfferSortingRequest, PaginationRequest } from './dto/offers.dto';
@@ -10,6 +10,7 @@ import { paginateRaw } from 'nestjs-typeorm-paginate';
 import { SortingOrder, SortingParameter } from './interfaces/offers.interface';
 import { HelperService } from '@app/common/src/lib/helper.service';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
+import { SortingOfferRequest, SortingRequest } from '@app/common/modules/types/requests';
 
 const offersMapping = {
   priceRaw: 'price_raw',
@@ -157,7 +158,7 @@ export class ViewOffersService {
     return this.bundleService.bundle(collectionId, tokenId);
   }
 
-  public async filter(offersFilter: OffersFilter, pagination: PaginationRouting, sort: OfferSortingRequest): Promise<any> {
+  public async filter(offersFilter: OffersFilter, pagination: PaginationRouting, sort: SortingOfferRequest): Promise<any> {
     let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
     // Filert by collection id
     queryFilter = this.byCollectionId(queryFilter, offersFilter.collectionId);
@@ -180,7 +181,6 @@ export class ViewOffersService {
     const attributes = await this.byAttributes(queryFilter).getRawMany();
 
     queryFilter = this.prepareQuery(queryFilter);
-
     queryFilter = this.sortBy(queryFilter, sort);
     //
     const itemQuery = await paginateRaw(queryFilter, pagination);
@@ -192,6 +192,36 @@ export class ViewOffersService {
       attributes: this.parseAttributes(attributes),
       attributesCount,
     };
+  }
+
+  sortBy(query: SelectQueryBuilder<ViewOffers>, sortFilter: SortingOfferRequest): SelectQueryBuilder<ViewOffers> {
+    if (!sortFilter || !sortFilter.sort) {
+      return query;
+    }
+
+    const { sort } = sortFilter;
+    if (sort) {
+      sort.map((filter) => {
+        switch (filter.column) {
+          case 'Price':
+            query.addOrderBy('view_offers_offer_price_parsed', filter.order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            break;
+          case 'TokenId':
+            query.addOrderBy('view_offers_token_id', filter.order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            break;
+          case 'CollectionId':
+            query.addOrderBy('view_offers_collection_id', filter.order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            break;
+          case 'CreationDate':
+            query.addOrderBy('view_offers_offer_created_at', filter.order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            break;
+          default:
+            query.addOrderBy('view_offers_offer_created_at', 'DESC');
+            break;
+        }
+      });
+    }
+    return query;
   }
 
   private parseAttributes(attributes: any[]): TraitDto[] {
@@ -217,7 +247,7 @@ export class ViewOffersService {
     return query.andWhere('view_offers.collection_id in (:...collectionIds)', { collectionIds });
   }
 
-  private byMaxPrice(query: SelectQueryBuilder<ViewOffers>, maxPrice?: bigint): SelectQueryBuilder<ViewOffers> {
+  private byMaxPrice(query: SelectQueryBuilder<ViewOffers>, maxPrice?: number): SelectQueryBuilder<ViewOffers> {
     if (!maxPrice) {
       return query;
     }
@@ -226,7 +256,7 @@ export class ViewOffersService {
     });
   }
 
-  private byMinPrice(query: SelectQueryBuilder<ViewOffers>, minPrice?: bigint): SelectQueryBuilder<ViewOffers> {
+  private byMinPrice(query: SelectQueryBuilder<ViewOffers>, minPrice?: number): SelectQueryBuilder<ViewOffers> {
     if (!minPrice) {
       return query;
     }
@@ -344,7 +374,7 @@ export class ViewOffersService {
     return +count?.count || 0;
   }
 
-  private sortBy(query: SelectQueryBuilder<ViewOffers>, sortBy: OfferSortingRequest): SelectQueryBuilder<ViewOffers> {
+  private sortByTwo(query: SelectQueryBuilder<ViewOffers>, sortBy: OfferSortingRequest): SelectQueryBuilder<ViewOffers> {
     query = this.applyFlatSort(query, sortBy);
     return query;
   }
