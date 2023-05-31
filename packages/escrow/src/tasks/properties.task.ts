@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { Helpers } from 'graphile-worker';
 import { PropertiesEntity } from '@app/common/modules/database/entities/properties.entity';
 import { BundleType, CollectionToken, Market, SerializeTokenType, TokenInfo, TypeAttributToken } from './task.types';
+import { TokensService } from '../collections/tokens.service';
 
 @Injectable()
 @Task('collectProperties')
@@ -15,6 +16,7 @@ export class PropertiesTask {
 
   constructor(
     private sdkService: SdkService,
+    private tokenObserver: TokensService,
     @InjectRepository(TokensEntity)
     private tokensRepository: Repository<TokensEntity>,
     @InjectRepository(PropertiesEntity)
@@ -66,10 +68,12 @@ export class PropertiesTask {
 
   async addSearchIndexIfNotExists(collectionToken: CollectionToken): Promise<any> {
     const { collectionId, tokenId, network } = collectionToken;
+    await this.clearAndReplacePropertiesData(tokenId, collectionId);
     const dbIndex = await this.propertiesRepository.find({
       where: { collection_id: collectionId, token_id: tokenId, network },
     });
     if (dbIndex.length) return dbIndex;
+
     const searchIndexItems = await this.getTokenInfoItems(collectionToken);
     return this.saveProperties(collectionToken, searchIndexItems);
   }
@@ -254,5 +258,27 @@ export class PropertiesTask {
       return attribute.value.map((item) => item._);
     }
     return attribute.value._ ? [attribute.value._] : [attribute.value];
+  }
+
+  private async clearAndReplacePropertiesData(tokenId: number, collectionId: number) {
+    const tokenProperty = await this.propertiesRepository
+      .createQueryBuilder('property')
+      .select('DISTINCT property.nested', 'nested')
+      .where('property.collection_id = :collectionId', { collectionId })
+      .andWhere('property.token_id = :tokenId', { tokenId })
+      .getRawOne();
+    if (tokenProperty == null) {
+      return;
+    }
+    if (tokenProperty.length != 0) {
+      tokenProperty.nested.map(async (item) => {
+        await this.propertiesRepository.delete({ collection_id: collectionId, token_id: tokenId });
+        if (tokenId === item.tokenId) {
+          return;
+        }
+        await this.tokenObserver.observer(item.collection_id, item.token_id);
+        console.dir({ process: 'Replace', item }, { depth: 10 });
+      });
+    }
   }
 }
