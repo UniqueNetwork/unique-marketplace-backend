@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Repository } from 'typeorm';
+import { LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { ContractEntity } from '../entities';
 
 @Injectable()
 export class ContractService {
   constructor(
     @InjectRepository(ContractEntity)
-    private contractEntityRepository: Repository<ContractEntity>
+    private contractEntityRepository: Repository<ContractEntity>,
   ) {}
 
   public get(address: string): Promise<ContractEntity | null> {
@@ -19,7 +19,11 @@ export class ContractService {
   }
 
   public getAll(): Promise<ContractEntity[]> {
-    return this.contractEntityRepository.find();
+    return this.contractEntityRepository.find({
+      where: {
+        version: MoreThanOrEqual(0),
+      },
+    });
   }
 
   async getProcessedBlock(address: string): Promise<number> {
@@ -39,7 +43,7 @@ export class ContractService {
       },
       {
         processedAt,
-      }
+      },
     );
   }
 }
