@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { SettingsDto } from './dto/setting.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CollectionEntity, ContractEntity, SettingEntity } from '@app/common/modules/database';
-import { Not, Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import { AddressService } from '@app/common/src/lib/address.service';
 import { CollectionStatus, CustomObject } from '@app/common/modules/types';
 
@@ -43,7 +43,7 @@ export class SettingsService {
   async prepareSettings() {
     const contracts = await this.contractRepository.find({
       where: {
-        version: Not(-1),
+        version: MoreThanOrEqual(0),
       },
     });
 
