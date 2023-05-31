@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TokensEntity } from '@app/common/modules/database/entities/tokens.entity';
 import { Repository } from 'typeorm';
 import { WorkerService } from 'nestjs-graphile-worker';
-import { CollectionData, Sdk } from '@unique-nft/sdk/full';
 import { CollectionEntity } from '@app/common/modules/database';
 import { SdkService } from '../app/sdk.service';
 
