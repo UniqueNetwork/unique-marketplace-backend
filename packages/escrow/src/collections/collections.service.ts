@@ -42,7 +42,7 @@ export class CollectionsService {
     if (collectionData != null) {
       return;
     }
-    this.logger.verbose(`Collection ID: ${collectionId} save to database!`);
+
     try {
       const [collection, tokens, chain] = await Promise.all([
         this.sdkService.getSchemaCollection(collectionId),
@@ -50,9 +50,14 @@ export class CollectionsService {
         this.sdkService.getChainProperties(),
       ]);
       if (collection) {
+        if (!collection.schema) {
+          this.logger.error(`Collection ID: ${collectionId} not found schema! Invalid collection schema!`);
+          return;
+        }
         await this.addTaskForAddCollection({ collection, chain });
         await this.addTaskForAddTokensList(tokens.list, collection.id, chain.token);
         this.logger.log(`Added a collection to work on schema: ${collection.id} and tokens: ${tokens.list.length}`);
+        this.logger.verbose(`Collection ID: ${collectionId} saved in database!`);
       } else {
         this.logger.warn('No found collection or destroyed');
       }
