@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { BaseController } from '@app/common/src/lib/base.controller';
 import { readApiDocs } from '../utils/utils';
 import { ContractsService } from './contracts.service';
@@ -21,6 +21,7 @@ export class ContractsController extends BaseController<ContractsService> {
   })
   @ApiBearerAuth()
   @UseGuards(LoginGuard)
+  @ApiQuery({ name: 'account', type: 'string', required: false })
   checkApproved(@Body() dto: CheckApprovedDto) {
     return this.contractsService.checkApproved(dto);
   }
