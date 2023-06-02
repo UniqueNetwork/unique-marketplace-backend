@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { Helpers } from 'graphile-worker';
 import { PropertiesEntity } from '@app/common/modules/database/entities/properties.entity';
 import { BundleType, CollectionToken, Market, SerializeTokenType, TokenInfo, TypeAttributToken } from './task.types';
+import { WorkerService } from 'nestjs-graphile-worker/dist/services/worker.service';
 
 @Injectable()
 @Task('collectProperties')
@@ -15,6 +16,7 @@ export class PropertiesTask {
 
   constructor(
     private sdkService: SdkService,
+    private readonly graphileWorker: WorkerService,
     @InjectRepository(TokensEntity)
     private tokensRepository: Repository<TokensEntity>,
     @InjectRepository(PropertiesEntity)
@@ -66,10 +68,12 @@ export class PropertiesTask {
 
   async addSearchIndexIfNotExists(collectionToken: CollectionToken): Promise<any> {
     const { collectionId, tokenId, network } = collectionToken;
-    const dbIndex = await this.propertiesRepository.find({
-      where: { collection_id: collectionId, token_id: tokenId, network },
-    });
-    if (dbIndex.length) return dbIndex;
+
+    // const dbIndex = await this.propertiesRepository.find({
+    //   where: { collection_id: collectionId, token_id: tokenId, network },
+    // });
+    // if (dbIndex.length) return dbIndex;
+    await this.clearAndReplacePropertiesData(tokenId, collectionId);
     const searchIndexItems = await this.getTokenInfoItems(collectionToken);
     return this.saveProperties(collectionToken, searchIndexItems);
   }
@@ -254,5 +258,51 @@ export class PropertiesTask {
       return attribute.value.map((item) => item._);
     }
     return attribute.value._ ? [attribute.value._] : [attribute.value];
+  }
+
+  private async clearAndReplacePropertiesData(tokenId: number, collectionId: number) {
+    const tokenProperty = await this.propertiesRepository
+      .createQueryBuilder('property')
+      .select('DISTINCT property.nested', 'nested')
+      .where('property.collection_id = :collectionId', { collectionId })
+      .andWhere('property.token_id = :tokenId', { tokenId })
+      .getRawOne();
+    // console.dir(tokenProperty, { depth: 10 });
+    if (tokenProperty == null) {
+      return;
+    }
+    if (tokenProperty.length != 0) {
+      tokenProperty.nested.map(async (item) => {
+        console.dir({ process: 'Replace properties', item }, { depth: 10 });
+        //await this.propertiesRepository.delete({ collection_id: item.collection_id, token_id: item.token_id });
+        if (tokenId === item.tokenId) {
+          return;
+        }
+        const chain = await this.sdkService.getChainProperties();
+
+        console.dir(
+          {
+            tokenId: item.tokenId,
+            collectionId: item.collectionId,
+            network: chain.token,
+          },
+          { depth: 10 },
+        );
+        // await this.graphileWorker.addJob('collectTokens', {
+        //   tokenId: item.tokenId,
+        //   collectionId: item.collectionId,
+        //   network: chain.token,
+        // });
+        //
+        // await this.graphileWorker.addJob('collectProperties', {
+        //   tokenId: item.tokenId,
+        //   collectionId: item.collectionId,
+        //   network: chain.token,
+        // });
+
+        //await this.tokenObserver.observer(item.collection_id, item.token_id);
+        console.dir({ process: 'Update properties', item }, { depth: 10 });
+      });
+    }
   }
 }
