@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CollectionEntity, ContractEntity, OfferEntity, SettingEntity } from '@app/common/modules/database';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { AddressService } from '@app/common/src/lib/address.service';
-import { CollectionStatus, CustomObject } from '@app/common/modules/types';
+import { CollectionStatus, CustomObject, OfferStatus } from '@app/common/modules/types';
 
 interface CollectionDataDescription {
   mode: string;
@@ -83,6 +83,7 @@ export class SettingsService {
     const offers = await this.offerRepository
       .createQueryBuilder('offers')
       .select('DISTINCT offers.collection_id', 'collection')
+      .where('offers.status = :status', { status: OfferStatus.Opened })
       .getRawMany();
 
     // Extract active collection IDs from offers
