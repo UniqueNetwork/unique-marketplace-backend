@@ -74,7 +74,7 @@ export class PropertiesTask {
     });
 
     if (dbIndexList.length > 0) {
-      // Удаление найденных записей из базы данных
+      // Delete the index
       const deleteResult = await this.propertiesRepository.delete({
         collection_id: collectionId,
         token_id: tokenId,
