@@ -5,6 +5,9 @@ import { Repository } from 'typeorm';
 import { WorkerService } from 'nestjs-graphile-worker';
 import { CollectionEntity } from '@app/common/modules/database';
 import { SdkService } from '../app/sdk.service';
+import { CollectionData } from '@unique-nft/sdk/full';
+import { Address } from '@unique-nft/utils';
+import { AddressService } from '@app/common/src/lib/address.service';
 
 @Injectable()
 export class TokensService {
@@ -18,17 +21,37 @@ export class TokensService {
     private collectionRepository: Repository<CollectionEntity>,
     /** Graphile Worker */
     private readonly graphileWorker: WorkerService,
+    private readonly addressService: AddressService,
   ) {}
 
-  async observer(collectionId: number, tokenId: number) {
+  async observer(collectionId: number, tokenId: number, data?: CollectionData) {
     const collection = await this.collectionRepository.findOne({ where: { collectionId: collectionId } });
     if (collection) {
+      const listTokenUpdate = [];
       const chain = await this.sdk.getChainProperties();
-      await this.addUpdateTokenAndProperties(tokenId, collectionId, chain.token);
+
+      // Add the tokenId, collectionId, network chain to the list for update
+      listTokenUpdate.push({ collectionId, tokenId, network: chain.token });
+
+      if (data && data.parsed) {
+        const { parsed } = data;
+        const addressNestedTo = await this.addressService.getParentCollectionAndToken(parsed.addressTo);
+        if (addressNestedTo) {
+          listTokenUpdate.push({ ...addressNestedTo, network: chain.token });
+        }
+        const addressNested = await this.addressService.getParentCollectionAndToken(parsed.address);
+        if (addressNested) {
+          listTokenUpdate.push({ ...addressNested, network: chain.token });
+        }
+        console.dir({ nested: true, listTokenUpdate }, { depth: 10 });
+      }
+
+      listTokenUpdate.map(async (item) => await this.addUpdateTokenAndProperties(item));
     }
   }
 
-  private async addUpdateTokenAndProperties(tokenId: number, collectionId: number, network: string) {
+  private async addUpdateTokenAndProperties(item: { collectionId: number; tokenId: number; network: string }) {
+    const { collectionId, tokenId, network } = item;
     await this.graphileWorker.addJob('collectTokens', {
       tokenId,
       collectionId,

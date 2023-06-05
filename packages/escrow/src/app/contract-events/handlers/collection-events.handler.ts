@@ -29,7 +29,7 @@ export class CollectionEventsHandler {
     const { collectionId, tokenId, event } = parsed;
 
     const { method } = event;
-    await this.tokensService.observer(collectionId, tokenId);
+    await this.tokensService.observer(collectionId, tokenId, data);
     console.log('collection:onEvent', collectionId, tokenId, method);
 
     if (tokenId) {
