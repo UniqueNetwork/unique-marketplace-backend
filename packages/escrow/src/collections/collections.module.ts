@@ -10,6 +10,7 @@ import { OffersSubscriber } from './offers.subscriber';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { TokensService } from './tokens.service';
+import { AddressService } from '@app/common/src/lib/address.service';
 
 @Module({
   controllers: [CollectionsController],
@@ -22,6 +23,7 @@ import { TokensService } from './tokens.service';
     PropertiesTask,
     OffersSubscriber,
     TokensService,
+    AddressService,
   ],
   exports: [CollectionsService],
 })

@@ -69,11 +69,22 @@ export class PropertiesTask {
   async addSearchIndexIfNotExists(collectionToken: CollectionToken): Promise<any> {
     const { collectionId, tokenId, network } = collectionToken;
 
-    // const dbIndex = await this.propertiesRepository.find({
-    //   where: { collection_id: collectionId, token_id: tokenId, network },
-    // });
-    // if (dbIndex.length) return dbIndex;
-    await this.clearAndReplacePropertiesData(tokenId, collectionId);
+    const dbIndexList = await this.propertiesRepository.find({
+      where: { collection_id: collectionId, token_id: tokenId, network },
+    });
+
+    if (dbIndexList.length > 0) {
+      // Delete the index
+      const deleteResult = await this.propertiesRepository.delete({
+        collection_id: collectionId,
+        token_id: tokenId,
+        network,
+      });
+      this.logger.log(
+        `Deleted properties collection: ${collectionId}, token: ${tokenId} in ${network} > ${deleteResult.affected} records`,
+      );
+    }
+
     const searchIndexItems = await this.getTokenInfoItems(collectionToken);
     return this.saveProperties(collectionToken, searchIndexItems);
   }
@@ -110,7 +121,9 @@ export class PropertiesTask {
       }),
     );
 
-    console.dir({ propertiesDataItems }, { depth: 0 });
+    this.logger.log(
+      `Updated properties collection: ${collectionToken.collectionId} token: ${collectionToken.tokenId} in ${collectionToken.network}`,
+    );
 
     return this.propertiesRepository.save(propertiesDataItems);
   }
@@ -279,28 +292,6 @@ export class PropertiesTask {
           return;
         }
         const chain = await this.sdkService.getChainProperties();
-
-        console.dir(
-          {
-            tokenId: item.tokenId,
-            collectionId: item.collectionId,
-            network: chain.token,
-          },
-          { depth: 10 },
-        );
-        // await this.graphileWorker.addJob('collectTokens', {
-        //   tokenId: item.tokenId,
-        //   collectionId: item.collectionId,
-        //   network: chain.token,
-        // });
-        //
-        // await this.graphileWorker.addJob('collectProperties', {
-        //   tokenId: item.tokenId,
-        //   collectionId: item.collectionId,
-        //   network: chain.token,
-        // });
-
-        //await this.tokenObserver.observer(item.collection_id, item.token_id);
         console.dir({ process: 'Update properties', item }, { depth: 10 });
       });
     }

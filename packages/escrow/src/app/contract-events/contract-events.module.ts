@@ -6,9 +6,18 @@ import { CollectionEventsHandler, ContractEventsHandler } from './handlers';
 import { CollectionsModule } from '../../collections/collections.module';
 import { SdkService } from '../sdk.service';
 import { TokensService } from '../../collections/tokens.service';
+import { AddressService } from '@app/common/src/lib/address.service';
 
 @Module({
   imports: [DatabaseModule.forFeature(), CollectionsModule],
-  providers: [sdkProvider, ContractEventsService, CollectionEventsHandler, ContractEventsHandler, TokensService, SdkService],
+  providers: [
+    sdkProvider,
+    ContractEventsService,
+    CollectionEventsHandler,
+    ContractEventsHandler,
+    TokensService,
+    SdkService,
+    AddressService,
+  ],
 })
 export class ContractEventsModule {}
