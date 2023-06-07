@@ -1,8 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OfferEventEntity } from '../entities';
-import { TokensService } from '../../../../escrow/src/collections/tokens.service';
 
 @Injectable()
 export class OfferEventService {

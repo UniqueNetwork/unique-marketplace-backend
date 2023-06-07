@@ -1,10 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ContractEntity } from '@app/common/modules/database';
+import { ContractEntity, OfferService } from '@app/common/modules/database';
 import { Sdk } from '@unique-nft/sdk/full';
+import { Address } from '@unique-nft/utils';
 import { CheckApprovedDto } from './dto/check-approved.dto';
 import { getContractAbi } from '@app/contracts/scripts';
+import { Market } from '@app/contracts/assemblies/0/market';
+import { OfferStatus } from '@app/common/modules/types';
+
+interface ContractEventValue {
+  item: Market.OrderStructOutput;
+}
 
 @Injectable()
 export class ContractsService {
@@ -14,6 +21,7 @@ export class ContractsService {
     private readonly sdk: Sdk,
     @InjectRepository(ContractEntity)
     private contractService: Repository<ContractEntity>,
+    private offerService: OfferService,
   ) {}
 
   public async checkApproved(params: CheckApprovedDto) {
@@ -62,10 +70,36 @@ export class ContractsService {
       };
     }
 
-    this.logger.log(`check-approved result:`, result);
+    const { name, values } = result.parsed.parsedEvents[0];
+    const eventObject = values as ContractEventValue;
+
+    const sellerIsOwner = await this.sellerIsOwner(collectionId, tokenId, eventObject);
+
+    if (name === 'TokenRevoke' || !sellerIsOwner) {
+      await this.offerService.update(contractEntity, eventObject.item, OfferStatus.Canceled);
+    } else if (name === 'TokenIsApproved') {
+      await this.offerService.update(contractEntity, eventObject.item, OfferStatus.Opened);
+    }
+
+    this.logger.log(`check-approved result:`, result.parsed);
 
     return {
-      result: result.parsed.parsedEvents[0],
+      result: eventObject,
     };
+  }
+
+  private async sellerIsOwner(collectionId, tokenId, eventObject: ContractEventValue): Promise<boolean> {
+    const ownerResult = await this.sdk.token.owner({
+      collectionId,
+      tokenId,
+    });
+
+    const owner = ownerResult.owner.toLowerCase();
+
+    const { seller } = eventObject.item;
+
+    const sellerNormalized = Address.extract.addressNormalized(seller).toLowerCase();
+
+    return sellerNormalized === owner;
   }
 }
