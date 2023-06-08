@@ -20,6 +20,16 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
             default: 0,
           },
           {
+            name: 'tokens_count',
+            type: 'int',
+            default: 0,
+          },
+          {
+            name: 'tokens_on_market',
+            type: 'int',
+            default: 0,
+          },
+          {
             name: 'owner',
             type: 'varchar',
             length: '128',

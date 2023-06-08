@@ -3,6 +3,7 @@ import { CollectionData, Sdk } from '@unique-nft/sdk/full';
 import { OfferEntity, OfferService } from '@app/common/modules/database';
 import { OfferStatus } from '@app/common/modules/types';
 import { TokensService } from '../../../collections/tokens.service';
+import { CollectionsService } from "../../../collections/collections.service";
 
 @Injectable()
 export class CollectionEventsHandler {
@@ -18,6 +19,8 @@ export class CollectionEventsHandler {
     private readonly offerService: OfferService,
     @Inject(TokensService)
     private readonly tokensService: TokensService,
+    @Inject(CollectionsService)
+    private readonly collectionsService: CollectionsService,
   ) {}
 
   public init(abiByAddress: Record<string, any>) {

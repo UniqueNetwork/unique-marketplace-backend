@@ -49,6 +49,10 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
     };
   }
 
+  async findOne(collectionId: number): Promise<CollectionEntity | undefined> {
+    return this.collectionRepository.findOne({ where: { collectionId } });
+  }
+
   async allowedTokens(collection: number, data: { tokens: string }): Promise<ResponseTokenDto> {
     const reg = /^[0-9-,]*$/;
     if (!reg.test(data.tokens)) {

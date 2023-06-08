@@ -5,13 +5,13 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpStatus,
+  HttpStatus, NotFoundException,
   Param,
   ParseIntPipe,
   Patch,
   Query,
-  UseGuards,
-} from '@nestjs/common';
+  UseGuards
+} from "@nestjs/common";
 import { CollectionsService } from './collections.service';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CollectionStatus } from '@app/common/modules/types';
@@ -50,6 +50,21 @@ export class CollectionsController extends BaseController<CollectionsService> {
       page,
       limit,
     } as PaginationRouting);
+  }
+
+  @Get('/:collectionId')
+  @ApiOperation({
+    summary: 'Adding the collection and its tokens to the database',
+    description: readApiDocs('collection-add.md'),
+  })
+  @ApiQuery({ name: 'collectionId', type: 'integer' })
+  async getOne(@Query('collectionId') collectionId: number) {
+    const collection = await this.collectionsService.findOne(collectionId);
+    if (!collection) {
+      throw new NotFoundException(`Collection by ID ${collectionId} not found on market`);
+    }
+    // todo add cover, social links, etc.
+    return collection;
   }
 
   @Patch('/add')
