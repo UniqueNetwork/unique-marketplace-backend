@@ -3,11 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TokensEntity } from '@app/common/modules/database/entities/tokens.entity';
 import { Repository } from 'typeorm';
 import { WorkerService } from 'nestjs-graphile-worker';
-import { CollectionEntity } from '@app/common/modules/database';
+import { CollectionEntity, PropertiesEntity } from '@app/common/modules/database';
 import { SdkService } from '../app/sdk.service';
 import { CollectionData } from '@unique-nft/sdk/full';
 import { Address } from '@unique-nft/utils';
 import { AddressService } from '@app/common/src/lib/address.service';
+
+export interface TokenCollectionUpdate {
+  collectionId: number;
+  tokenId: number;
+  network: string;
+}
 
 @Injectable()
 export class TokensService {
@@ -17,6 +23,8 @@ export class TokensService {
     private sdk: SdkService,
     @InjectRepository(TokensEntity)
     private tokensRepository: Repository<TokensEntity>,
+    @InjectRepository(PropertiesEntity)
+    private propsRepository: Repository<PropertiesEntity>,
     @InjectRepository(CollectionEntity)
     private collectionRepository: Repository<CollectionEntity>,
     /** Graphile Worker */
@@ -34,31 +42,47 @@ export class TokensService {
    */
   async observer(collectionId: number, tokenId: number, data?: CollectionData) {
     const collection = await this.collectionRepository.findOne({ where: { collectionId: collectionId } });
-
     if (collection) {
-      const chain = await this.sdk.getChainProperties();
-      let listTokenUpdate: { collectionId: number; tokenId: number; network: string }[] = []; // Инициализируем переменную как массив
+      //Check token lives in the chain
+      const token = await this.sdk.getTokenSchema(collectionId, tokenId);
 
-      // Add the tokenId, collectionId, network chain to the list for update
-      listTokenUpdate.push({ collectionId, tokenId, network: chain.token });
+      console.dir({ token, data }, { depth: 3 });
+
+      const chain = await this.sdk.getChainProperties();
+      const tokenMap = new Map<string, TokenCollectionUpdate>();
 
       if (data && data.parsed) {
-        const { parsed } = data;
-        const addressNestedTo = await this.addressService.getParentCollectionAndToken(parsed.addressTo);
+        const { parsed, event } = data;
 
-        if (addressNestedTo) {
-          listTokenUpdate = await this.getListBundles({ ...addressNestedTo, network: chain.token });
-          console.dir(listTokenUpdate, { depth: 10 });
+        if (event.method === 'ItemDestroyed') {
+        }
+
+        if (event.method === 'Approved') {
+        }
+
+        if (event.method === 'Transfer') {
+        }
+
+        const addressNestedTo = await this.addressService.getParentCollectionAndToken(parsed.addressTo);
+        if (addressNestedTo !== undefined) {
+          tokenMap.set(`${addressNestedTo?.collectionId}-${addressNestedTo?.tokenId}-${chain.token}`, {
+            ...addressNestedTo,
+            network: chain.token,
+          });
         }
 
         const addressNested = await this.addressService.getParentCollectionAndToken(parsed.address);
-        if (addressNested) {
-          listTokenUpdate = await this.getListBundles({ ...addressNested, network: chain.token }); // Исправляем ошибку
-          console.dir(listTokenUpdate, { depth: 10 });
+        if (addressNested !== undefined) {
+          tokenMap.set(`${addressNested?.collectionId}-${addressNested?.tokenId}-${chain.token}`, {
+            ...addressNested,
+            network: chain.token,
+          });
         }
       }
+      // Add the tokenId, collectionId, network chain to the list for update
+      tokenMap.set(`${collectionId}-${tokenId}-${chain.token}`, { collectionId, tokenId, network: chain.token });
 
-      listTokenUpdate.map(async (item) => await this.addUpdateTokenAndProperties(item));
+      Array.from(tokenMap.values()).map((item) => this.addUpdateTokenAndProperties(item));
     }
   }
 

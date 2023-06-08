@@ -37,7 +37,7 @@ export class CollectionEventsHandler {
       await this.tokensService.observer(collectionId, tokenId, data);
     }
 
-    this.logger.verbose('Collection:onEvent', collectionId, tokenId, method);
+    this.logger.verbose(`Collection:onEvent: ${method} for C:${collectionId} T:${tokenId}`);
 
     if (tokenId) {
       const offer = await this.offerService.find(collectionId, tokenId);
@@ -45,22 +45,22 @@ export class CollectionEventsHandler {
         return;
       }
 
-      if (method === 'ItemDestroyed') {
+      if (method === "ItemDestroyed") {
         await this.deleteOffer(offer);
       }
 
-      if (method === 'Approved') {
+      if (method === "Approved") {
         const { addressTo } = parsed;
         if (addressTo && this.abiByAddress[addressTo.toLowerCase()]) {
           await this.runCheckApproved(offer);
         }
       }
 
-      if (method === 'Transfer') {
+      if (method === "Transfer") {
         await this.runCheckApproved(offer);
       }
     } else {
-      if (method === 'CollectionDestroyed') {
+      if (method === "CollectionDestroyed") {
         await this.deleteCollectionOffers(collectionId);
       }
     }
