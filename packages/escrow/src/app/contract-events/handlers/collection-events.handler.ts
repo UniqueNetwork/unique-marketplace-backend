@@ -34,7 +34,7 @@ export class CollectionEventsHandler {
       await this.tokensService.observer(collectionId, tokenId, data);
     }
 
-    this.logger.verbose('Collection:onEvent', collectionId, tokenId, method);
+    this.logger.verbose(`Collection:onEvent: ${method} for C:${collectionId} T:${tokenId}`);
 
     if (tokenId) {
       const offer = await this.offerService.find(collectionId, tokenId);
