@@ -150,7 +150,7 @@ export class SdkService {
    */
   async getSchemaToken(tokenId: number, collectionId: number, at?: string): Promise<TokenByIdResponse> {
     const getSchema = await this.sdk.tokens.get({ collectionId, tokenId, at });
-    if (getSchema) {
+    if (!getSchema) {
       return null;
     }
     return getSchema;
