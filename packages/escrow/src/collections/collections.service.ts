@@ -35,11 +35,13 @@ export class CollectionsService {
    * {@link CollectionsController}
    * @param data
    */
-  async addNewCollection(data: { collectionId: number }): Promise<void> {
-    const { collectionId } = data;
+  async addNewCollection(data: { collectionId: number; forceUpdate: boolean }): Promise<void> {
+    console.dir({ data }, { depth: 10 });
+
+    const { collectionId, forceUpdate } = data;
     this.logger.verbose(`Collection ID: ${collectionId} active`);
     const collectionData = await this.collectionRepository.findOne({ where: { collectionId: collectionId } });
-    if (collectionData != null) {
+    if (collectionData != null && !forceUpdate) {
       return;
     }
 

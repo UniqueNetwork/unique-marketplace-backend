@@ -70,6 +70,7 @@ export enum TypeAttributToken {
 
 export type PayLoadCollection = {
   collectionId: number;
+  forceUpdate: boolean;
 };
 
 export type ChainDataResponse = {
