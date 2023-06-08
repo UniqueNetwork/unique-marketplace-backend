@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
 import {
   ChainPropertiesResponse,
@@ -26,6 +26,8 @@ export type TokenBalance = {
 
 @Injectable()
 export class SdkService {
+
+  private logger = new Logger('SDK');
   constructor(private readonly sdk: Sdk) {}
 
   async isBundle(token: number, collection: number): Promise<any> {
@@ -148,8 +150,13 @@ export class SdkService {
    * @param collectionId
    * @param at
    */
-  async getSchemaToken(tokenId: number, collectionId: number, at?: string): Promise<TokenByIdResponse> {
-    const getSchema = await this.sdk.tokens.get({ collectionId, tokenId, at });
+  async getSchemaToken(tokenId: number, collectionId: number): Promise<TokenByIdResponse> {
+    let getSchema;
+    try {
+      getSchema = await this.sdk.token.get({ collectionId, tokenId });
+    } catch (e) {
+      this.logger.error(e);
+    }
     if (!getSchema) {
       return null;
     }

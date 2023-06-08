@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Patch,
@@ -52,6 +53,16 @@ export class CollectionsController extends BaseController<CollectionsService> {
     } as PaginationRouting);
   }
 
+  @Get('/:collectionId')
+  @ApiOperation({
+    summary: 'Adding the collection and its tokens to the database',
+    description: readApiDocs('collection-add.md'),
+  })
+  @ApiQuery({ name: 'collectionId', type: 'integer' })
+  async getOne(@Query('collectionId') collectionId: number) {
+    return await this.collectionsService.getOneColection(collectionId);
+  }
+
   @Patch('/add')
   @ApiOperation({
     summary: 'Adding the collection and its tokens to the database',
@@ -61,8 +72,9 @@ export class CollectionsController extends BaseController<CollectionsService> {
   //@UseGuards(LoginGuard)
   @ApiQuery({ name: 'collectionId', type: 'integer' })
   @ApiQuery({ name: 'account', type: 'string', required: false })
-  async addCollection(@Query('collectionId') collectionId: number) {
-    return await this.collectionsService.addCollection(collectionId);
+  @ApiQuery({ name: 'force', type: 'boolean', required: false })
+  async addCollection(@Query('collectionId') collectionId: number, @Query('force') force: boolean = false) {
+    return await this.collectionsService.addCollection(collectionId, force ?? false);
   }
 
   @Patch('test/add')
@@ -74,8 +86,9 @@ export class CollectionsController extends BaseController<CollectionsService> {
   @UseGuards(LoginGuard)
   @ApiQuery({ name: 'collectionId', type: 'integer' })
   @ApiQuery({ name: 'account', type: 'string', required: false })
-  async addCollectionTest(@Query('collectionId') collectionId: number) {
-    return { collectionId: collectionId };
+  @ApiQuery({ name: 'force', type: 'boolean', required: false })
+  async addCollectionTest(@Query('collectionId') collectionId: number, @Query('force') force: boolean = false) {
+    return await this.collectionsService.addCollection(collectionId, force ?? false);
   }
 
   @Patch('/allowed/tokens/:collectionId')

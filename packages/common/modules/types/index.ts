@@ -46,6 +46,8 @@ export enum CollectionMode {
 
 export type DecodedCollection = {
   collectionId: number;
+  tokensCount: number;
+  tokensOnMarket: number;
   owner: string;
   mode: CollectionMode;
   tokenPrefix: string;
@@ -68,6 +70,7 @@ export enum TypeAttributToken {
 
 export type PayLoadCollection = {
   collectionId: number;
+  forceUpdate: boolean;
 };
 
 export type ChainDataResponse = {
@@ -81,4 +84,5 @@ export type ChainDataResponse = {
 export type CollectionSchemaAndChain = {
   collection: CollectionInfoWithSchemaResponse;
   chain: ChainDataResponse;
+  tokensCount: number;
 };

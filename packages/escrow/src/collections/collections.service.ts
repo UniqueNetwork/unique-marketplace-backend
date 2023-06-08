@@ -35,11 +35,13 @@ export class CollectionsService {
    * {@link CollectionsController}
    * @param data
    */
-  async addNewCollection(data: { collectionId: number }): Promise<void> {
-    const { collectionId } = data;
+  async addNewCollection(data: { collectionId: number; forceUpdate: boolean }): Promise<void> {
+    console.dir({ data }, { depth: 10 });
+
+    const { collectionId, forceUpdate } = data;
     this.logger.verbose(`Collection ID: ${collectionId} active`);
     const collectionData = await this.collectionRepository.findOne({ where: { collectionId: collectionId } });
-    if (collectionData != null) {
+    if (collectionData != null && !forceUpdate) {
       return;
     }
 
@@ -54,7 +56,7 @@ export class CollectionsService {
           this.logger.error(`Collection ID: ${collectionId} not found schema! Invalid collection schema!`);
           return;
         }
-        await this.addTaskForAddCollection({ collection, chain });
+        await this.addTaskForAddCollection({ collection, chain, tokensCount: tokens.list.length });
         await this.addTaskForAddTokensList(tokens.list, collection.id, chain.token);
         this.logger.log(`Added a collection to work on schema: ${collection.id} and tokens: ${tokens.list.length}`);
         this.logger.verbose(`Collection ID: ${collectionId} saved in database!`);

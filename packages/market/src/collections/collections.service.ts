@@ -1,13 +1,14 @@
 import { BadRequestException, HttpStatus, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CollectionDto, ResponseTokenDto } from './dto/create-collection.dto';
-import { UpdateCollectionDto, UpdateCollectionStatusDto } from './dto/update-collection.dto';
+import { UpdateCollectionStatusDto } from './dto/update-collection.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Collection, Repository } from 'typeorm';
-import { CollectionEntity } from '@app/common/modules/database';
+import { Repository } from 'typeorm';
+import { CollectionEntity, OfferEntity, TokensEntity } from '@app/common/modules/database';
 import { BaseService } from '@app/common/src/lib/base.service';
 import { pgNotifyClient } from '@app/common/pg-transport/pg-notify-client.symbol';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { PgTransportClient } from '@app/common/pg-transport/pg-transport.client';
+import { OfferStatus } from '@app/common/modules/types';
 
 @Injectable()
 export class CollectionsService extends BaseService<CollectionEntity, CollectionDto> {
@@ -19,15 +20,20 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
     @Inject(pgNotifyClient) private client: PgTransportClient,
     @InjectRepository(CollectionEntity)
     private collectionRepository: Repository<CollectionEntity>,
+    @InjectRepository(OfferEntity)
+    private offersRepository: Repository<OfferEntity>,
+    @InjectRepository(TokensEntity)
+    private tokensRepository: Repository<TokensEntity>,
   ) {
     super({});
   }
 
-  async addCollection(collectionId: number): Promise<any> {
+  async addCollection(collectionId: number, forceUpdate: boolean = false): Promise<any> {
     //await this.hasCollection(collectionId);
 
     this.client.emit('new-collection-added', {
       collectionId,
+      forceUpdate,
     });
 
     return {
@@ -43,10 +49,16 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
   async findAll(options: IPaginationOptions): Promise<any> {
     const qb = await this.collectionRepository.createQueryBuilder();
     const { items, meta } = await paginate(qb, options);
+    items.map((item) => this.updateTokensOneMarket(item.collectionId));
+    console.dir(items, { depth: 2 });
     return {
       meta,
       items,
     };
+  }
+
+  async findOne(collectionId: number): Promise<CollectionEntity | undefined> {
+    return this.collectionRepository.findOne({ where: { collectionId } });
   }
 
   async allowedTokens(collection: number, data: { tokens: string }): Promise<ResponseTokenDto> {
@@ -113,8 +125,36 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
     return await this.collectionRepository.delete({ collectionId: id });
   }
 
+  async getOneColection(collectionId: number) {
+    await this.updateTokensOneMarket(collectionId);
+    const collection = await this.findOne(collectionId);
+    if (!collection) {
+      throw new NotFoundException(`Collection by ID ${collectionId} not found on market`);
+    }
+    // todo add cover, social links, etc.
+    return collection;
+  }
+
+  async updateTokensOneMarket(collectionId: number) {
+    const countTokenOneMarket = await this.offersRepository.count({
+      where: {
+        collectionId,
+        status: OfferStatus.Opened,
+      },
+    });
+    const countToken = await this.tokensRepository.count({ where: { collectionId } });
+
+    await this.collectionRepository.update(
+      { collectionId },
+      {
+        tokensOnMarket: countTokenOneMarket,
+        tokensCount: countToken,
+      },
+    );
+  }
+
   /**
-   * Проверяем есть ли такая коллекция в списке макрета, Включена ли коллекция!
+   * Check if there is such a collection in the macro list, Is the collection included!
    * @param collectionId
    * @private
    */

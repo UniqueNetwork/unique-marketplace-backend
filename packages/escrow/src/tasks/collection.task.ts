@@ -35,11 +35,13 @@ export class CollectionTask {
     collectionDto: CollectionSchemaAndChain,
     helpers: Helpers
   ): Promise<void> {
-    const { collection, chain } = collectionDto;
+    const { collection, chain, tokensCount } = collectionDto;
     const { id, description, name, owner, mode, tokenPrefix } = collection;
     const { token } = chain;
     const decodedCollection: DecodedCollection = {
       decimalPoints: collection['decimals'] || 0,
+      tokensCount,
+      tokensOnMarket: 0,
       collectionId: id,
       owner,
       mode: mode as CollectionMode,
