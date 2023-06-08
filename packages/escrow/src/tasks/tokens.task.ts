@@ -48,8 +48,11 @@ export class TokensTask {
     const token = await this.sdkService
       .getSchemaToken(tokenId, collectionId)
       .then(async (token) => {
+        if (token === null) {
+          return;
+        }
         let owners = [];
-        if (token.owner !== null) {
+        if (token?.owner !== null) {
           owners = (await this.sdkService.getTokenOwners(collectionId, tokenId)).human;
         } else {
           owners.push(`{ Substrate: ${token.owner} }`);
@@ -60,6 +63,9 @@ export class TokensTask {
         };
       })
       .then(async (token) => {
+        if (token === undefined) {
+          return;
+        }
         const tokenOwners = [];
         for (const ownerData of token.owners) {
           const address = ownerData['Substrate'] || ownerData['Ethereum'];
@@ -78,7 +84,10 @@ export class TokensTask {
         };
       });
 
-    const otherOwners = JSON.parse(JSON.stringify(token.tokenOwners));
+    if (!token) {
+      return;
+    }
+    const otherOwners = JSON.parse(JSON.stringify(token?.tokenOwners));
     const owner_token = token.owner;
 
     const nested = JSON.parse(JSON.stringify(this.nestedCollectionAndToken(token.owner))) || {};

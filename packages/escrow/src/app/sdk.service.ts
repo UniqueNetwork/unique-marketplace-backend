@@ -83,6 +83,7 @@ export class SdkService {
   async getTokenSchema(collectionId: number, tokenId: number): Promise<TokenByIdResponse> {
     return await this.sdk.tokens.get({ collectionId: collectionId, tokenId: tokenId });
   }
+
   /**
    * Get a list of token numbers
    * @param collectionId
@@ -99,6 +100,7 @@ export class SdkService {
       list,
     };
   }
+
   async getTokenOwners(collectionId: number, tokenId: number): Promise<any> {
     const token: ResponseTokenSchema = await this.sdk.stateQuery.execute(
       { endpoint: 'rpc', module: 'unique', method: 'tokenOwners' },
@@ -147,7 +149,11 @@ export class SdkService {
    * @param at
    */
   async getSchemaToken(tokenId: number, collectionId: number, at?: string): Promise<TokenByIdResponse> {
-    return await this.sdk.tokens.get({ collectionId, tokenId, at });
+    const getSchema = await this.sdk.tokens.get({ collectionId, tokenId, at });
+    if (getSchema) {
+      return null;
+    }
+    return getSchema;
   }
 
   async getChainProperties(): Promise<ChainPropertiesResponse> {
