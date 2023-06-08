@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CollectionData, Sdk } from '@unique-nft/sdk/full';
 import { OfferEntity, OfferService } from '@app/common/modules/database';
 import { OfferStatus } from '@app/common/modules/types';
@@ -7,6 +7,7 @@ import { TokensService } from '../../../collections/tokens.service';
 @Injectable()
 export class CollectionEventsHandler {
   private abiByAddress: Record<string, any>;
+  private logger: Logger = new Logger(CollectionEventsHandler.name);
 
   private queueIsBusy: boolean;
   private approveQueue: OfferEntity[] = [];
@@ -29,8 +30,11 @@ export class CollectionEventsHandler {
     const { collectionId, tokenId, event } = parsed;
 
     const { method } = event;
-    await this.tokensService.observer(collectionId, tokenId, data);
-    console.log('collection:onEvent', collectionId, tokenId, method);
+    if (tokenId) {
+      await this.tokensService.observer(collectionId, tokenId, data);
+    }
+
+    this.logger.verbose('Collection:onEvent', collectionId, tokenId, method);
 
     if (tokenId) {
       const offer = await this.offerService.find(collectionId, tokenId);
