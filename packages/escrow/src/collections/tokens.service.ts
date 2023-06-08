@@ -40,7 +40,7 @@ export class TokensService {
       let listTokenUpdate: { collectionId: number; tokenId: number; network: string }[] = []; // Инициализируем переменную как массив
 
       // Add the tokenId, collectionId, network chain to the list for update
-      listTokenUpdate.push({ collectionId, tokenId, network: chain.token });
+      listTokenUpdate = [{ collectionId, tokenId, network: chain.token }];
 
       if (data && data.parsed) {
         const { parsed } = data;
@@ -48,16 +48,14 @@ export class TokensService {
 
         if (addressNestedTo) {
           listTokenUpdate = await this.getListBundles({ ...addressNestedTo, network: chain.token });
-          console.dir(listTokenUpdate, { depth: 10 });
         }
 
         const addressNested = await this.addressService.getParentCollectionAndToken(parsed.address);
         if (addressNested) {
           listTokenUpdate = await this.getListBundles({ ...addressNested, network: chain.token }); // Исправляем ошибку
-          console.dir(listTokenUpdate, { depth: 10 });
         }
       }
-
+      console.dir(listTokenUpdate, { depth: 10 });
       listTokenUpdate.map(async (item) => await this.addUpdateTokenAndProperties(item));
     }
   }
