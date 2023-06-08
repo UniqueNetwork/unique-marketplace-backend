@@ -1,8 +1,8 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { CollectionData, Sdk } from '@unique-nft/sdk/full';
-import { OfferEntity, OfferService } from '@app/common/modules/database';
-import { OfferStatus } from '@app/common/modules/types';
-import { TokensService } from '../../../collections/tokens.service';
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import { CollectionData, Sdk } from "@unique-nft/sdk/full";
+import { OfferEntity, OfferService } from "@app/common/modules/database";
+import { OfferStatus } from "@app/common/modules/types";
+import { TokensService } from "../../../collections/tokens.service";
 
 @Injectable()
 export class CollectionEventsHandler {
@@ -17,8 +17,9 @@ export class CollectionEventsHandler {
     @Inject(OfferService)
     private readonly offerService: OfferService,
     @Inject(TokensService)
-    private readonly tokensService: TokensService,
-  ) {}
+    private readonly tokensService: TokensService
+  ) {
+  }
 
   public init(abiByAddress: Record<string, any>) {
     this.abiByAddress = abiByAddress;
@@ -31,6 +32,7 @@ export class CollectionEventsHandler {
 
     const { method } = event;
     if (tokenId) {
+      console.dir({ method: "onEvent", tokenId, collectionId }, { depth: 10 });
       await this.tokensService.observer(collectionId, tokenId, data);
     }
 
@@ -42,22 +44,22 @@ export class CollectionEventsHandler {
         return;
       }
 
-      if (method === 'ItemDestroyed') {
+      if (method === "ItemDestroyed") {
         await this.deleteOffer(offer);
       }
 
-      if (method === 'Approved') {
+      if (method === "Approved") {
         const { addressTo } = parsed;
         if (addressTo && this.abiByAddress[addressTo.toLowerCase()]) {
           await this.runCheckApproved(offer);
         }
       }
 
-      if (method === 'Transfer') {
+      if (method === "Transfer") {
         await this.runCheckApproved(offer);
       }
     } else {
-      if (method === 'CollectionDestroyed') {
+      if (method === "CollectionDestroyed") {
         await this.deleteCollectionOffers(collectionId);
       }
     }
@@ -74,9 +76,9 @@ export class CollectionEventsHandler {
       collectionId: offer.collectionId,
       tokenId: offer.tokenId,
       from: offer.seller,
-      to: offer.contract.address,
+      to: offer.contract.address
     });
-    console.log('runCheckApproved', isAllowed);
+    console.log("runCheckApproved", isAllowed);
     if (!isAllowed && offer.status === OfferStatus.Opened) {
       await this.offerService.updateStatus(offer.id, OfferStatus.Canceled);
     }
@@ -85,11 +87,11 @@ export class CollectionEventsHandler {
   }
 
   private async runContractCheckApproved(offer: OfferEntity) {
-    console.log('runContractCheckApproved', this.queueIsBusy);
+    console.log("runContractCheckApproved", this.queueIsBusy);
     if (this.queueIsBusy) {
       const exists = this.approveQueue.find(
         (o) =>
-          o.collectionId === offer.collectionId && o.tokenId === offer.tokenId && o.contract.address === offer.contract.address,
+          o.collectionId === offer.collectionId && o.tokenId === offer.tokenId && o.contract.address === offer.contract.address
       );
 
       if (!exists) {
@@ -108,12 +110,12 @@ export class CollectionEventsHandler {
 
     const args = {
       address,
-      funcName: 'checkApproved',
+      funcName: "checkApproved",
       gasLimit: 10_000_000,
       args: {
         collectionId: offer.collectionId,
-        tokenId: offer.tokenId,
-      },
+        tokenId: offer.tokenId
+      }
     };
 
     try {
@@ -121,7 +123,7 @@ export class CollectionEventsHandler {
 
       await contract.send.submitWaitResult(args);
     } catch (err) {
-      console.log('checkApproved err', err);
+      console.log("checkApproved err", err);
     }
 
     this.queueIsBusy = false;

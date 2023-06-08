@@ -146,6 +146,14 @@ export class ContractEventsHandler {
         tokenUpArgs.item.seller,
       );
       await this.offerEventService.create(eventData);
+      console.dir(
+        {
+          method: 'tokenIsUpForSale',
+          tokenId: tokenUpArgs.item.tokenId,
+          collectionId: tokenUpArgs.item.collectionId,
+        },
+        { depth: 10 },
+      );
       await this.tokensService.observer(tokenUpArgs.item.collectionId, tokenUpArgs.item.tokenId);
     }
   }
@@ -196,6 +204,14 @@ export class ContractEventsHandler {
       );
       await this.offerEventService.create(eventData);
       await this.tokensService.observer(tokenIsPurchasedArgs.item.collectionId, tokenIsPurchasedArgs.item.tokenId);
+      console.dir(
+        {
+          method: 'tokenIsUpForSale',
+          tokenId: tokenIsPurchasedArgs.item.tokenId,
+          collectionId: tokenIsPurchasedArgs.item.collectionId,
+        },
+        { depth: 10 },
+      );
     }
   }
 }
