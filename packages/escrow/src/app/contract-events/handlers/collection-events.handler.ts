@@ -1,12 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CollectionData, Sdk } from '@unique-nft/sdk/full';
 import { OfferEntity, OfferService } from '@app/common/modules/database';
 import { OfferStatus } from '@app/common/modules/types';
 import { TokensService } from '../../../collections/tokens.service';
+import { CollectionsService } from "../../../collections/collections.service";
 
 @Injectable()
 export class CollectionEventsHandler {
   private abiByAddress: Record<string, any>;
+  private logger: Logger = new Logger(CollectionEventsHandler.name);
 
   private queueIsBusy: boolean;
   private approveQueue: OfferEntity[] = [];
@@ -17,6 +19,8 @@ export class CollectionEventsHandler {
     private readonly offerService: OfferService,
     @Inject(TokensService)
     private readonly tokensService: TokensService,
+    @Inject(CollectionsService)
+    private readonly collectionsService: CollectionsService,
   ) {}
 
   public init(abiByAddress: Record<string, any>) {
@@ -29,8 +33,11 @@ export class CollectionEventsHandler {
     const { collectionId, tokenId, event } = parsed;
 
     const { method } = event;
-    await this.tokensService.observer(collectionId, tokenId);
-    console.log('collection:onEvent', collectionId, tokenId, method);
+    if (tokenId) {
+      await this.tokensService.observer(collectionId, tokenId, data);
+    }
+
+    this.logger.verbose(`Collection:onEvent: ${method} for C:${collectionId} T:${tokenId}`);
 
     if (tokenId) {
       const offer = await this.offerService.find(collectionId, tokenId);
@@ -38,22 +45,22 @@ export class CollectionEventsHandler {
         return;
       }
 
-      if (method === 'ItemDestroyed') {
+      if (method === "ItemDestroyed") {
         await this.deleteOffer(offer);
       }
 
-      if (method === 'Approved') {
+      if (method === "Approved") {
         const { addressTo } = parsed;
         if (addressTo && this.abiByAddress[addressTo.toLowerCase()]) {
           await this.runCheckApproved(offer);
         }
       }
 
-      if (method === 'Transfer') {
+      if (method === "Transfer") {
         await this.runCheckApproved(offer);
       }
     } else {
-      if (method === 'CollectionDestroyed') {
+      if (method === "CollectionDestroyed") {
         await this.deleteCollectionOffers(collectionId);
       }
     }

@@ -1,16 +1,5 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import {
-  CollectionActive,
-  CollectionMode,
-  CollectionStatus,
-} from '../../types';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { CollectionActive, CollectionMode, CollectionStatus } from '../../types';
 
 @Entity('collections', { schema: 'public' })
 @Index(['collectionId'])
@@ -20,6 +9,15 @@ export class CollectionEntity {
 
   @Column('int', { name: 'collection_id' })
   collectionId: number;
+
+  @Column('int', { name: 'tokens_total' })
+  tokensTotal: number;
+
+  @Column('int', { name: 'tokens_count' })
+  tokensCount: number;
+
+  @Column('int', { name: 'tokens_on_market' })
+  tokensOnMarket: number;
 
   @Column('varchar', { name: 'owner', length: 128, nullable: true })
   owner: string;
