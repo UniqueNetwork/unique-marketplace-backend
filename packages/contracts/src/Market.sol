@@ -253,7 +253,7 @@ contract Market {
 
         IERC721 erc721 = getErc721(collectionId);
 
-        if (erc721.getApproved(tokenId) != selfAddress) {
+        if (erc721.getApproved(tokenId) != selfAddress || erc721.ownerOf(tokenId) != getAddressFromCrossAccount(order.seller)) {
           uint32 amount = order.amount;
           order.amount = 0;
           emit TokenRevoke(version, order, amount);
@@ -262,6 +262,27 @@ contract Market {
         } else {
           emit TokenIsApproved(version, order);
         }
+    }
+
+    function getAddressFromCrossAccount(CrossAddress memory account) private pure returns (address) {
+        if (account.eth != address(0)) {
+            return account.eth;
+        } else {
+            return address(uint160(account.sub >> 96));
+        }
+    }
+
+    function revokeAdmin(uint32 collectionId, uint32 tokenId) public onlyAdmin {
+        Order memory order = orders[collectionId][tokenId];
+        if (order.price == 0) {
+          revert OrderNotFound();
+        }
+
+        uint32 amount = order.amount;
+        order.amount = 0;
+        emit TokenRevoke(version, order, amount);
+
+        delete orders[collectionId][tokenId];
     }
 
     // ################################################################

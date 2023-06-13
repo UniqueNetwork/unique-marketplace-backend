@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { loadConfig } from '../scripts';
 import { Market } from '../../../typechain-types';
-import { ContractReceipt, Event } from '@ethersproject/contracts/src.ts';
+import { ContractReceipt } from '@ethersproject/contracts/src.ts';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
