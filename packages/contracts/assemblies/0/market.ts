@@ -79,6 +79,7 @@ export interface MarketInterface extends utils.Interface {
   functions: {
     "addAdmin(address)": FunctionFragment;
     "admins(address)": FunctionFragment;
+    "buildVersion()": FunctionFragment;
     "buy(uint32,uint32,uint32,(address,uint256))": FunctionFragment;
     "checkApproved(uint32,uint32)": FunctionFragment;
     "ctime()": FunctionFragment;
@@ -98,6 +99,7 @@ export interface MarketInterface extends utils.Interface {
     nameOrSignatureOrTopic:
       | "addAdmin"
       | "admins"
+      | "buildVersion"
       | "buy"
       | "checkApproved"
       | "ctime"
@@ -120,6 +122,10 @@ export interface MarketInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "admins",
     values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "buildVersion",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "buy",
@@ -179,6 +185,10 @@ export interface MarketInterface extends utils.Interface {
 
   decodeFunctionResult(functionFragment: "addAdmin", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "admins", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "buildVersion",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "checkApproved",
@@ -320,6 +330,8 @@ export interface Market extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
+    buildVersion(overrides?: CallOverrides): Promise<[number]>;
+
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -395,6 +407,8 @@ export interface Market extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  buildVersion(overrides?: CallOverrides): Promise<number>;
+
   buy(
     collectionId: PromiseOrValue<BigNumberish>,
     tokenId: PromiseOrValue<BigNumberish>,
@@ -469,6 +483,8 @@ export interface Market extends BaseContract {
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    buildVersion(overrides?: CallOverrides): Promise<number>;
 
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
@@ -587,6 +603,8 @@ export interface Market extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    buildVersion(overrides?: CallOverrides): Promise<BigNumber>;
+
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -662,6 +680,8 @@ export interface Market extends BaseContract {
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    buildVersion(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     buy(
       collectionId: PromiseOrValue<BigNumberish>,
