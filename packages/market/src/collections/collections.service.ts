@@ -30,7 +30,6 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
 
   async addCollection(collectionId: number, forceUpdate: boolean = false): Promise<any> {
     //await this.hasCollection(collectionId);
-
     this.client.emit('new-collection-added', {
       collectionId,
       forceUpdate,

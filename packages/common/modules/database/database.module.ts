@@ -30,6 +30,7 @@ import {
   ViewTokens1684221119187,
   MarketTradeToOffers1684739540151,
   MarketTradeToOfferEvents1684739540519,
+  VerifyMessageContract1686310569001,
 } from './migrations';
 import { ContractService, OfferService } from './services';
 import { OfferEventService } from './services/offer-event.service';
@@ -62,6 +63,7 @@ const migrations = [
   ViewTokens1684221119187,
   MarketTradeToOffers1684739540151,
   MarketTradeToOfferEvents1684739540519,
+  VerifyMessageContract1686310569001,
 ];
 
 function typeOrmModulesFactory(
