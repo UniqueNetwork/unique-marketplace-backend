@@ -10,16 +10,15 @@ import {
   ParseIntPipe,
   Patch,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { CollectionsService } from './collections.service';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CollectionStatus } from '@app/common/modules/types';
 import { BaseController } from '@app/common/src/lib/base.controller';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 import { AddTokensDto, PaginateCollectionDto, ResponseTokenDto } from './dto/create-collection.dto';
 import { readApiDocs } from '../utils/utils';
-import { LoginGuard } from '../admin/guards/login.guard';
+import { ApiBearerAuthMetamaskAndSubstrate } from '../admin/decorators/login.decorator';
 
 @ApiTags('Collections')
 @Controller('collections')
@@ -52,17 +51,26 @@ export class CollectionsController extends BaseController<CollectionsService> {
     } as PaginationRouting);
   }
 
+  @Get('/:collectionId')
+  @ApiOperation({
+    summary: 'Adding the collection and its tokens to the database',
+    description: readApiDocs('collection-add.md'),
+  })
+  @ApiQuery({ name: 'collectionId', type: 'integer' })
+  async getOne(@Query('collectionId') collectionId: number) {
+    return await this.collectionsService.getOneColection(collectionId);
+  }
+
   @Patch('/add')
   @ApiOperation({
     summary: 'Adding the collection and its tokens to the database',
     description: readApiDocs('collection-add.md'),
   })
-  //@ApiBearerAuth()
-  //@UseGuards(LoginGuard)
+  //@ApiBearerAuthMetamaskAndSubstrate()
   @ApiQuery({ name: 'collectionId', type: 'integer' })
-  @ApiQuery({ name: 'account', type: 'string', required: false })
-  async addCollection(@Query('collectionId') collectionId: number) {
-    return await this.collectionsService.addCollection(collectionId);
+  @ApiQuery({ name: 'force', type: 'boolean', required: false })
+  async addCollection(@Query('collectionId') collectionId: number, @Query('force') force: boolean = false) {
+    return await this.collectionsService.addCollection(collectionId, force ?? false);
   }
 
   @Patch('test/add')
@@ -70,12 +78,11 @@ export class CollectionsController extends BaseController<CollectionsService> {
     summary: 'Adding the collection and its tokens to the database',
     description: readApiDocs('collection-add.md'),
   })
-  @ApiBearerAuth()
-  @UseGuards(LoginGuard)
+  @ApiBearerAuthMetamaskAndSubstrate()
   @ApiQuery({ name: 'collectionId', type: 'integer' })
-  @ApiQuery({ name: 'account', type: 'string', required: false })
-  async addCollectionTest(@Query('collectionId') collectionId: number) {
-    return { collectionId: collectionId };
+  @ApiQuery({ name: 'force', type: 'boolean', required: false })
+  async addCollectionTest(@Query('collectionId') collectionId: number, @Query('force') force: boolean = false) {
+    return await this.collectionsService.addCollection(collectionId, force ?? false);
   }
 
   @Patch('/allowed/tokens/:collectionId')

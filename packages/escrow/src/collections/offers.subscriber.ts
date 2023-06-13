@@ -12,6 +12,6 @@ export class OffersSubscriber implements EntitySubscriberInterface<OfferEntity> 
   }
 
   public async afterInsert(event: InsertEvent<OfferEntity>): Promise<void> {
-    await this.collectionsService.addNewCollection({ collectionId: event.entity.collectionId });
+    await this.collectionsService.addNewCollection({ collectionId: event.entity.collectionId, forceUpdate: false });
   }
 }

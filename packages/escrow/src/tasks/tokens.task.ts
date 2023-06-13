@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { SdkService } from '../app/sdk.service';
 import { Address } from '@unique-nft/utils';
 import { TokenDataForUpdate, TokenPayload } from './task.types';
+import { CollectionEntity } from "@app/common/modules/database";
 
 @Injectable()
 @Task('collectTokens')
@@ -17,6 +18,9 @@ export class TokensTask {
     private sdkService: SdkService,
     @InjectRepository(TokensEntity)
     private tokensRepository: Repository<TokensEntity>,
+
+    @InjectRepository(CollectionEntity)
+    private collectionsRepository: Repository<CollectionEntity>,
   ) {}
 
   /**
@@ -48,8 +52,12 @@ export class TokensTask {
     const token = await this.sdkService
       .getSchemaToken(tokenId, collectionId)
       .then(async (token) => {
+        if (token === null) {
+          await this.deleteToken(tokenId, collectionId);
+          return;
+        }
         let owners = [];
-        if (token.owner !== null) {
+        if (token?.owner !== null) {
           owners = (await this.sdkService.getTokenOwners(collectionId, tokenId)).human;
         } else {
           owners.push(`{ Substrate: ${token.owner} }`);
@@ -60,6 +68,9 @@ export class TokensTask {
         };
       })
       .then(async (token) => {
+        if (token === undefined) {
+          return;
+        }
         const tokenOwners = [];
         for (const ownerData of token.owners) {
           const address = ownerData['Substrate'] || ownerData['Ethereum'];
@@ -78,7 +89,10 @@ export class TokensTask {
         };
       });
 
-    const otherOwners = JSON.parse(JSON.stringify(token.tokenOwners));
+    if (!token) {
+      return;
+    }
+    const otherOwners = JSON.parse(JSON.stringify(token?.tokenOwners));
     const owner_token = token.owner;
 
     const nested = JSON.parse(JSON.stringify(this.nestedCollectionAndToken(token.owner))) || {};
@@ -101,8 +115,22 @@ export class TokensTask {
    * @param updateTokenData
    */
   async upsertTokens(updateTokenData) {
+    const { collectionId, tokenId, network } = updateTokenData;
+    const already = await this.tokensRepository.findOne({ where: { collectionId, tokenId, network }});
+    if (!already) {
+      await this.collectionsRepository.increment({ collectionId }, 'tokensOnMarket', 1);
+    }
     await this.tokensRepository.upsert(updateTokenData, ['collectionId', 'tokenId', 'network']);
   }
+
+  async deleteToken(tokenId: number, collectionId: number): Promise<void> {
+    const already = await this.tokensRepository.findOne({ where: { collectionId, tokenId }});
+    if (already) {
+      await this.tokensRepository.delete({ tokenId, collectionId });
+      await this.collectionsRepository.decrement({ collectionId }, 'tokensOnMarket', 1);
+    }
+  }
+
 
   nestedCollectionAndToken(address) {
     if (Address.is.ethereumAddress(address)) {

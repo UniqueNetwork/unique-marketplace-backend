@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { KeyringAccount, KeyringProvider } from '@unique-nft/accounts/keyring';
-import { Account, SignatureType } from '@unique-nft/accounts';
+import { SignatureType } from '@unique-nft/accounts';
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 import { Address } from '@unique-nft/utils';
 
@@ -17,6 +17,14 @@ export class AddressService {
     if (!seed) throw new Error('seed is required');
     await this.keyringProvider.init();
     return this.keyringProvider.addSeed(seed);
+  }
+
+  getParentCollectionAndToken(address) {
+    if (Address.is.ethereumAddress(address)) {
+      return Address.is.nestingAddress(address) ? Address.nesting.addressToIds(address) : undefined;
+    } else {
+      return undefined;
+    }
   }
 
   normalizeSubstrateAddress(address, ss58Format?: number) {

@@ -2,10 +2,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SettingsDto } from './dto/setting.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CollectionEntity, ContractEntity, SettingEntity } from '@app/common/modules/database';
+import { CollectionEntity, ContractEntity, OfferEntity, SettingEntity } from '@app/common/modules/database';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { AddressService } from '@app/common/src/lib/address.service';
-import { CollectionStatus, CustomObject } from '@app/common/modules/types';
+import { CollectionStatus, CustomObject, OfferStatus } from '@app/common/modules/types';
 
 interface CollectionDataDescription {
   mode: string;
@@ -38,6 +38,8 @@ export class SettingsService {
     private collectionRepository: Repository<CollectionEntity>,
     @InjectRepository(SettingEntity)
     private settingsRepository: Repository<SettingEntity>,
+    @InjectRepository(OfferEntity)
+    private offerRepository: Repository<OfferEntity>,
   ) {}
 
   async prepareSettings() {
@@ -71,18 +73,38 @@ export class SettingsService {
   }
 
   /**
-   * Getting data about collections for sale
+   * Retrieves enabled collection settings based on available offers.
+   * @async
+   * @function getCollectionSettings
+   * @returns {Promise<Object>} Object containing collection settings.
    */
-  async getCollectionSettings(): Promise<any> {
-    const collestions = await this.collectionRepository.find({
-      where: { status: CollectionStatus.Enabled },
-    });
+  async getCollectionSettings() {
+    // Retrieve distinct collection IDs from offers table
+    const offers = await this.offerRepository
+      .createQueryBuilder('offers')
+      .select('DISTINCT offers.collection_id', 'collection')
+      .where('offers.status = :status', { status: OfferStatus.Opened })
+      .getRawMany();
+
+    // Extract active collection IDs from offers
+    const activeIdCollections = offers.map((item) => item.collection);
+
+    // Query collections with specified IDs and enabled status
+    const collections = await this.collectionRepository
+      .createQueryBuilder('collection')
+      .where('collection.status = :status', { status: CollectionStatus.Enabled })
+      .andWhere('collection.collection_id IN (:...ids)', { ids: activeIdCollections })
+      .getMany();
+
+    // Transform and map collection data into a Map object
     const collectionMap = new Map();
-    collestions.map((elem) => {
+    collections.map((elem) => {
       const { allowedTokens, data } = elem;
       const collectionDescription = this.collectionDataTransformation(data);
       collectionMap.set(elem.collectionId, { allowedTokens: elem.allowedTokens, description: collectionDescription });
     });
+
+    // Return collectionMap as an object
     return Object.fromEntries(collectionMap);
   }
 

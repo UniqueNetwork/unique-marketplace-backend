@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
 import {
   ChainPropertiesResponse,
@@ -26,6 +26,8 @@ export type TokenBalance = {
 
 @Injectable()
 export class SdkService {
+
+  private logger = new Logger('SDK');
   constructor(private readonly sdk: Sdk) {}
 
   async isBundle(token: number, collection: number): Promise<any> {
@@ -83,6 +85,7 @@ export class SdkService {
   async getTokenSchema(collectionId: number, tokenId: number): Promise<TokenByIdResponse> {
     return await this.sdk.tokens.get({ collectionId: collectionId, tokenId: tokenId });
   }
+
   /**
    * Get a list of token numbers
    * @param collectionId
@@ -99,6 +102,7 @@ export class SdkService {
       list,
     };
   }
+
   async getTokenOwners(collectionId: number, tokenId: number): Promise<any> {
     const token: ResponseTokenSchema = await this.sdk.stateQuery.execute(
       { endpoint: 'rpc', module: 'unique', method: 'tokenOwners' },
@@ -146,8 +150,17 @@ export class SdkService {
    * @param collectionId
    * @param at
    */
-  async getSchemaToken(tokenId: number, collectionId: number, at?: string): Promise<TokenByIdResponse> {
-    return await this.sdk.tokens.get({ collectionId, tokenId, at });
+  async getSchemaToken(tokenId: number, collectionId: number): Promise<TokenByIdResponse> {
+    let getSchema;
+    try {
+      getSchema = await this.sdk.token.get({ collectionId, tokenId });
+    } catch (e) {
+      this.logger.error(e);
+    }
+    if (!getSchema) {
+      return null;
+    }
+    return getSchema;
   }
 
   async getChainProperties(): Promise<ChainPropertiesResponse> {

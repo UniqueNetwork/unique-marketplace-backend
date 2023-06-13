@@ -1,8 +1,9 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
-import { CollectionEntity } from "../entities";
+import { CollectionEntity } from '../entities';
 
 export class CollectionsTable1681108635456 implements MigrationInterface {
   name: 'CollectionsTable1681108635456';
+
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.createTable(
       new Table({
@@ -16,6 +17,21 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
           },
           {
             name: 'collection_id',
+            type: 'int',
+            default: 0,
+          },
+          {
+            name: 'tokens_total',
+            type: 'int',
+            default: 0,
+          },
+          {
+            name: 'tokens_count',
+            type: 'int',
+            default: 0,
+          },
+          {
+            name: 'tokens_on_market',
             type: 'int',
             default: 0,
           },
@@ -106,7 +122,7 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
           },
         ],
       }),
-      true
+      true,
     );
   }
 

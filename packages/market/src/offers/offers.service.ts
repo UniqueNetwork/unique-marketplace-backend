@@ -2,9 +2,8 @@ import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/com
 import { InjectRepository } from '@nestjs/typeorm';
 import { CollectionEntity, OfferEntity } from '@app/common/modules/database';
 import { DataSource, In, Repository } from 'typeorm';
-import { OfferEntityDto, OffersDto, OffersFilter, PaginationRequest, PaginationResultDto } from './dto/offers.dto';
+import { OfferEntityDto, OffersDto, OffersFilter } from './dto/offers.dto';
 import { BaseService } from '@app/common/src/lib/base.service';
-import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { ViewOffers } from '@app/common/modules/database/entities/offers-view.entity';
 import { TraitDto } from './dto/trait.dto';
 import { ViewOffersService } from './view-offers.service';

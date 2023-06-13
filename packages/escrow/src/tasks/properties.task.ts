@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { Helpers } from 'graphile-worker';
 import { PropertiesEntity } from '@app/common/modules/database/entities/properties.entity';
 import { BundleType, CollectionToken, Market, SerializeTokenType, TokenInfo, TypeAttributToken } from './task.types';
+import { WorkerService } from 'nestjs-graphile-worker/dist/services/worker.service';
 
 @Injectable()
 @Task('collectProperties')
@@ -15,6 +16,7 @@ export class PropertiesTask {
 
   constructor(
     private sdkService: SdkService,
+    private readonly graphileWorker: WorkerService,
     @InjectRepository(TokensEntity)
     private tokensRepository: Repository<TokensEntity>,
     @InjectRepository(PropertiesEntity)
@@ -66,10 +68,23 @@ export class PropertiesTask {
 
   async addSearchIndexIfNotExists(collectionToken: CollectionToken): Promise<any> {
     const { collectionId, tokenId, network } = collectionToken;
-    const dbIndex = await this.propertiesRepository.find({
+
+    const dbIndexList = await this.propertiesRepository.find({
       where: { collection_id: collectionId, token_id: tokenId, network },
     });
-    if (dbIndex.length) return dbIndex;
+
+    if (dbIndexList.length > 0) {
+      // Delete the index
+      const deleteResult = await this.propertiesRepository.delete({
+        collection_id: collectionId,
+        token_id: tokenId,
+        network,
+      });
+      this.logger.log(
+        `Deleted properties collection: ${collectionId}, token: ${tokenId} in ${network} > ${deleteResult.affected} records`,
+      );
+    }
+
     const searchIndexItems = await this.getTokenInfoItems(collectionToken);
     return this.saveProperties(collectionToken, searchIndexItems);
   }
@@ -106,7 +121,9 @@ export class PropertiesTask {
       }),
     );
 
-    console.dir({ propertiesDataItems }, { depth: 0 });
+    this.logger.log(
+      `Updated properties collection: ${collectionToken.collectionId} token: ${collectionToken.tokenId} in ${collectionToken.network}`,
+    );
 
     return this.propertiesRepository.save(propertiesDataItems);
   }
@@ -254,5 +271,29 @@ export class PropertiesTask {
       return attribute.value.map((item) => item._);
     }
     return attribute.value._ ? [attribute.value._] : [attribute.value];
+  }
+
+  private async clearAndReplacePropertiesData(tokenId: number, collectionId: number) {
+    const tokenProperty = await this.propertiesRepository
+      .createQueryBuilder('property')
+      .select('DISTINCT property.nested', 'nested')
+      .where('property.collection_id = :collectionId', { collectionId })
+      .andWhere('property.token_id = :tokenId', { tokenId })
+      .getRawOne();
+    // console.dir(tokenProperty, { depth: 10 });
+    if (tokenProperty == null) {
+      return;
+    }
+    if (tokenProperty.length != 0) {
+      tokenProperty.nested.map(async (item) => {
+        console.dir({ process: 'Replace properties', item }, { depth: 10 });
+        //await this.propertiesRepository.delete({ collection_id: item.collection_id, token_id: item.token_id });
+        if (tokenId === item.tokenId) {
+          return;
+        }
+        const chain = await this.sdkService.getChainProperties();
+        console.dir({ process: 'Update properties', item }, { depth: 10 });
+      });
+    }
   }
 }
