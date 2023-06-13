@@ -60,20 +60,11 @@ export class SdkMarketService {
 
     try {
       const result = await contract.call(callArgs);
-      console.dir(
-        {
-          payload: result.toString() === payload.metamask,
-          addressMetamask: result.toString() === addressMetamask,
-        },
-        { depth: 10 },
-      );
       if (result.toString() === payload.metamask && result.toString() === addressMetamask) {
         return true;
       }
     } catch (err) {
       throw new BadRequestException(err);
     }
-
-    console.dir(callArgs, { depth: 10 });
   }
 }
