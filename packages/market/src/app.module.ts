@@ -12,6 +12,7 @@ import { AdminModule } from './admin/admin.module';
 import { sdkProvider } from '@app/common/modules/sdk/sdk.provider';
 import { SdkMarketService } from './sdk/sdk.service';
 import { TradesModule } from './trades/trades.module';
+import { ContractModule } from './contracts/contract.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { TradesModule } from './trades/trades.module';
     TokensModule,
     TradesModule,
     SettingsModule,
+    ContractModule,
   ],
   providers: [sdkProvider, SdkMarketService],
   exports: [SdkMarketService],

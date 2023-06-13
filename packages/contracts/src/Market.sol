@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { UniqueNFT, CrossAddress } from "@unique-nft/solidity-interfaces/contracts/UniqueNFT.sol";
+import { UniqueFungible, CrossAddress as CrossAddressF } from "@unique-nft/solidity-interfaces/contracts/UniqueFungible.sol";
 import "@unique-nft/solidity-interfaces/contracts/CollectionHelpers.sol";
 import "./utils.sol";
 import "./royalty/UniqueRoyaltyHelper.sol";
@@ -253,7 +254,7 @@ contract Market {
 
         IERC721 erc721 = getErc721(collectionId);
 
-        if (erc721.getApproved(tokenId) != selfAddress) {
+        if (erc721.getApproved(tokenId) != selfAddress || erc721.ownerOf(tokenId) != getAddressFromCrossAccount(order.seller)) {
           uint32 amount = order.amount;
           order.amount = 0;
           emit TokenRevoke(version, order, amount);
@@ -262,6 +263,27 @@ contract Market {
         } else {
           emit TokenIsApproved(version, order);
         }
+    }
+
+    function getAddressFromCrossAccount(CrossAddress memory account) private pure returns (address) {
+        if (account.eth != address(0)) {
+            return account.eth;
+        } else {
+            return address(uint160(account.sub >> 96));
+        }
+    }
+
+    function revokeAdmin(uint32 collectionId, uint32 tokenId) public onlyAdmin {
+        Order memory order = orders[collectionId][tokenId];
+        if (order.price == 0) {
+          revert OrderNotFound();
+        }
+
+        uint32 amount = order.amount;
+        order.amount = 0;
+        emit TokenRevoke(version, order, amount);
+
+        delete orders[collectionId][tokenId];
     }
 
     // ################################################################
@@ -331,13 +353,14 @@ contract Market {
     }
 
     function sendMoney(CrossAddress memory to, uint256 money) private {
-      address payable eth;
-      if (to.eth != address(0)) {
-        eth = payable(to.eth);
-      } else {
-        eth = payable(address(uint160(to.sub >> 96)));
-      }
-      eth.transfer(money);
+      address collectionAddress = collectionHelpers.collectionAddress(0);
+
+      UniqueFungible fungible = UniqueFungible(collectionAddress);
+
+      CrossAddressF memory fromF = CrossAddressF(selfAddress, 0);
+      CrossAddressF memory toF = CrossAddressF(to.eth, to.sub);
+
+      fungible.transferFromCross(fromF, toF, money);
     }
 
     function sendRoyalties(address collection, uint tokenId, uint sellPrice) private returns (uint256, RoyaltyAmount[] memory) {
