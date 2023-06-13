@@ -9,6 +9,11 @@ import { OfferStatus } from '../../types';
 import { ChainPropertiesResponse } from '@unique-nft/sdk/full';
 import { BigNumber } from 'ethers';
 
+interface FindOptions {
+  contract?: ContractEntity;
+  status?: OfferStatus;
+}
+
 @Injectable()
 export class OfferService {
   constructor(
@@ -64,9 +69,10 @@ export class OfferService {
     await this.offerEntityRepository.update({ id }, { status });
   }
 
-  async find(collectionId: number, tokenId: number): Promise<OfferEntity | null> {
+  async find(collectionId: number, tokenId: number, options?: FindOptions): Promise<OfferEntity | null> {
     return this.offerEntityRepository.findOne({
       where: {
+        ...options,
         collectionId,
         tokenId,
       },
