@@ -35,6 +35,18 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
             type: 'int',
             default: 0,
           },
+          { name: 'min_price', type: 'numeric', precision: 38, scale: 18 },
+          { name: 'max_price', type: 'numeric', precision: 38, scale: 18 },
+          {
+            name: 'holders',
+            type: 'int',
+            default: 0,
+          },
+          {
+            name: 'unique_holders',
+            type: 'int',
+            default: 0,
+          },
           {
             name: 'owner',
             type: 'varchar',

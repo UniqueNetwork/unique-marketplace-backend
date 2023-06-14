@@ -19,6 +19,18 @@ export class CollectionEntity {
   @Column('int', { name: 'tokens_on_market' })
   tokensOnMarket: number;
 
+  @Column({ name: 'min_price', type: 'numeric', precision: 38, scale: 18 })
+  minPrice: number;
+
+  @Column({ name: 'max_price', type: 'numeric', precision: 38, scale: 18 })
+  maxPrice: number;
+
+  @Column('int', { name: 'holders' })
+  holders: number;
+
+  @Column('int', { name: 'unique_holders' })
+  uniqueHolders: number;
+
   @Column('varchar', { name: 'owner', length: 128, nullable: true })
   owner: string;
 

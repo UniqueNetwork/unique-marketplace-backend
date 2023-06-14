@@ -42,6 +42,9 @@ export class TokensViewFilterDto {
   @ApiProperty({ required: false })
   public seller?: string;
 
+  @ApiProperty({ required: false, default: true })
+  public isOwner?: boolean;
+
   @ApiProperty({
     name: 'numberOfAttributes',
     items: { type: 'integer', default: '' },
