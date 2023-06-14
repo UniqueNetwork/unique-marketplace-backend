@@ -90,11 +90,14 @@ export class SettingsService {
     const activeIdCollections = offers.map((item) => item.collection);
 
     // Query collections with specified IDs and enabled status
-    const collections = await this.collectionRepository
+    const collectionsData = await this.collectionRepository
       .createQueryBuilder('collection')
-      .where('collection.status = :status', { status: CollectionStatus.Enabled })
-      .andWhere('collection.collection_id IN (:...ids)', { ids: activeIdCollections })
-      .getMany();
+      .where('collection.status = :status', { status: CollectionStatus.Enabled });
+
+    if (activeIdCollections.length > 0) {
+      collectionsData.andWhere('collection.collection_id IN (:...ids)', { ids: activeIdCollections });
+    }
+    const collections = await collectionsData.getMany();
 
     // Transform and map collection data into a Map object
     const collectionMap = new Map();
