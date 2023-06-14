@@ -68,7 +68,7 @@ export class CollectionsController extends BaseController<CollectionsService> {
     summary: 'Adding the collection and its tokens to the database',
     description: readApiDocs('collection-add.md'),
   })
-  @ApiBearerAuthMetamaskAndSubstrate()
+  //@ApiBearerAuthMetamaskAndSubstrate()
   @ApiQuery({ name: 'collectionId', type: 'integer' })
   @ApiQuery({ name: 'force', type: 'boolean', required: false })
   async addCollection(@Query('collectionId') collectionId: number, @Query('force') force: boolean = false) {
