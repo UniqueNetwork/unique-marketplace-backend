@@ -38,6 +38,19 @@ export class SdkMarketService {
     };
   }
 
+  async getTokensCollection(collectionId: number): Promise<any> {
+    const token: ResponseTokenSchema = await this.sdk.stateQuery.execute(
+      { endpoint: 'rpc', module: 'unique', method: 'collectionTokens' },
+      { args: [String(collectionId)] },
+    );
+    const list = token.json.sort((a, b) => a - b);
+
+    return {
+      ...token,
+      list,
+    };
+  }
+
   async verifyMessageData(signature: string, addressMetamask: string): Promise<boolean> {
     const contractAddress = await this.settingRepository.findOne({ where: { key: 'contract_metamask_address' } });
     const contract = await this.sdk.evm.contractConnect(contractAddress.value, abiVerifyMessage);

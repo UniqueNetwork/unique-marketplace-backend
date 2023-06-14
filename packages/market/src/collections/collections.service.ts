@@ -9,6 +9,8 @@ import { pgNotifyClient } from '@app/common/pg-transport/pg-notify-client.symbol
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { PgTransportClient } from '@app/common/pg-transport/pg-transport.client';
 import { OfferStatus } from '@app/common/modules/types';
+import { SdkService } from '../../../escrow/src/app/sdk.service';
+import { SdkMarketService } from '../sdk/sdk.service';
 
 @Injectable()
 export class CollectionsService extends BaseService<CollectionEntity, CollectionDto> {
@@ -18,6 +20,7 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
 
   constructor(
     @Inject(pgNotifyClient) private client: PgTransportClient,
+    @Inject(SdkMarketService) private sdkService: SdkMarketService,
     @InjectRepository(CollectionEntity)
     private collectionRepository: Repository<CollectionEntity>,
     @InjectRepository(OfferEntity)
@@ -130,7 +133,6 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
     if (!collection) {
       throw new NotFoundException(`Collection by ID ${collectionId} not found on market`);
     }
-    // todo add cover, social links, etc.
     return collection;
   }
 
@@ -141,11 +143,16 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
         status: OfferStatus.Opened,
       },
     });
+    const tokensTotal = (await this.sdkService.getTokensCollection(collectionId)).list.length;
+
     const tokensCount = await this.tokensRepository.count({ where: { collectionId } });
 
-    const query = this.tokensRepository.createQueryBuilder('token').select('COUNT(DISTINCT token.owner_token)', 'count');
+    const query = this.tokensRepository
+      .createQueryBuilder('token')
+      .select('COUNT(DISTINCT token.owner_token)', 'count')
+      .andWhere('token.collection_id = :collectionId', { collectionId });
 
-    const holders = (await query.getRawOne()).count;
+    const holders = parseInt((await query.getRawOne()).count);
 
     const { minPrice, maxPrice, totalPrice } = await this.getPriceStats(collectionId);
 
@@ -155,8 +162,11 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
         holders,
         tokensOnMarket,
         tokensCount,
+        tokensTotal,
         minPrice,
         maxPrice,
+        totalPrice,
+        uniqueHolders: (holders * 100) / tokensTotal,
       },
     );
   }
@@ -177,6 +187,23 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
     };
   }
 
+  async updateMetaData(collectionId: number, newdata: any) {
+    try {
+      const collection = await this.collectionRepository.findOne({ where: { collectionId: collectionId } });
+
+      const metadata = JSON.parse(JSON.stringify(newdata));
+
+      const up = await this.collectionRepository.update({ id: collection.id }, { metadata });
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: `Updated meta data for collection ${collectionId}`,
+      };
+    } catch (e) {
+      throw new BadRequestException(`Something went wrong! Error: ${e.message}`);
+    }
+  }
+
   /**
    * Check if there is such a collection in the macro list, Is the collection included!
    * @param collectionId
@@ -186,8 +213,8 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
     const collectioExist = await this.collectionRepository.findOne({
       where: { collectionId: collectionId },
     });
-    if (collectioExist) {
-      throw new BadRequestException(`Сollection present already on the market. Status: ${collectioExist.status}`);
+    if (!collectioExist) {
+      throw new NotFoundException(`Not found collection on the market. Status: ${collectioExist.status}`);
     }
   }
 

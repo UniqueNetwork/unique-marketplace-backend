@@ -43,11 +43,7 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
             type: 'int',
             default: 0,
           },
-          {
-            name: 'unique_holders',
-            type: 'int',
-            default: 0,
-          },
+          { name: 'unique_holders', type: 'numeric', precision: 38, scale: 18 },
           {
             name: 'owner',
             type: 'varchar',
@@ -87,6 +83,12 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
             name: 'mint_mode',
             type: 'boolean',
             default: false,
+            isNullable: true,
+          },
+          {
+            name: 'cover_url',
+            type: 'varchar',
+            length: '255',
             isNullable: true,
           },
           {

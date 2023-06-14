@@ -31,7 +31,7 @@ export class CollectionEntity {
   @Column('int', { name: 'holders' })
   holders: number;
 
-  @Column('int', { name: 'unique_holders' })
+  @Column({ name: 'unique_holders', type: 'numeric', precision: 38, scale: 18 })
   uniqueHolders: number;
 
   @Column('varchar', { name: 'owner', length: 128, nullable: true })
@@ -49,11 +49,25 @@ export class CollectionEntity {
   @Column('varchar', { name: 'description', length: 256, nullable: true })
   description: string;
 
+  @Column('varchar', { name: 'cover_url', length: 255, nullable: true })
+  coverUrl: string;
+
   @Column('varchar', { name: 'token_prefix', length: 16, nullable: true })
   tokenPrefix: string;
 
   @Column('boolean', { name: 'mint_mode', default: false })
   mintMode: boolean;
+
+  @Column('varchar', {
+    name: 'network',
+    length: 64,
+    nullable: true,
+    default: null,
+  })
+  network: string;
+
+  @Column('jsonb', { name: 'metadata', default: {} })
+  metadata: string;
 
   @Column('varchar', { name: 'allowed_tokens', default: '' })
   allowedTokens: string;
@@ -77,17 +91,6 @@ export class CollectionEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
-
-  @Column('varchar', {
-    name: 'network',
-    length: 64,
-    nullable: true,
-    default: null,
-  })
-  network: string;
-
-  @Column('jsonb', { name: 'metadata', default: {} })
-  metadata: string;
 
   @Column('jsonb', { name: 'data', default: {} })
   data: string;
