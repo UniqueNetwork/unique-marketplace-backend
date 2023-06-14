@@ -46,6 +46,7 @@ export enum CollectionMode {
 
 export type DecodedCollection = {
   collectionId: number;
+  tokensTotal: number;
   tokensCount: number;
   tokensOnMarket: number;
   owner: string;

@@ -5,12 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Helpers } from 'graphile-worker';
 import { CollectionEntity } from '@app/common/modules/database';
-import {
-  CollectionActive,
-  CollectionMode,
-  CollectionSchemaAndChain,
-  DecodedCollection,
-} from '@app/common/modules/types';
+import { CollectionActive, CollectionMode, CollectionSchemaAndChain, DecodedCollection } from '@app/common/modules/types';
 import { CollectionInfoWithSchemaResponse } from '@unique-nft/sdk';
 
 @Injectable()
@@ -21,7 +16,7 @@ export class CollectionTask {
   constructor(
     private sdkService: SdkService,
     @InjectRepository(CollectionEntity)
-    private collectionRepository: Repository<CollectionEntity>
+    private collectionRepository: Repository<CollectionEntity>,
   ) {}
 
   /**
@@ -31,16 +26,14 @@ export class CollectionTask {
    * @param helpers
    */
   @TaskHandler()
-  async handler(
-    collectionDto: CollectionSchemaAndChain,
-    helpers: Helpers
-  ): Promise<void> {
+  async handler(collectionDto: CollectionSchemaAndChain, helpers: Helpers): Promise<void> {
     const { collection, chain, tokensCount } = collectionDto;
     const { id, description, name, owner, mode, tokenPrefix } = collection;
     const { token } = chain;
     const decodedCollection: DecodedCollection = {
       decimalPoints: collection['decimals'] || 0,
-      tokensCount,
+      tokensTotal: tokensCount,
+      tokensCount: 0,
       tokensOnMarket: 0,
       collectionId: id,
       owner,
@@ -59,10 +52,7 @@ export class CollectionTask {
 
       const entity = this.collectionRepository.create(decodedCollection);
       if (collectionExist) {
-        await this.collectionRepository.update(
-          { id: collectionExist.id },
-          decodedCollection
-        );
+        await this.collectionRepository.update({ id: collectionExist.id }, decodedCollection);
         this.logger.log(`Collection id ${id} updated!`);
       } else {
         await this.collectionRepository.save({
