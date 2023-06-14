@@ -81,7 +81,7 @@ export class CollectionsController extends BaseController<CollectionsService> {
     summary: 'Create and update metadata for collection',
     description: readApiDocs('collection-add.md'),
   })
-  //@ApiBearerAuthMetamaskAndSubstrate()
+  @ApiBearerAuthMetamaskAndSubstrate()
   @ApiParam({ name: 'collectionId', type: 'integer' })
   @ApiBody({
     schema: {
