@@ -135,21 +135,46 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
   }
 
   async updateTokensOneMarket(collectionId: number) {
-    const countTokenOneMarket = await this.offersRepository.count({
+    const tokensOnMarket = await this.offersRepository.count({
       where: {
         collectionId,
         status: OfferStatus.Opened,
       },
     });
-    const countToken = await this.tokensRepository.count({ where: { collectionId } });
+    const tokensCount = await this.tokensRepository.count({ where: { collectionId } });
+
+    const query = this.tokensRepository.createQueryBuilder('token').select('COUNT(DISTINCT token.owner_token)', 'count');
+
+    const holders = (await query.getRawOne()).count;
+
+    const { minPrice, maxPrice, totalPrice } = await this.getPriceStats(collectionId);
 
     await this.collectionRepository.update(
       { collectionId },
       {
-        tokensOnMarket: countTokenOneMarket,
-        tokensCount: countToken,
+        holders,
+        tokensOnMarket,
+        tokensCount,
+        minPrice,
+        maxPrice,
       },
     );
+  }
+
+  async getPriceStats(collectionId: number): Promise<{ minPrice: number; maxPrice: number; totalPrice: number }> {
+    const query = this.offersRepository
+      .createQueryBuilder('offer')
+      .select('MIN(offer.price_parsed)', 'minPrice')
+      .addSelect('MAX(offer.price_parsed)', 'maxPrice')
+      .addSelect('SUM(offer.price_parsed)', 'totalPrice')
+      .where('offer.collection_id = :collectionId', { collectionId });
+
+    const result = await query.getRawOne();
+    return {
+      minPrice: result.minPrice,
+      maxPrice: result.maxPrice,
+      totalPrice: result.totalPrice,
+    };
   }
 
   /**

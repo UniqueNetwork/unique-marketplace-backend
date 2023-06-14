@@ -25,6 +25,9 @@ export class CollectionEntity {
   @Column({ name: 'max_price', type: 'numeric', precision: 38, scale: 18 })
   maxPrice: number;
 
+  @Column({ name: 'total_price', type: 'numeric', precision: 38, scale: 18 })
+  totalPrice: number;
+
   @Column('int', { name: 'holders' })
   holders: number;
 
@@ -82,6 +85,9 @@ export class CollectionEntity {
     default: null,
   })
   network: string;
+
+  @Column('jsonb', { name: 'metadata', default: {} })
+  metadata: string;
 
   @Column('jsonb', { name: 'data', default: {} })
   data: string;
