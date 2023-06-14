@@ -57,8 +57,8 @@ export class CollectionsController extends BaseController<CollectionsService> {
     summary: 'Adding the collection and its tokens to the database',
     description: readApiDocs('collection-add.md'),
   })
-  @ApiQuery({ name: 'collectionId', type: 'integer' })
-  async getOne(@Query('collectionId') collectionId: number) {
+  @ApiParam({ name: 'collectionId', type: 'integer' })
+  async getOne(@Param('collectionId') collectionId: number) {
     return await this.collectionsService.getOneColection(collectionId);
   }
 
