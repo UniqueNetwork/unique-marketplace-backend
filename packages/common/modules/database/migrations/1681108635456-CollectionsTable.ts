@@ -37,16 +37,13 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
           },
           { name: 'min_price', type: 'numeric', precision: 38, scale: 18 },
           { name: 'max_price', type: 'numeric', precision: 38, scale: 18 },
+          { name: 'total_price', type: 'numeric', precision: 38, scale: 18 },
           {
             name: 'holders',
             type: 'int',
             default: 0,
           },
-          {
-            name: 'unique_holders',
-            type: 'int',
-            default: 0,
-          },
+          { name: 'unique_holders', type: 'numeric', precision: 38, scale: 18 },
           {
             name: 'owner',
             type: 'varchar',
@@ -89,6 +86,12 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
             isNullable: true,
           },
           {
+            name: 'cover_url',
+            type: 'varchar',
+            length: '255',
+            isNullable: true,
+          },
+          {
             name: 'allowed_tokens',
             type: 'varchar',
             default: "''",
@@ -121,6 +124,10 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
             name: 'network',
             type: 'varchar',
             isNullable: true,
+          },
+          {
+            name: 'metadata',
+            type: 'jsonb',
           },
           {
             name: 'data',
