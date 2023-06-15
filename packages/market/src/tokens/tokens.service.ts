@@ -57,7 +57,6 @@ export class TokensService {
       });
     }
 
-    console.dir({ collectionId, tokensFilterDto, paginationRequest, sort, items }, { depth: 2 });
     return {
       ...tokens.meta,
       items,
