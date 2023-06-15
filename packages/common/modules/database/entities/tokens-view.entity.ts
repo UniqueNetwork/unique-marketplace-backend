@@ -17,7 +17,7 @@ import { PropertiesEntity } from './properties.entity';
       'offer.status AS offer_status',
       'offer.price_parsed AS offer_price_parsed',
       'offer.price_raw AS offer_price_raw',
-      'offer.seller AS offer_seller',
+      'token.owner_token AS offer_seller',
       'offer.created_at AS offer_created_at',
       'offer.updated_at AS offer_updated_at',
       'properties_filter.network',
