@@ -85,7 +85,7 @@ export class TokensService {
     // Filter by min price
     queryFilter = this.byMinPrice(queryFilter, tokensFilterDto.minPrice);
     // Filter by seller address
-    queryFilter = this.bySeller(queryFilter, tokensFilterDto.seller);
+    queryFilter = this.bySeller(queryFilter, tokensFilterDto.seller, tokensFilterDto.isOwner);
     // Filter by search
     queryFilter = this.bySearch(queryFilter, tokensFilterDto.searchText, tokensFilterDto.searchLocale);
 
@@ -257,11 +257,20 @@ export class TokensService {
     });
   }
 
-  private bySeller(query: SelectQueryBuilder<TokensViewer>, seller?: string): SelectQueryBuilder<TokensViewer> {
+  private bySeller(
+    query: SelectQueryBuilder<TokensViewer>,
+    seller?: string,
+    isOwner: boolean = true,
+  ): SelectQueryBuilder<TokensViewer> {
     if (HelperService.nullOrWhitespace(seller)) {
       return query;
     }
-    return query.andWhere('view_tokens.offer_seller = :seller', { seller });
+    if (isOwner) {
+      return query.andWhere('view_tokens.offer_seller = :seller', { seller });
+    } else {
+      return query.andWhere('view_tokens.offer_seller != :seller', { seller });
+    }
+
     //.andWhere('view_tokens.offer_status in (:...offer_status)', { offer_status: ['Opened'] });
   }
 

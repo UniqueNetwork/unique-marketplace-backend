@@ -38,6 +38,7 @@ export class ParseTokensFilterPipe implements PipeTransform<any, TransformationR
       searchLocale: value.searchLocale,
       searchText: value.searchText,
       seller: value.seller,
+      isOwner: value.isOwner === 'true',
       numberOfAttributes: HelperService.requestArray(value.numberOfAttributes)
         .map((id) =>
           HelperService.parseIntRequest(id, () => {
