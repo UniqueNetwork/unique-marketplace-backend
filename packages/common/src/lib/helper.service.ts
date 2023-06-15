@@ -15,6 +15,17 @@ export class HelperService {
     }
   }
 
+  static parseNumberRequest(request: string | undefined, onError: () => void): number | undefined {
+    if (request === undefined || request === null) {
+      return undefined;
+    }
+    try {
+      return parseFloat(request);
+    } catch (e) {
+      onError();
+    }
+  }
+
   static parseIntArrayRequest(request: QueryParamArray, onError: (badValue: string) => void): number[] {
     return this.requestArray(request)
       .map((v) => this.parseIntRequest(v, () => onError(v)))
