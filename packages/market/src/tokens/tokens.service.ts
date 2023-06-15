@@ -57,6 +57,7 @@ export class TokensService {
       });
     }
 
+    console.dir({ collectionId, tokensFilterDto, paginationRequest, sort, items }, { depth: 2 });
     return {
       ...tokens.meta,
       items,
@@ -88,16 +89,6 @@ export class TokensService {
     // Filter by search
     queryFilter = this.bySearch(queryFilter, tokensFilterDto.searchText, tokensFilterDto.searchLocale);
 
-    console.dir(
-      {
-        collectionId,
-        tokensFilterDto,
-        pagination,
-        sort,
-      },
-      { depth: 10 },
-    );
-
     // Filter by traits
     queryFilter = this.byFindAttributes(queryFilter, collectionId, tokensFilterDto.attributes);
     // Does not contain a search by the number of attributes
@@ -112,7 +103,7 @@ export class TokensService {
     queryFilter = this.sortBy(queryFilter, sort);
 
     paginationResult = await paginateRaw<TokensViewer>(queryFilter, pagination);
-    console.dir(paginationResult, { depth: 3 });
+
     return {
       meta: paginationResult.meta,
       items: paginationResult.items,
@@ -248,7 +239,7 @@ export class TokensService {
     });
   }
 
-  private byMaxPrice(query: SelectQueryBuilder<TokensViewer>, maxPrice?: bigint): SelectQueryBuilder<TokensViewer> {
+  private byMaxPrice(query: SelectQueryBuilder<TokensViewer>, maxPrice?: number): SelectQueryBuilder<TokensViewer> {
     if (!maxPrice) {
       return query;
     }
@@ -257,7 +248,7 @@ export class TokensService {
     });
   }
 
-  private byMinPrice(query: SelectQueryBuilder<TokensViewer>, minPrice?: bigint): SelectQueryBuilder<TokensViewer> {
+  private byMinPrice(query: SelectQueryBuilder<TokensViewer>, minPrice?: number): SelectQueryBuilder<TokensViewer> {
     if (!minPrice) {
       return query;
     }
