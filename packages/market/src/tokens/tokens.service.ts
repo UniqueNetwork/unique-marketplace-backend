@@ -88,14 +88,24 @@ export class TokensService {
     // Filter by search
     queryFilter = this.bySearch(queryFilter, tokensFilterDto.searchText, tokensFilterDto.searchLocale);
 
+    console.dir(
+      {
+        collectionId,
+        tokensFilterDto,
+        pagination,
+        sort,
+      },
+      { depth: 10 },
+    );
+
     // Filter by traits
     queryFilter = this.byFindAttributes(queryFilter, collectionId, tokensFilterDto.attributes);
     // Does not contain a search by the number of attributes
-    const attributesCount = await this.byAttributesCount(queryFilter);
+    const attributesCount = await this.byAttributesCount(queryFilter, collectionId);
     // Exceptions to the influence of the search by the number of attributes
     queryFilter = this.byNumberOfAttributes(queryFilter, tokensFilterDto.numberOfAttributes);
 
-    const attributes = await this.byAttributes(queryFilter).getRawMany();
+    const attributes = await this.byAttributes(queryFilter, collectionId).getRawMany();
 
     queryFilter = this.prepareQuery(queryFilter, collectionId);
 
@@ -172,7 +182,7 @@ export class TokensService {
     }, {});
   }
 
-  private byAttributes(query: SelectQueryBuilder<TokensViewer>): SelectQueryBuilder<any> {
+  private byAttributes(query: SelectQueryBuilder<TokensViewer>, collectionId: number): SelectQueryBuilder<any> {
     const attributes = this.connection.manager
       .createQueryBuilder()
       .select(['key', 'traits as trait ', 'count(traits) over (partition by traits, key) as count'])
@@ -183,8 +193,10 @@ export class TokensService {
           .from(`(${query.getQuery()})`, '_filter')
           .setParameters(query.getParameters())
           .where('view_tokens_traits is not null')
-          .andWhere('view_tokens_locale is not null');
+          .andWhere('view_tokens_locale is not null')
+          .andWhere(`view_tokens_collection_id = :collectionId`, { collectionId });
       }, '_filter');
+
     return attributes;
   }
 
@@ -213,7 +225,7 @@ export class TokensService {
     return query;
   }
 
-  private async byAttributesCount(query: SelectQueryBuilder<TokensViewer>): Promise<Array<OfferAttributes>> {
+  private async byAttributesCount(query: SelectQueryBuilder<TokensViewer>, collectionId): Promise<Array<OfferAttributes>> {
     const attributesCount = (await this.connection.manager
       .createQueryBuilder()
       .select(['total_items as "numberOfAttributes"', 'count(token_id) over (partition by total_items) as amount'])
@@ -224,7 +236,8 @@ export class TokensService {
           .from(`(${query.getQuery()})`, '_filter')
           .distinct()
           .setParameters(query.getParameters())
-          .where('view_tokens_total_items is not null');
+          .where('view_tokens_total_items is not null')
+          .andWhere(`view_tokens_collection_id = :collectionId`, { collectionId });
       }, '_filter')
       .getRawMany()) as any as Array<OfferAttributes>;
     return attributesCount.map((item) => {
