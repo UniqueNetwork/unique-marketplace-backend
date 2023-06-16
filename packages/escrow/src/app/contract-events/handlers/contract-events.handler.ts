@@ -154,16 +154,18 @@ export class ContractEventsHandler {
         tokenUpArgs.item.amount,
         tokenUpArgs.item.seller,
       );
-      await this.offerEventService.create(eventData);
-      console.dir(
-        {
-          method: 'tokenIsUpForSale',
-          tokenId: tokenUpArgs.item.tokenId,
-          collectionId: tokenUpArgs.item.collectionId,
-        },
-        { depth: 10 },
-      );
-      await this.tokensService.observer(tokenUpArgs.item.collectionId, tokenUpArgs.item.tokenId);
+      if (eventData) {
+        await this.offerEventService.create(eventData);
+        console.dir(
+          {
+            method: 'tokenIsUpForSale',
+            tokenId: tokenUpArgs.item.tokenId,
+            collectionId: tokenUpArgs.item.collectionId,
+          },
+          { depth: 10 },
+        );
+        await this.tokensService.observer(tokenUpArgs.item.collectionId, tokenUpArgs.item.tokenId);
+      }
     }
   }
 
@@ -190,7 +192,9 @@ export class ContractEventsHandler {
         tokenRevokeArgs.amount,
         tokenRevokeArgs.item.seller,
       );
-      await this.offerEventService.create(eventData);
+      if (eventData) {
+        await this.offerEventService.create(eventData);
+      }
     }
   }
 
@@ -211,16 +215,18 @@ export class ContractEventsHandler {
         tokenIsPurchasedArgs.salesAmount,
         tokenIsPurchasedArgs.buyer,
       );
-      await this.offerEventService.create(eventData);
-      await this.tokensService.observer(tokenIsPurchasedArgs.item.collectionId, tokenIsPurchasedArgs.item.tokenId);
-      console.dir(
-        {
-          method: 'tokenIsPurchased',
-          tokenId: tokenIsPurchasedArgs.item.tokenId,
-          collectionId: tokenIsPurchasedArgs.item.collectionId,
-        },
-        { depth: 10 },
-      );
+      if (eventData) {
+        await this.offerEventService.create(eventData);
+        await this.tokensService.observer(tokenIsPurchasedArgs.item.collectionId, tokenIsPurchasedArgs.item.tokenId);
+        console.dir(
+          {
+            method: 'tokenIsPurchased',
+            tokenId: tokenIsPurchasedArgs.item.tokenId,
+            collectionId: tokenIsPurchasedArgs.item.collectionId,
+          },
+          { depth: 10 },
+        );
+      }
     }
   }
 }
