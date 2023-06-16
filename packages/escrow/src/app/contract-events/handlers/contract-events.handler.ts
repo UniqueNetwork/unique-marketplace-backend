@@ -119,12 +119,21 @@ export class ContractEventsHandler {
     // @ts-ignore
     const blockId = extrinsic.blockId || extrinsic.block?.id || 0;
 
+    const address = crossAddress ? Address.extract.addressNormalized(crossAddress) : null;
+
+    // todo fix double events error
+    const foundEvent = await this.offerEventService.find(offer, eventType, blockId, address);
+    if (foundEvent) {
+      console.error('!!!Double offer event', extrinsic.block, offer);
+      return;
+    }
+
     const collection = await this.collectionsService.get(offer.collectionId);
     return {
       offer,
       eventType,
       blockNumber: blockId,
-      address: crossAddress ? Address.extract.addressNormalized(crossAddress) : null,
+      address,
       amount,
       commission: offer.contract.commission,
       collectionMode: collection?.mode || '',
@@ -206,7 +215,7 @@ export class ContractEventsHandler {
       await this.tokensService.observer(tokenIsPurchasedArgs.item.collectionId, tokenIsPurchasedArgs.item.tokenId);
       console.dir(
         {
-          method: 'tokenIsUpForSale',
+          method: 'tokenIsPurchased',
           tokenId: tokenIsPurchasedArgs.item.tokenId,
           collectionId: tokenIsPurchasedArgs.item.collectionId,
         },
