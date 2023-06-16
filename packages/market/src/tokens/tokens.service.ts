@@ -84,19 +84,9 @@ export class TokensService {
     // Filter by min price
     queryFilter = this.byMinPrice(queryFilter, tokensFilterDto.minPrice);
     // Filter by seller address
-    queryFilter = this.bySeller(queryFilter, tokensFilterDto.seller);
+    queryFilter = this.bySeller(queryFilter, tokensFilterDto.seller, tokensFilterDto.isOwner);
     // Filter by search
     queryFilter = this.bySearch(queryFilter, tokensFilterDto.searchText, tokensFilterDto.searchLocale);
-
-    console.dir(
-      {
-        collectionId,
-        tokensFilterDto,
-        pagination,
-        sort,
-      },
-      { depth: 10 },
-    );
 
     // Filter by traits
     queryFilter = this.byFindAttributes(queryFilter, collectionId, tokensFilterDto.attributes);
@@ -112,7 +102,7 @@ export class TokensService {
     queryFilter = this.sortBy(queryFilter, sort);
 
     paginationResult = await paginateRaw<TokensViewer>(queryFilter, pagination);
-    console.dir(paginationResult, { depth: 3 });
+
     return {
       meta: paginationResult.meta,
       items: paginationResult.items,
@@ -248,7 +238,7 @@ export class TokensService {
     });
   }
 
-  private byMaxPrice(query: SelectQueryBuilder<TokensViewer>, maxPrice?: bigint): SelectQueryBuilder<TokensViewer> {
+  private byMaxPrice(query: SelectQueryBuilder<TokensViewer>, maxPrice?: number): SelectQueryBuilder<TokensViewer> {
     if (!maxPrice) {
       return query;
     }
@@ -257,7 +247,7 @@ export class TokensService {
     });
   }
 
-  private byMinPrice(query: SelectQueryBuilder<TokensViewer>, minPrice?: bigint): SelectQueryBuilder<TokensViewer> {
+  private byMinPrice(query: SelectQueryBuilder<TokensViewer>, minPrice?: number): SelectQueryBuilder<TokensViewer> {
     if (!minPrice) {
       return query;
     }
@@ -266,11 +256,20 @@ export class TokensService {
     });
   }
 
-  private bySeller(query: SelectQueryBuilder<TokensViewer>, seller?: string): SelectQueryBuilder<TokensViewer> {
+  private bySeller(
+    query: SelectQueryBuilder<TokensViewer>,
+    seller?: string,
+    isOwner: boolean = true,
+  ): SelectQueryBuilder<TokensViewer> {
     if (HelperService.nullOrWhitespace(seller)) {
       return query;
     }
-    return query.andWhere('view_tokens.offer_seller = :seller', { seller });
+    if (isOwner) {
+      return query.andWhere('view_tokens.offer_seller = :seller', { seller });
+    } else {
+      return query.andWhere('view_tokens.offer_seller != :seller', { seller });
+    }
+
     //.andWhere('view_tokens.offer_status in (:...offer_status)', { offer_status: ['Opened'] });
   }
 

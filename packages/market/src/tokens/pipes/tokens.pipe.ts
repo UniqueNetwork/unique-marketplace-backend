@@ -29,15 +29,16 @@ export class ParseTokensFilterPipe implements PipeTransform<any, TransformationR
 
     return {
       tokenId: HelperService.parseCollectionIdRequest(value.tokenId),
-      maxPrice: HelperService.parseBigIntRequest(value.maxPrice, () => {
+      maxPrice: HelperService.parseNumberRequest(value.maxPrice, () => {
         throw this.exceptionFactory(`Failed to parse maxPrice. Expected a big integer value, got ${value.maxPrice}`);
       }),
-      minPrice: HelperService.parseBigIntRequest(value.minPrice, () => {
+      minPrice: HelperService.parseNumberRequest(value.minPrice, () => {
         throw this.exceptionFactory(`Failed to parse minPrice. Expected a big integer value, got ${value.minPrice}`);
       }),
       searchLocale: value.searchLocale,
       searchText: value.searchText,
       seller: value.seller,
+      isOwner: value.isOwner === 'true',
       numberOfAttributes: HelperService.requestArray(value.numberOfAttributes)
         .map((id) =>
           HelperService.parseIntRequest(id, () => {

@@ -30,14 +30,14 @@ export class TokensViewFilterDto {
   tokenId: number[];
 
   @ApiProperty({ required: false, type: String })
-  @Type(() => BigInt)
+  @Type(() => Number)
   @IsOptional()
-  public minPrice?: bigint;
+  public minPrice?: number;
 
   @ApiProperty({ required: false, type: String })
-  @Type(() => BigInt)
+  @Type(() => Number)
   @IsOptional()
-  public maxPrice?: bigint;
+  public maxPrice?: number;
 
   @ApiProperty({ required: false })
   public seller?: string;

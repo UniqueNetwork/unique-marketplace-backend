@@ -3,7 +3,7 @@ import { CollectionData, Sdk } from '@unique-nft/sdk/full';
 import { OfferEntity, OfferService } from '@app/common/modules/database';
 import { OfferStatus } from '@app/common/modules/types';
 import { TokensService } from '../../../collections/tokens.service';
-import { CollectionsService } from "../../../collections/collections.service";
+import { CollectionsService } from '../../../collections/collections.service';
 
 @Injectable()
 export class CollectionEventsHandler {
@@ -40,27 +40,29 @@ export class CollectionEventsHandler {
     this.logger.verbose(`Collection:onEvent: ${method} for C:${collectionId} T:${tokenId}`);
 
     if (tokenId) {
-      const offer = await this.offerService.find(collectionId, tokenId);
+      const offer = await this.offerService.find(collectionId, tokenId, {
+        status: OfferStatus.Opened,
+      });
       if (!offer) {
         return;
       }
 
-      if (method === "ItemDestroyed") {
+      if (method === 'ItemDestroyed') {
         await this.deleteOffer(offer);
       }
 
-      if (method === "Approved") {
+      if (method === 'Approved') {
         const { addressTo } = parsed;
         if (addressTo && this.abiByAddress[addressTo.toLowerCase()]) {
           await this.runCheckApproved(offer);
         }
       }
 
-      if (method === "Transfer") {
+      if (method === 'Transfer') {
         await this.runCheckApproved(offer);
       }
     } else {
-      if (method === "CollectionDestroyed") {
+      if (method === 'CollectionDestroyed') {
         await this.deleteCollectionOffers(collectionId);
       }
     }
