@@ -307,7 +307,7 @@ contract Market {
           revert InvalidArgument("amount must not be zero");
         }
 
-        Order memory order = orders[collectionId][tokenId];
+        Order storage order = orders[collectionId][tokenId];
         if (order.price == 0) {
             revert OrderNotFound();
         }
