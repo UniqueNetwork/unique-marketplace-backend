@@ -56,6 +56,7 @@ export declare namespace Market {
     amount: PromiseOrValue<BigNumberish>;
     price: PromiseOrValue<BigNumberish>;
     seller: CrossAddressStruct;
+    lock: PromiseOrValue<boolean>;
   };
 
   export type OrderStructOutput = [
@@ -64,7 +65,8 @@ export declare namespace Market {
     number,
     number,
     BigNumber,
-    CrossAddressStructOutput
+    CrossAddressStructOutput,
+    boolean
   ] & {
     id: number;
     collectionId: number;
@@ -72,6 +74,7 @@ export declare namespace Market {
     amount: number;
     price: BigNumber;
     seller: CrossAddressStructOutput;
+    lock: boolean;
   };
 }
 

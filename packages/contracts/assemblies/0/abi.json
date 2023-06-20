@@ -59,6 +59,11 @@
   },
   {
     "inputs": [],
+    "name": "OrderLocked",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "OrderNotFound",
     "type": "error"
   },
@@ -147,6 +152,11 @@
             "internalType": "struct CrossAddress",
             "name": "seller",
             "type": "tuple"
+          },
+          {
+            "internalType": "bool",
+            "name": "lock",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -210,6 +220,11 @@
             "internalType": "struct CrossAddress",
             "name": "seller",
             "type": "tuple"
+          },
+          {
+            "internalType": "bool",
+            "name": "lock",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -327,6 +342,11 @@
             "internalType": "struct CrossAddress",
             "name": "seller",
             "type": "tuple"
+          },
+          {
+            "internalType": "bool",
+            "name": "lock",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -390,6 +410,11 @@
             "internalType": "struct CrossAddress",
             "name": "seller",
             "type": "tuple"
+          },
+          {
+            "internalType": "bool",
+            "name": "lock",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -581,6 +606,11 @@
             "internalType": "struct CrossAddress",
             "name": "seller",
             "type": "tuple"
+          },
+          {
+            "internalType": "bool",
+            "name": "lock",
+            "type": "bool"
           }
         ],
         "internalType": "struct Market.Order",

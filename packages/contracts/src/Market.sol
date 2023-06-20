@@ -19,6 +19,7 @@ contract Market {
       uint32 amount;
       uint256 price;
       CrossAddress seller;
+      bool lock;
     }
 
     uint32 public constant version = 0;
@@ -57,6 +58,7 @@ contract Market {
     error CollectionNotFound();
     error CollectionNotSupportedERC721();
     error OrderNotFound();
+    error OrderLocked();
     error TooManyAmountRequested();
     error NotEnoughMoneyError();
     error FailTransferToken(string reason);
@@ -87,7 +89,7 @@ contract Market {
         marketFee = fee;
         ctime = timestamp;
 
-        if (marketFee == 0 || marketFee >= 100) {
+        if (marketFee >= 100) {
             revert InvalidMarketFee();
         }
 
@@ -178,7 +180,8 @@ contract Market {
             tokenId,
             amount,
             price,
-            seller
+            seller,
+            false
         );
 
         order.id = idCount++;
@@ -309,6 +312,10 @@ contract Market {
             revert OrderNotFound();
         }
 
+        if (order.lock) {
+          revert OrderLocked();
+        }
+
         if (amount > order.amount) {
             revert TooManyAmountRequested();
         }
@@ -326,6 +333,7 @@ contract Market {
         }
 
         order.amount -= amount;
+        order.lock = true;
         if (order.amount == 0) {
             delete orders[collectionId][tokenId];
         } else {
@@ -341,16 +349,17 @@ contract Market {
           order.tokenId
         );
 
-        (uint256 totalRoyalty, RoyaltyAmount[] memory royalties) = sendRoyalties(collectionAddress, tokenId, totalValue);
+        (uint256 totalRoyalty, RoyaltyAmount[] memory royalties) = sendRoyalties(collectionAddress, tokenId, totalValue - feeValue);
 
         sendMoney(order.seller, totalValue - feeValue - totalRoyalty);
 
         if (msg.value > totalValue) {
-            // todo, send money to signer or buyer ?
-            payable(msg.sender).transfer(msg.value - totalValue);
+            sendMoney(buyer, msg.value - totalValue);
         }
 
         emit TokenIsPurchased(version, order, amount, buyer, royalties);
+
+        order.lock = false;
     }
 
     function sendMoney(CrossAddress memory to, uint256 money) private {
