@@ -119,12 +119,21 @@ export class ContractEventsHandler {
     // @ts-ignore
     const blockId = extrinsic.blockId || extrinsic.block?.id || 0;
 
+    const address = crossAddress ? Address.extract.addressNormalized(crossAddress) : null;
+
+    // todo fix double events error
+    const foundEvent = await this.offerEventService.find(offer, eventType, blockId, address);
+    if (foundEvent) {
+      console.error('!!!Double offer event', extrinsic.block, offer);
+      return;
+    }
+
     const collection = await this.collectionsService.get(offer.collectionId);
     return {
       offer,
       eventType,
       blockNumber: blockId,
-      address: crossAddress ? Address.extract.addressNormalized(crossAddress) : null,
+      address,
       amount,
       commission: offer.contract.commission,
       collectionMode: collection?.mode || '',
@@ -145,16 +154,18 @@ export class ContractEventsHandler {
         tokenUpArgs.item.amount,
         tokenUpArgs.item.seller,
       );
-      await this.offerEventService.create(eventData);
-      console.dir(
-        {
-          method: 'tokenIsUpForSale',
-          tokenId: tokenUpArgs.item.tokenId,
-          collectionId: tokenUpArgs.item.collectionId,
-        },
-        { depth: 10 },
-      );
-      await this.tokensService.observer(tokenUpArgs.item.collectionId, tokenUpArgs.item.tokenId);
+      if (eventData) {
+        await this.offerEventService.create(eventData);
+        console.dir(
+          {
+            method: 'tokenIsUpForSale',
+            tokenId: tokenUpArgs.item.tokenId,
+            collectionId: tokenUpArgs.item.collectionId,
+          },
+          { depth: 10 },
+        );
+        await this.tokensService.observer(tokenUpArgs.item.collectionId, tokenUpArgs.item.tokenId);
+      }
     }
   }
 
@@ -181,7 +192,9 @@ export class ContractEventsHandler {
         tokenRevokeArgs.amount,
         tokenRevokeArgs.item.seller,
       );
-      await this.offerEventService.create(eventData);
+      if (eventData) {
+        await this.offerEventService.create(eventData);
+      }
     }
   }
 
@@ -202,16 +215,18 @@ export class ContractEventsHandler {
         tokenIsPurchasedArgs.salesAmount,
         tokenIsPurchasedArgs.buyer,
       );
-      await this.offerEventService.create(eventData);
-      await this.tokensService.observer(tokenIsPurchasedArgs.item.collectionId, tokenIsPurchasedArgs.item.tokenId);
-      console.dir(
-        {
-          method: 'tokenIsUpForSale',
-          tokenId: tokenIsPurchasedArgs.item.tokenId,
-          collectionId: tokenIsPurchasedArgs.item.collectionId,
-        },
-        { depth: 10 },
-      );
+      if (eventData) {
+        await this.offerEventService.create(eventData);
+        await this.tokensService.observer(tokenIsPurchasedArgs.item.collectionId, tokenIsPurchasedArgs.item.tokenId);
+        console.dir(
+          {
+            method: 'tokenIsPurchased',
+            tokenId: tokenIsPurchasedArgs.item.tokenId,
+            collectionId: tokenIsPurchasedArgs.item.collectionId,
+          },
+          { depth: 10 },
+        );
+      }
     }
   }
 }
