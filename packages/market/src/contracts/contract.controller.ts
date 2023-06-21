@@ -1,10 +1,10 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BaseController } from '@app/common/src/lib/base.controller';
 import { readApiDocs } from '../utils/utils';
 import { ContractsService } from './contracts.service';
-import { LoginGuard } from '../admin/guards/login.guard';
 import { CheckApprovedDto } from './dto/check-approved.dto';
+import { ApiBearerAuthMetamaskAndSubstrate } from '../admin/decorators/login.decorator';
 
 @ApiTags('Contracts')
 @Controller('contracts')
@@ -19,9 +19,7 @@ export class ContractsController extends BaseController<ContractsService> {
     summary: 'Show the entire list of collections',
     description: readApiDocs('collection-add.md'),
   })
-  @ApiBearerAuth()
-  @UseGuards(LoginGuard)
-  @ApiQuery({ name: 'account', type: 'string', required: false })
+  @ApiBearerAuthMetamaskAndSubstrate()
   checkApproved(@Body() dto: CheckApprovedDto) {
     return this.contractsService.checkApproved(dto);
   }

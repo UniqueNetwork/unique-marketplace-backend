@@ -84,25 +84,25 @@ export class TokensService {
     // Filter by min price
     queryFilter = this.byMinPrice(queryFilter, tokensFilterDto.minPrice);
     // Filter by seller address
-    queryFilter = this.bySeller(queryFilter, tokensFilterDto.seller);
+    queryFilter = this.bySeller(queryFilter, tokensFilterDto.seller, tokensFilterDto.isOwner);
     // Filter by search
     queryFilter = this.bySearch(queryFilter, tokensFilterDto.searchText, tokensFilterDto.searchLocale);
 
     // Filter by traits
     queryFilter = this.byFindAttributes(queryFilter, collectionId, tokensFilterDto.attributes);
     // Does not contain a search by the number of attributes
-    const attributesCount = await this.byAttributesCount(queryFilter);
+    const attributesCount = await this.byAttributesCount(queryFilter, collectionId);
     // Exceptions to the influence of the search by the number of attributes
     queryFilter = this.byNumberOfAttributes(queryFilter, tokensFilterDto.numberOfAttributes);
 
-    const attributes = await this.byAttributes(queryFilter).getRawMany();
+    const attributes = await this.byAttributes(queryFilter, collectionId).getRawMany();
 
     queryFilter = this.prepareQuery(queryFilter, collectionId);
 
     queryFilter = this.sortBy(queryFilter, sort);
 
     paginationResult = await paginateRaw<TokensViewer>(queryFilter, pagination);
-    console.dir(paginationResult, { depth: 3 });
+
     return {
       meta: paginationResult.meta,
       items: paginationResult.items,
@@ -172,7 +172,7 @@ export class TokensService {
     }, {});
   }
 
-  private byAttributes(query: SelectQueryBuilder<TokensViewer>): SelectQueryBuilder<any> {
+  private byAttributes(query: SelectQueryBuilder<TokensViewer>, collectionId: number): SelectQueryBuilder<any> {
     const attributes = this.connection.manager
       .createQueryBuilder()
       .select(['key', 'traits as trait ', 'count(traits) over (partition by traits, key) as count'])
@@ -183,8 +183,10 @@ export class TokensService {
           .from(`(${query.getQuery()})`, '_filter')
           .setParameters(query.getParameters())
           .where('view_tokens_traits is not null')
-          .andWhere('view_tokens_locale is not null');
+          .andWhere('view_tokens_locale is not null')
+          .andWhere(`view_tokens_collection_id = :collectionId`, { collectionId });
       }, '_filter');
+
     return attributes;
   }
 
@@ -213,7 +215,7 @@ export class TokensService {
     return query;
   }
 
-  private async byAttributesCount(query: SelectQueryBuilder<TokensViewer>): Promise<Array<OfferAttributes>> {
+  private async byAttributesCount(query: SelectQueryBuilder<TokensViewer>, collectionId): Promise<Array<OfferAttributes>> {
     const attributesCount = (await this.connection.manager
       .createQueryBuilder()
       .select(['total_items as "numberOfAttributes"', 'count(token_id) over (partition by total_items) as amount'])
@@ -224,7 +226,8 @@ export class TokensService {
           .from(`(${query.getQuery()})`, '_filter')
           .distinct()
           .setParameters(query.getParameters())
-          .where('view_tokens_total_items is not null');
+          .where('view_tokens_total_items is not null')
+          .andWhere(`view_tokens_collection_id = :collectionId`, { collectionId });
       }, '_filter')
       .getRawMany()) as any as Array<OfferAttributes>;
     return attributesCount.map((item) => {
@@ -235,7 +238,7 @@ export class TokensService {
     });
   }
 
-  private byMaxPrice(query: SelectQueryBuilder<TokensViewer>, maxPrice?: bigint): SelectQueryBuilder<TokensViewer> {
+  private byMaxPrice(query: SelectQueryBuilder<TokensViewer>, maxPrice?: number): SelectQueryBuilder<TokensViewer> {
     if (!maxPrice) {
       return query;
     }
@@ -244,7 +247,7 @@ export class TokensService {
     });
   }
 
-  private byMinPrice(query: SelectQueryBuilder<TokensViewer>, minPrice?: bigint): SelectQueryBuilder<TokensViewer> {
+  private byMinPrice(query: SelectQueryBuilder<TokensViewer>, minPrice?: number): SelectQueryBuilder<TokensViewer> {
     if (!minPrice) {
       return query;
     }
@@ -253,11 +256,20 @@ export class TokensService {
     });
   }
 
-  private bySeller(query: SelectQueryBuilder<TokensViewer>, seller?: string): SelectQueryBuilder<TokensViewer> {
+  private bySeller(
+    query: SelectQueryBuilder<TokensViewer>,
+    seller?: string,
+    isOwner: boolean = true,
+  ): SelectQueryBuilder<TokensViewer> {
     if (HelperService.nullOrWhitespace(seller)) {
       return query;
     }
-    return query.andWhere('view_tokens.offer_seller = :seller', { seller });
+    if (isOwner) {
+      return query.andWhere('view_tokens.offer_seller = :seller', { seller });
+    } else {
+      return query.andWhere('view_tokens.offer_seller != :seller', { seller });
+    }
+
     //.andWhere('view_tokens.offer_status in (:...offer_status)', { offer_status: ['Opened'] });
   }
 

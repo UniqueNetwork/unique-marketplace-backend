@@ -91,7 +91,6 @@ export class CollectionsController extends BaseController<CollectionsService> {
     },
   })
   async editeMetadata(@Body('metadata') body: any, @Param('collectionId') collectionId: number) {
-    console.dir({ body }, { depth: 10 });
     return await this.collectionsService.updateMetaData(collectionId, body);
   }
 
