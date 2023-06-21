@@ -24,7 +24,7 @@ contract Market is Ownable {
     }
 
     uint32 public constant version = 0;
-    uint32 public constant buildVersion = 1;
+    uint32 public constant buildVersion = 2;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     CollectionHelpers private constant collectionHelpers =
