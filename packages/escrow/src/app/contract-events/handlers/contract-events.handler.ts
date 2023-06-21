@@ -29,7 +29,7 @@ type LogEventHandler = (
 export class ContractEventsHandler {
   private readonly logger = new Logger(ContractEventsHandler.name);
 
-  private readonly eventHandlers: Record<MarketEventNames, LogEventHandler>;
+  private readonly eventHandlers: Record<string, LogEventHandler>;
 
   private abiByAddress: Record<string, any>;
 
