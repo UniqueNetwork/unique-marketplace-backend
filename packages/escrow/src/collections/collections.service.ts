@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CollectionInfoWithSchemaResponse } from '@unique-nft/sdk/';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CollectionEntity } from '@app/common/modules/database';
+import { CollectionEntity, OfferEntity } from '@app/common/modules/database';
 import { Repository } from 'typeorm';
 import { TokensEntity } from '@app/common/modules/database/entities/tokens.entity';
 import { WorkerService } from 'nestjs-graphile-worker';
 import { SdkService } from '../app/sdk.service';
 import { CollectionSchemaAndChain } from '@app/common/modules/types';
+import { TaskSpec } from 'graphile-worker';
+import { getJobName, JOB_HIGH_PRIORITY, JOB_LOW_PRIORITY } from './utils';
 
 @Injectable()
 export class CollectionsService {
@@ -21,6 +23,8 @@ export class CollectionsService {
     /** Token Repository */
     @InjectRepository(TokensEntity)
     private tokensRepository: Repository<TokensEntity>,
+    @InjectRepository(OfferEntity)
+    private offersRepository: Repository<OfferEntity>,
     /** Graphile Worker */
     private readonly graphileWorker: WorkerService,
   ) {}
@@ -94,18 +98,37 @@ export class CollectionsService {
    */
   private async addTaskForAddTokensList(tokens: number[], collectionId: number, network: string) {
     if (tokens.length > 0) {
-      tokens.map(async (token) => {
-        await this.graphileWorker.addJob('collectTokens', {
-          tokenId: token,
-          collectionId,
-          network,
+      tokens.map(async (tokenId) => {
+        const hasOffer = await this.offersRepository.findOne({
+          where: {
+            collectionId,
+            tokenId,
+          },
         });
+        const taskSpec: TaskSpec = {
+          priority: hasOffer ? JOB_HIGH_PRIORITY : JOB_LOW_PRIORITY,
+          queueName: getJobName(collectionId, tokenId),
+        };
 
-        await this.graphileWorker.addJob('collectProperties', {
-          tokenId: token,
-          collectionId,
-          network,
-        });
+        await this.graphileWorker.addJob(
+          'collectTokens',
+          {
+            tokenId,
+            collectionId,
+            network,
+          },
+          taskSpec,
+        );
+
+        await this.graphileWorker.addJob(
+          'collectProperties',
+          {
+            tokenId,
+            collectionId,
+            network,
+          },
+          taskSpec,
+        );
       });
     }
   }
