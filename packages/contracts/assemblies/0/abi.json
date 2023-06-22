@@ -53,13 +53,19 @@
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "NotEnoughMoneyError",
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalRoyalty",
+        "type": "uint256"
+      }
+    ],
+    "name": "InvalidRoyaltiesError",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "OrderLocked",
+    "name": "NotEnoughMoneyError",
     "type": "error"
   },
   {
@@ -171,11 +177,6 @@
             "internalType": "struct CrossAddress",
             "name": "seller",
             "type": "tuple"
-          },
-          {
-            "internalType": "bool",
-            "name": "lock",
-            "type": "bool"
           }
         ],
         "indexed": false,
@@ -239,11 +240,6 @@
             "internalType": "struct CrossAddress",
             "name": "seller",
             "type": "tuple"
-          },
-          {
-            "internalType": "bool",
-            "name": "lock",
-            "type": "bool"
           }
         ],
         "indexed": false,
@@ -361,11 +357,6 @@
             "internalType": "struct CrossAddress",
             "name": "seller",
             "type": "tuple"
-          },
-          {
-            "internalType": "bool",
-            "name": "lock",
-            "type": "bool"
           }
         ],
         "indexed": false,
@@ -429,11 +420,6 @@
             "internalType": "struct CrossAddress",
             "name": "seller",
             "type": "tuple"
-          },
-          {
-            "internalType": "bool",
-            "name": "lock",
-            "type": "bool"
           }
         ],
         "indexed": false,
@@ -625,11 +611,6 @@
             "internalType": "struct CrossAddress",
             "name": "seller",
             "type": "tuple"
-          },
-          {
-            "internalType": "bool",
-            "name": "lock",
-            "type": "bool"
           }
         ],
         "internalType": "struct Market.Order",
