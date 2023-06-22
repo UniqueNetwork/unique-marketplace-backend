@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -10,7 +11,7 @@ import "@unique-nft/solidity-interfaces/contracts/CollectionHelpers.sol";
 import "./utils.sol";
 import "./royalty/UniqueRoyaltyHelper.sol";
 
-contract Market is Ownable {
+contract Market is Ownable, ReentrancyGuard {
     using ERC165Checker for address;
 
     struct Order {
@@ -20,11 +21,10 @@ contract Market is Ownable {
       uint32 amount;
       uint256 price;
       CrossAddress seller;
-      bool lock;
     }
 
     uint32 public constant version = 0;
-    uint32 public constant buildVersion = 2;
+    uint32 public constant buildVersion = 3;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     CollectionHelpers private constant collectionHelpers =
@@ -58,9 +58,9 @@ contract Market is Ownable {
     error CollectionNotFound();
     error CollectionNotSupportedERC721();
     error OrderNotFound();
-    error OrderLocked();
     error TooManyAmountRequested();
     error NotEnoughMoneyError();
+    error InvalidRoyaltiesError(uint256 totalRoyalty);
     error FailTransferToken(string reason);
 
     modifier onlyAdmin() {
@@ -171,8 +171,7 @@ contract Market is Ownable {
             tokenId,
             amount,
             price,
-            seller,
-            false
+            seller
         );
 
         order.id = idCount++;
@@ -308,7 +307,7 @@ contract Market is Ownable {
         uint32 tokenId,
         uint32 amount,
         CrossAddress memory buyer
-    ) public payable validCrossAddress(buyer.eth, buyer.sub) {
+    ) public payable validCrossAddress(buyer.eth, buyer.sub) nonReentrant {
         if (msg.value == 0) {
           revert InvalidArgument("msg.value must not be zero");
         }
@@ -319,10 +318,6 @@ contract Market is Ownable {
         Order memory order = orders[collectionId][tokenId];
         if (order.price == 0) {
             revert OrderNotFound();
-        }
-
-        if (order.lock) {
-          revert OrderLocked();
         }
 
         if (amount > order.amount) {
@@ -342,7 +337,6 @@ contract Market is Ownable {
         }
 
         order.amount -= amount;
-        order.lock = true;
         if (order.amount == 0) {
             delete orders[collectionId][tokenId];
         } else {
@@ -360,6 +354,10 @@ contract Market is Ownable {
 
         (uint256 totalRoyalty, RoyaltyAmount[] memory royalties) = sendRoyalties(collectionAddress, tokenId, totalValue - feeValue);
 
+        if (totalRoyalty >= totalValue - feeValue) {
+          revert InvalidRoyaltiesError(totalRoyalty);
+        }
+
         sendMoney(order.seller, totalValue - feeValue - totalRoyalty);
 
         if (msg.value > totalValue) {
@@ -367,8 +365,6 @@ contract Market is Ownable {
         }
 
         emit TokenIsPurchased(version, order, amount, buyer, royalties);
-
-        order.lock = false;
     }
 
     function sendMoney(CrossAddress memory to, uint256 money) private {
