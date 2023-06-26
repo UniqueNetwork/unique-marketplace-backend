@@ -6,9 +6,9 @@ import { WorkerService } from 'nestjs-graphile-worker';
 import { CollectionEntity, PropertiesEntity } from '@app/common/modules/database';
 import { SdkService } from '../app/sdk.service';
 import { CollectionData } from '@unique-nft/sdk/full';
-import { Address } from '@unique-nft/utils';
 import { AddressService } from '@app/common/src/lib/address.service';
 import { EventMethod } from '@app/common/modules/types';
+import { GraphileService } from './graphile.service';
 
 export interface TokenCollectionUpdate {
   collectionId: number;
@@ -31,6 +31,7 @@ export class TokensService {
     /** Graphile Worker */
     private readonly graphileWorker: WorkerService,
     private readonly addressService: AddressService,
+    private readonly graphileService: GraphileService,
   ) {}
 
   /**
@@ -135,17 +136,8 @@ export class TokensService {
    */
   private async addUpdateTokenAndProperties(item: { collectionId: number; tokenId: number; network: string }) {
     const { collectionId, tokenId, network } = item;
-    await this.graphileWorker.addJob('collectTokens', {
-      tokenId,
-      collectionId,
-      network,
-    });
 
-    await this.graphileWorker.addJob('collectProperties', {
-      tokenId,
-      collectionId,
-      network,
-    });
+    await this.graphileService.addToken(collectionId, tokenId, network, false);
   }
 
   private async cleanTokenAndProperties(collectionId: number, tokenId: number, network: string) {

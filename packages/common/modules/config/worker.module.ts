@@ -1,13 +1,10 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphileWorkerModule } from 'nestjs-graphile-worker';
-import { Config } from "./types";
-import {
-  GraphileWorkerConfiguration
-} from "nestjs-graphile-worker/dist/interfaces/module-config.interfaces";
-import { DataSource } from "typeorm";
-import { Pool } from "pg";
-import { PostgresDriver } from "typeorm/driver/postgres/PostgresDriver";
-import { Logger } from "@nestjs/common";
+import { Config } from './types';
+import { GraphileWorkerConfiguration } from 'nestjs-graphile-worker/dist/interfaces/module-config.interfaces';
+import { DataSource } from 'typeorm';
+import { Pool } from 'pg';
+import { PostgresDriver } from 'typeorm/driver/postgres/PostgresDriver';
 
 /**
  * Tasks Worker Module
@@ -32,12 +29,13 @@ export const TasksWorkerModule = GraphileWorkerModule.forRootAsync({
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    pgPool.toJSON = function(){
+    pgPool.toJSON = function () {
       return 'pgPool';
     };
 
     return {
       pgPool,
+      concurrency: 10,
     };
   },
 });

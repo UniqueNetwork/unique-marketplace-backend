@@ -11,12 +11,14 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { TokensService } from './tokens.service';
 import { AddressService } from '@app/common/src/lib/address.service';
+import { GraphileService } from './graphile.service';
 
 @Module({
   controllers: [CollectionsController],
   providers: [
     CollectionsService,
     sdkProvider,
+    GraphileService,
     SdkService,
     TokensTask,
     CollectionTask,
@@ -25,7 +27,7 @@ import { AddressService } from '@app/common/src/lib/address.service';
     TokensService,
     AddressService,
   ],
-  exports: [CollectionsService],
+  exports: [CollectionsService, GraphileService],
 })
 export class CollectionsModule {
   constructor(@InjectDataSource() dataSource: DataSource, offersSubscriber: OffersSubscriber) {

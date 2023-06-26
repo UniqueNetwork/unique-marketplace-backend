@@ -7,8 +7,7 @@ import { TokensEntity } from '@app/common/modules/database/entities/tokens.entit
 import { WorkerService } from 'nestjs-graphile-worker';
 import { SdkService } from '../app/sdk.service';
 import { CollectionSchemaAndChain } from '@app/common/modules/types';
-import { TaskSpec } from 'graphile-worker';
-import { getJobName, JOB_HIGH_PRIORITY, JOB_LOW_PRIORITY } from './utils';
+import { GraphileService } from './graphile.service';
 
 @Injectable()
 export class CollectionsService {
@@ -27,6 +26,7 @@ export class CollectionsService {
     private offersRepository: Repository<OfferEntity>,
     /** Graphile Worker */
     private readonly graphileWorker: WorkerService,
+    private readonly graphileService: GraphileService,
   ) {}
 
   /**
@@ -93,43 +93,13 @@ export class CollectionsService {
    * get its schema, and store this information in the database.
    * @param {Object} tokens - list of sorted Tokens
    * @param {Number} collectionId - collection ID
+   * @param {String} network
    * @private
    * @async
    */
   private async addTaskForAddTokensList(tokens: number[], collectionId: number, network: string) {
     if (tokens.length > 0) {
-      tokens.map(async (tokenId) => {
-        const hasOffer = await this.offersRepository.findOne({
-          where: {
-            collectionId,
-            tokenId,
-          },
-        });
-        const taskSpec: TaskSpec = {
-          priority: hasOffer ? JOB_HIGH_PRIORITY : JOB_LOW_PRIORITY,
-          queueName: getJobName(collectionId, tokenId),
-        };
-
-        await this.graphileWorker.addJob(
-          'collectTokens',
-          {
-            tokenId,
-            collectionId,
-            network,
-          },
-          taskSpec,
-        );
-
-        await this.graphileWorker.addJob(
-          'collectProperties',
-          {
-            tokenId,
-            collectionId,
-            network,
-          },
-          taskSpec,
-        );
-      });
+      tokens.map(async (tokenId) => this.graphileService.addToken(collectionId, tokenId, network, true));
     }
   }
 }
