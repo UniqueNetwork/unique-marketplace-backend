@@ -24,13 +24,14 @@ contract Market is Ownable, ReentrancyGuard {
     }
 
     uint32 public constant version = 0;
-    uint32 public constant buildVersion = 3;
+    uint32 public constant buildVersion = 4;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     CollectionHelpers private constant collectionHelpers =
         CollectionHelpers(0x6C4E9fE1AE37a41E93CEE429e8E1881aBdcbb54F);
     Utils private utils = new Utils();
 
+    mapping(uint32 => bool) blacklist;
     mapping(uint32 => mapping(uint32 => Order)) orders;
     uint32 private idCount = 1;
     uint32 public marketFee;
@@ -62,6 +63,7 @@ contract Market is Ownable, ReentrancyGuard {
     error NotEnoughMoneyError();
     error InvalidRoyaltiesError(uint256 totalRoyalty);
     error FailTransferToken(string reason);
+    error CollectionInBlacklist();
 
     modifier onlyAdmin() {
       require(msg.sender == this.owner() || admins[msg.sender], "Only admin can");
@@ -141,6 +143,24 @@ contract Market is Ownable, ReentrancyGuard {
     }
 
     /**
+     * Add collection to blacklist. Only owner or an existing admin can this.
+     *
+     * @param collectionId: ID of collection
+     */
+    function addToBlacklist(uint32 collectionId) public onlyAdmin {
+      blacklist[collectionId] = true;
+    }
+
+    /**
+     * Remove collection from blacklist. Only owner or an existing admin can this.
+     *
+     * @param collectionId: ID of collection
+     */
+    function removeFromBlacklist(uint32 collectionId) public onlyAdmin {
+        delete blacklist[collectionId];
+    }
+
+    /**
      * Place an NFT or RFT token for sale. It must be pre-approved for transfers by this contract address.
      *
      * @param collectionId: ID of the token collection
@@ -161,6 +181,10 @@ contract Market is Ownable, ReentrancyGuard {
         }
         if (amount == 0) {
           revert InvalidArgument("amount must not be zero");
+        }
+
+        if (blacklist[collectionId]) {
+          revert CollectionInBlacklist();
         }
 
         if (orders[collectionId][tokenId].price > 0) {
@@ -307,6 +331,18 @@ contract Market is Ownable, ReentrancyGuard {
     }
 
     /**
+     * Revoke the token from the sale. Only the contract admin can use this method.
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenIdList: List ID of the token
+     */
+    function revokeListAdmin(uint32 collectionId, uint32[] calldata tokenIdList) public onlyAdmin {
+      for (uint256 i=0; i<tokenIdList.length; i += 1) {
+        revokeAdmin(collectionId, tokenIdList[i]);
+      }
+    }
+
+    /**
      * Buy a token (partially for an RFT).
      *
      * @param collectionId: ID of the token collection
@@ -325,6 +361,10 @@ contract Market is Ownable, ReentrancyGuard {
         }
         if (amount == 0) {
           revert InvalidArgument("amount must not be zero");
+        }
+
+        if (blacklist[collectionId]) {
+          revert CollectionInBlacklist();
         }
 
         Order memory order = orders[collectionId][tokenId];

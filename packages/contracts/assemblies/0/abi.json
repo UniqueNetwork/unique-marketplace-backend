@@ -17,6 +17,11 @@
   },
   {
     "inputs": [],
+    "name": "CollectionInBlacklist",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CollectionNotFound",
     "type": "error"
   },
@@ -457,6 +462,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      }
+    ],
+    "name": "addToBlacklist",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "",
         "type": "address"
@@ -723,6 +741,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      }
+    ],
+    "name": "removeFromBlacklist",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "renounceOwnership",
     "outputs": [],
@@ -766,6 +797,24 @@
       }
     ],
     "name": "revokeAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32[]",
+        "name": "tokenIdList",
+        "type": "uint32[]"
+      }
+    ],
+    "name": "revokeListAdmin",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
