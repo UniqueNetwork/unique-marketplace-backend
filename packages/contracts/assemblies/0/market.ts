@@ -78,6 +78,7 @@ export declare namespace Market {
 export interface MarketInterface extends utils.Interface {
   functions: {
     "addAdmin(address)": FunctionFragment;
+    "addToBlacklist(uint32)": FunctionFragment;
     "admins(address)": FunctionFragment;
     "buildVersion()": FunctionFragment;
     "buy(uint32,uint32,uint32,(address,uint256))": FunctionFragment;
@@ -85,12 +86,16 @@ export interface MarketInterface extends utils.Interface {
     "ctime()": FunctionFragment;
     "getOrder(uint32,uint32)": FunctionFragment;
     "marketFee()": FunctionFragment;
+    "owner()": FunctionFragment;
     "ownerAddress()": FunctionFragment;
     "put(uint32,uint32,uint256,uint32,(address,uint256))": FunctionFragment;
     "removeAdmin(address)": FunctionFragment;
+    "removeFromBlacklist(uint32)": FunctionFragment;
+    "renounceOwnership()": FunctionFragment;
     "revoke(uint32,uint32,uint32)": FunctionFragment;
     "revokeAdmin(uint32,uint32)": FunctionFragment;
-    "setOwner()": FunctionFragment;
+    "revokeListAdmin(uint32,uint32[])": FunctionFragment;
+    "transferOwnership(address)": FunctionFragment;
     "version()": FunctionFragment;
     "withdraw(address)": FunctionFragment;
   };
@@ -98,6 +103,7 @@ export interface MarketInterface extends utils.Interface {
   getFunction(
     nameOrSignatureOrTopic:
       | "addAdmin"
+      | "addToBlacklist"
       | "admins"
       | "buildVersion"
       | "buy"
@@ -105,12 +111,16 @@ export interface MarketInterface extends utils.Interface {
       | "ctime"
       | "getOrder"
       | "marketFee"
+      | "owner"
       | "ownerAddress"
       | "put"
       | "removeAdmin"
+      | "removeFromBlacklist"
+      | "renounceOwnership"
       | "revoke"
       | "revokeAdmin"
-      | "setOwner"
+      | "revokeListAdmin"
+      | "transferOwnership"
       | "version"
       | "withdraw"
   ): FunctionFragment;
@@ -118,6 +128,10 @@ export interface MarketInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "addAdmin",
     values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "addToBlacklist",
+    values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "admins",
@@ -146,6 +160,7 @@ export interface MarketInterface extends utils.Interface {
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(functionFragment: "marketFee", values?: undefined): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "ownerAddress",
     values?: undefined
@@ -165,6 +180,14 @@ export interface MarketInterface extends utils.Interface {
     values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
+    functionFragment: "removeFromBlacklist",
+    values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "renounceOwnership",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "revoke",
     values: [
       PromiseOrValue<BigNumberish>,
@@ -176,7 +199,14 @@ export interface MarketInterface extends utils.Interface {
     functionFragment: "revokeAdmin",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
-  encodeFunctionData(functionFragment: "setOwner", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "revokeListAdmin",
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferOwnership",
+    values: [PromiseOrValue<string>]
+  ): string;
   encodeFunctionData(functionFragment: "version", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "withdraw",
@@ -184,6 +214,10 @@ export interface MarketInterface extends utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "addAdmin", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "addToBlacklist",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "admins", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "buildVersion",
@@ -197,6 +231,7 @@ export interface MarketInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "ctime", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getOrder", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "marketFee", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "ownerAddress",
     data: BytesLike
@@ -206,17 +241,33 @@ export interface MarketInterface extends utils.Interface {
     functionFragment: "removeAdmin",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "removeFromBlacklist",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "revoke", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "revokeAdmin",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "setOwner", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "revokeListAdmin",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferOwnership",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "version", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
   events: {
     "Log(string)": EventFragment;
+    "OwnershipTransferred(address,address)": EventFragment;
     "TokenIsApproved(uint32,tuple)": EventFragment;
     "TokenIsPurchased(uint32,tuple,uint32,tuple,tuple[])": EventFragment;
     "TokenIsUpForSale(uint32,tuple)": EventFragment;
@@ -224,6 +275,7 @@ export interface MarketInterface extends utils.Interface {
   };
 
   getEvent(nameOrSignatureOrTopic: "Log"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenIsApproved"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenIsPurchased"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenIsUpForSale"): EventFragment;
@@ -236,6 +288,18 @@ export interface LogEventObject {
 export type LogEvent = TypedEvent<[string], LogEventObject>;
 
 export type LogEventFilter = TypedEventFilter<LogEvent>;
+
+export interface OwnershipTransferredEventObject {
+  previousOwner: string;
+  newOwner: string;
+}
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string],
+  OwnershipTransferredEventObject
+>;
+
+export type OwnershipTransferredEventFilter =
+  TypedEventFilter<OwnershipTransferredEvent>;
 
 export interface TokenIsApprovedEventObject {
   version: number;
@@ -325,6 +389,11 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    addToBlacklist(
+      collectionId: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     admins(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -356,6 +425,8 @@ export interface Market extends BaseContract {
 
     marketFee(overrides?: CallOverrides): Promise<[number]>;
 
+    owner(overrides?: CallOverrides): Promise<[string]>;
+
     ownerAddress(overrides?: CallOverrides): Promise<[string]>;
 
     put(
@@ -372,6 +443,15 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    removeFromBlacklist(
+      collectionId: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    renounceOwnership(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     revoke(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -385,7 +465,14 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    setOwner(
+    revokeListAdmin(
+      collectionId: PromiseOrValue<BigNumberish>,
+      tokenIdList: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    transferOwnership(
+      newOwner: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -399,6 +486,11 @@ export interface Market extends BaseContract {
 
   addAdmin(
     admin: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  addToBlacklist(
+    collectionId: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -433,6 +525,8 @@ export interface Market extends BaseContract {
 
   marketFee(overrides?: CallOverrides): Promise<number>;
 
+  owner(overrides?: CallOverrides): Promise<string>;
+
   ownerAddress(overrides?: CallOverrides): Promise<string>;
 
   put(
@@ -449,6 +543,15 @@ export interface Market extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  removeFromBlacklist(
+    collectionId: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  renounceOwnership(
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   revoke(
     collectionId: PromiseOrValue<BigNumberish>,
     tokenId: PromiseOrValue<BigNumberish>,
@@ -462,7 +565,14 @@ export interface Market extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  setOwner(
+  revokeListAdmin(
+    collectionId: PromiseOrValue<BigNumberish>,
+    tokenIdList: PromiseOrValue<BigNumberish>[],
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  transferOwnership(
+    newOwner: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -476,6 +586,11 @@ export interface Market extends BaseContract {
   callStatic: {
     addAdmin(
       admin: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    addToBlacklist(
+      collectionId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -510,6 +625,8 @@ export interface Market extends BaseContract {
 
     marketFee(overrides?: CallOverrides): Promise<number>;
 
+    owner(overrides?: CallOverrides): Promise<string>;
+
     ownerAddress(overrides?: CallOverrides): Promise<string>;
 
     put(
@@ -526,6 +643,13 @@ export interface Market extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    removeFromBlacklist(
+      collectionId: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    renounceOwnership(overrides?: CallOverrides): Promise<void>;
+
     revoke(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -539,7 +663,16 @@ export interface Market extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setOwner(overrides?: CallOverrides): Promise<void>;
+    revokeListAdmin(
+      collectionId: PromiseOrValue<BigNumberish>,
+      tokenIdList: PromiseOrValue<BigNumberish>[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    transferOwnership(
+      newOwner: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     version(overrides?: CallOverrides): Promise<number>;
 
@@ -552,6 +685,15 @@ export interface Market extends BaseContract {
   filters: {
     "Log(string)"(message?: null): LogEventFilter;
     Log(message?: null): LogEventFilter;
+
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: PromiseOrValue<string> | null,
+      newOwner?: PromiseOrValue<string> | null
+    ): OwnershipTransferredEventFilter;
+    OwnershipTransferred(
+      previousOwner?: PromiseOrValue<string> | null,
+      newOwner?: PromiseOrValue<string> | null
+    ): OwnershipTransferredEventFilter;
 
     "TokenIsApproved(uint32,tuple)"(
       version?: null,
@@ -598,6 +740,11 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    addToBlacklist(
+      collectionId: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     admins(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -629,6 +776,8 @@ export interface Market extends BaseContract {
 
     marketFee(overrides?: CallOverrides): Promise<BigNumber>;
 
+    owner(overrides?: CallOverrides): Promise<BigNumber>;
+
     ownerAddress(overrides?: CallOverrides): Promise<BigNumber>;
 
     put(
@@ -645,6 +794,15 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    removeFromBlacklist(
+      collectionId: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    renounceOwnership(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     revoke(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -658,7 +816,14 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    setOwner(
+    revokeListAdmin(
+      collectionId: PromiseOrValue<BigNumberish>,
+      tokenIdList: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    transferOwnership(
+      newOwner: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -673,6 +838,11 @@ export interface Market extends BaseContract {
   populateTransaction: {
     addAdmin(
       admin: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    addToBlacklist(
+      collectionId: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -707,6 +877,8 @@ export interface Market extends BaseContract {
 
     marketFee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     ownerAddress(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     put(
@@ -723,6 +895,15 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    removeFromBlacklist(
+      collectionId: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    renounceOwnership(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
     revoke(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -736,7 +917,14 @@ export interface Market extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    setOwner(
+    revokeListAdmin(
+      collectionId: PromiseOrValue<BigNumberish>,
+      tokenIdList: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    transferOwnership(
+      newOwner: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -750,4 +938,4 @@ export interface Market extends BaseContract {
 }
 
 
-export type MarketEventNames = "TokenIsApproved" | "TokenIsPurchased" | "TokenIsUpForSale" | "TokenRevoke";
+export type MarketEventNames = "OwnershipTransferred" | "TokenIsApproved" | "TokenIsPurchased" | "TokenIsUpForSale" | "TokenRevoke";

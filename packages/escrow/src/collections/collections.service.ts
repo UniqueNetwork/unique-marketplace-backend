@@ -1,12 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CollectionInfoWithSchemaResponse } from '@unique-nft/sdk/';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CollectionEntity } from '@app/common/modules/database';
+import { CollectionEntity, OfferEntity } from '@app/common/modules/database';
 import { Repository } from 'typeorm';
 import { TokensEntity } from '@app/common/modules/database/entities/tokens.entity';
 import { WorkerService } from 'nestjs-graphile-worker';
 import { SdkService } from '../app/sdk.service';
 import { CollectionSchemaAndChain } from '@app/common/modules/types';
+import { GraphileService } from './graphile.service';
 
 @Injectable()
 export class CollectionsService {
@@ -21,8 +22,11 @@ export class CollectionsService {
     /** Token Repository */
     @InjectRepository(TokensEntity)
     private tokensRepository: Repository<TokensEntity>,
+    @InjectRepository(OfferEntity)
+    private offersRepository: Repository<OfferEntity>,
     /** Graphile Worker */
     private readonly graphileWorker: WorkerService,
+    private readonly graphileService: GraphileService,
   ) {}
 
   /**
@@ -89,24 +93,13 @@ export class CollectionsService {
    * get its schema, and store this information in the database.
    * @param {Object} tokens - list of sorted Tokens
    * @param {Number} collectionId - collection ID
+   * @param {String} network
    * @private
    * @async
    */
   private async addTaskForAddTokensList(tokens: number[], collectionId: number, network: string) {
     if (tokens.length > 0) {
-      tokens.map(async (token) => {
-        await this.graphileWorker.addJob('collectTokens', {
-          tokenId: token,
-          collectionId,
-          network,
-        });
-
-        await this.graphileWorker.addJob('collectProperties', {
-          tokenId: token,
-          collectionId,
-          network,
-        });
-      });
+      tokens.map(async (tokenId) => this.graphileService.addToken(collectionId, tokenId, network, true));
     }
   }
 }

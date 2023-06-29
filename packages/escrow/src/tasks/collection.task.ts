@@ -50,11 +50,12 @@ export class CollectionTask {
         where: { collectionId: id },
       });
 
-      const entity = this.collectionRepository.create(decodedCollection);
       if (collectionExist) {
         await this.collectionRepository.update({ id: collectionExist.id }, decodedCollection);
         this.logger.log(`Collection id ${id} updated!`);
       } else {
+        const entity = this.collectionRepository.create(decodedCollection);
+        entity.metadata = entity.metadata || '{}';
         await this.collectionRepository.save({
           ...entity,
         });

@@ -114,7 +114,7 @@ export class CollectionEventsHandler {
     const args = {
       address,
       funcName: 'checkApproved',
-      gasLimit: 10_000_000,
+      gasLimit: 60_000,
       args: {
         collectionId: offer.collectionId,
         tokenId: offer.tokenId,
