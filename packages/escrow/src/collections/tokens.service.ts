@@ -59,7 +59,8 @@ export class TokensService {
       const tokenMap = new Map<string, TokenCollectionUpdate>();
 
       if (data && data.parsed) {
-        const { parsed, event } = data;
+        const { parsed } = data;
+        const { event } = parsed;
 
         if (event.method === EventMethod.ITEM_DESTROYED) {
           await this.cleanTokenAndProperties(collectionId, tokenId, chain.token);
@@ -103,7 +104,7 @@ export class TokensService {
     let result = [{ collectionId: data.collectionId, tokenId: data.tokenId, network: '' }];
 
     if (data.nestingChildTokens) {
-      for (let child of data.nestingChildTokens) {
+      for (const child of data.nestingChildTokens) {
         result = [...result, ...this.extractCollectionAndTokenIds(child)];
       }
     }
