@@ -8,6 +8,7 @@ import { Helpers } from 'graphile-worker';
 import { PropertiesEntity } from '@app/common/modules/database/entities/properties.entity';
 import { BundleType, CollectionToken, Market, SerializeTokenType, TokenInfo, TypeAttributToken } from './task.types';
 import { WorkerService } from 'nestjs-graphile-worker/dist/services/worker.service';
+import { NestedToken } from '@unique-nft/sdk/full';
 
 @Injectable()
 @Task('collectProperties')
@@ -39,6 +40,18 @@ export class PropertiesTask {
     return source;
   }
 
+  private findNestedToken(bundle: NestedToken, tokenId: number): NestedToken | undefined {
+    if (bundle.tokenId === tokenId) {
+      return bundle;
+    }
+    if (bundle.nestingChildTokens?.length) {
+      for (let i = 0; i < bundle.nestingChildTokens.length; i++) {
+        const nested = this.findNestedToken(bundle.nestingChildTokens[i], tokenId);
+        if (nested) return nested;
+      }
+    }
+  }
+
   async tokenWithCollection(
     tokenId: number,
     collectionId: number,
@@ -48,11 +61,27 @@ export class PropertiesTask {
     isBundle: boolean;
     serializeBundle: Array<BundleType>;
   }> {
-    const isBundle = await this.sdkService.isBundle(tokenId, collectionId);
+    const { isBundle } = await this.sdkService.isBundle(tokenId, collectionId);
     let token = null;
     let serializeBundle = [];
     if (isBundle) {
-      token = await this.sdkService.getBundle(tokenId, collectionId);
+      const [bundle, tokenData] = await Promise.all([
+        this.sdkService.getBundle(tokenId, collectionId),
+        this.sdkService.getTokenSchema(collectionId, tokenId),
+      ]);
+      token = tokenData;
+
+      if (bundle.tokenId === tokenId) {
+        token.nestingChildTokens = bundle.nestingChildTokens;
+      } else {
+        const nested = this.findNestedToken(bundle, tokenId);
+        if (nested?.nestingParentToken) {
+          token.nestingParentToken = nested.nestingParentToken;
+        } else {
+          this.logger.error(`Invalid nestingParentToken for ${collectionId}x${tokenId}`);
+          token.nestingChildTokens = bundle.nestingChildTokens;
+        }
+      }
       serializeBundle = this.sdkService.serializeBunlde(token);
     } else {
       token = await this.sdkService.getTokenSchema(collectionId, tokenId);
@@ -130,6 +159,7 @@ export class PropertiesTask {
 
   async preparePropertiesData(tokenId: number, collectionId: number): Promise<any> {
     const tokenData = await this.tokenWithCollection(tokenId, collectionId);
+
     const source = new Set();
     // Collection
     source
