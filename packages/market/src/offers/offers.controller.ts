@@ -30,7 +30,6 @@ export class OffersController {
   ) {
     const limit = pageSize > 100 ? 100 : pageSize;
     const pagination = { page, limit } as PaginationRouting;
-    console.dir({ offerFilter, sortFilter }, { depth: 10 });
     return await this.offersService.getOffers(offerFilter, pagination, sortFilter);
   }
 
