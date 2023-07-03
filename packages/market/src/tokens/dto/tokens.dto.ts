@@ -24,6 +24,18 @@ export class TokensViewDto {
   attributesCount: any[];
 }
 
+export enum AccessoryTypes {
+  All = 'All',
+  Owned = 'Owned',
+  Disowned = 'Disowned',
+}
+
+export enum SaleTypes {
+  All = 'All',
+  OnSale = 'OnSale',
+  NotForSale = 'NotForSale',
+}
+
 export class TokensViewFilterDto {
   @ApiProperty({ description: 'Token ID', example: 16 })
   @Expose()
@@ -38,12 +50,6 @@ export class TokensViewFilterDto {
   @Type(() => Number)
   @IsOptional()
   public maxPrice?: number;
-
-  @ApiProperty({ required: false })
-  public seller?: string;
-
-  @ApiProperty({ required: false, default: true })
-  public isOwner?: boolean;
 
   @ApiProperty({
     name: 'numberOfAttributes',
@@ -75,6 +81,15 @@ export class TokensViewFilterDto {
     required: false,
   })
   public sort?: SortingParameter[];
+
+  @ApiProperty({ required: false })
+  public address?: string;
+
+  @ApiProperty({ required: false, default: AccessoryTypes.All, enum: AccessoryTypes })
+  public accessoryType?: AccessoryTypes;
+
+  @ApiProperty({ required: false, default: SaleTypes.All, enum: SaleTypes })
+  public saleType?: SaleTypes;
 }
 
 export class TokensEntityDto {

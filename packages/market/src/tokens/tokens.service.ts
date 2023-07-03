@@ -1,10 +1,10 @@
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository, SelectQueryBuilder } from 'typeorm';
 import { CollectionEntity, PropertiesEntity, TokensViewer } from '@app/common/modules/database';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 import { OfferPrice, OffersFilterType, OffersItemType, SortingRequest } from '@app/common/modules/types/requests';
-import { TokensViewDto, TokensViewFilterDto } from './dto/tokens.dto';
+import { AccessoryTypes, SaleTypes, TokensViewDto, TokensViewFilterDto } from './dto/tokens.dto';
 import { paginateRaw } from 'nestjs-typeorm-paginate';
 import { HelperService } from '@app/common/src/lib/helper.service';
 import { OfferAttributes } from '../offers/dto/offers.dto';
@@ -13,6 +13,8 @@ import { SortingOrder, SortingParameter } from '../offers/interfaces/offers.inte
 
 @Injectable()
 export class TokensService {
+  private readonly logger = new Logger(TokensService.name);
+
   constructor(
     private connection: DataSource,
     @InjectRepository(TokensViewer)
@@ -83,8 +85,10 @@ export class TokensService {
     queryFilter = this.byMaxPrice(queryFilter, tokensFilterDto.maxPrice);
     // Filter by min price
     queryFilter = this.byMinPrice(queryFilter, tokensFilterDto.minPrice);
-    // Filter by seller address
-    queryFilter = this.bySeller(queryFilter, tokensFilterDto.seller, tokensFilterDto.isOwner);
+    // Filter by accessory type
+    queryFilter = this.byAccessoryType(queryFilter, tokensFilterDto.accessoryType, tokensFilterDto.address);
+    // Filter by on sale
+    queryFilter = this.bySaleType(queryFilter, tokensFilterDto.saleType);
     // Filter by search
     queryFilter = this.bySearch(queryFilter, tokensFilterDto.searchText, tokensFilterDto.searchLocale);
 
@@ -256,21 +260,40 @@ export class TokensService {
     });
   }
 
-  private bySeller(
+  private byAccessoryType(
     query: SelectQueryBuilder<TokensViewer>,
+    accessoryType?: AccessoryTypes,
     seller?: string,
-    isOwner: boolean = true,
   ): SelectQueryBuilder<TokensViewer> {
-    if (HelperService.nullOrWhitespace(seller)) {
-      return query;
-    }
-    if (isOwner) {
+    if (!accessoryType || accessoryType === AccessoryTypes.All || HelperService.nullOrWhitespace(seller)) return query;
+
+    if (accessoryType === AccessoryTypes.Owned) {
       return query.andWhere('view_tokens.offer_seller = :seller', { seller });
-    } else {
+    }
+
+    if (accessoryType === AccessoryTypes.Disowned) {
       return query.andWhere('view_tokens.offer_seller != :seller', { seller });
     }
 
-    //.andWhere('view_tokens.offer_status in (:...offer_status)', { offer_status: ['Opened'] });
+    this.logger.warn(`filter:byAccessoryType, invalid accessoryType: ${accessoryType}`);
+
+    return query;
+  }
+
+  private bySaleType(query: SelectQueryBuilder<TokensViewer>, saleType?: SaleTypes): SelectQueryBuilder<TokensViewer> {
+    if (!saleType || saleType === SaleTypes.All) return query;
+
+    if (saleType === SaleTypes.OnSale) {
+      return query.andWhere('view_tokens.offer_status in (:...offer_status)', { offer_status: ['Opened'] });
+    }
+
+    if (saleType === SaleTypes.NotForSale) {
+      return query.andWhere('view_tokens.offer_status is null');
+    }
+
+    this.logger.warn(`filter:bySaleType, invalid saleType: ${saleType}`);
+
+    return query;
   }
 
   private bySearch(query: SelectQueryBuilder<TokensViewer>, search?: string, locale?: string): SelectQueryBuilder<TokensViewer> {
