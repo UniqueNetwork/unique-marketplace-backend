@@ -1,7 +1,7 @@
 import { ArgumentMetadata, HttpStatus, Injectable, Optional, PipeTransform } from '@nestjs/common';
 import { HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
 import { ParseOffersFilterPipeOptions, TransformationResult } from '../../offers/pipes/offer-filter.pipe';
-import { TokensViewFilterDto } from '../dto/tokens.dto';
+import { AccessoryTypes, SaleTypes, TokensViewFilterDto } from '../dto/tokens.dto';
 import { HelperService } from '@app/common/src/lib/helper.service';
 import { UntypedRequest } from '@app/common/modules/types';
 
@@ -37,8 +37,9 @@ export class ParseTokensFilterPipe implements PipeTransform<any, TransformationR
       }),
       searchLocale: value.searchLocale,
       searchText: value.searchText,
-      seller: value.seller,
-      isOwner: value.isOwner === 'true',
+      address: value.address,
+      accessoryType: value.accessoryType as AccessoryTypes,
+      saleType: value.saleType as SaleTypes,
       numberOfAttributes: HelperService.requestArray(value.numberOfAttributes)
         .map((id) =>
           HelperService.parseIntRequest(id, () => {
