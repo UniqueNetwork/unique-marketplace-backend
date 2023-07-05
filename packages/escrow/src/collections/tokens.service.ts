@@ -60,38 +60,54 @@ export class TokensService {
 
       if (data && data.parsed) {
         const { parsed } = data;
-        const { event } = parsed;
+        const { event, address, addressTo } = parsed;
 
         if (event.method === EventMethod.ITEM_DESTROYED) {
           await this.cleanTokenAndProperties(collectionId, tokenId, chain.token);
           return;
         }
 
-        const addressNestedTo = await this.addressService.getParentCollectionAndToken(parsed.addressTo);
-        if (addressNestedTo !== undefined) {
-          tokenMap.set(`${addressNestedTo?.collectionId}-${addressNestedTo?.tokenId}-${chain.token}`, {
-            ...addressNestedTo,
-            network: chain.token,
-          });
-        }
+        await Promise.all([address, addressTo].map((a) => this.findAllParents(a, tokenMap, chain.token)));
 
-        const addressNested = await this.addressService.getParentCollectionAndToken(parsed.address);
-        if (addressNested !== undefined) {
-          tokenMap.set(`${addressNested?.collectionId}-${addressNested?.tokenId}-${chain.token}`, {
-            ...addressNested,
-            network: chain.token,
-          });
-        }
         // Add the tokenId, collectionId, network chain to the list for update
         if (event.method === EventMethod.ITEM_CREATED || event.method === EventMethod.TRANSFER) {
-          tokenMap.set(`${collectionId}-${tokenId}-${chain.token}`, { collectionId, tokenId, network: chain.token });
-          Array.from(tokenMap.values()).map((item) => this.addUpdateTokenAndProperties(item));
+          this.addTokenToMap(tokenMap, collectionId, tokenId, chain.token);
         }
       } else {
-        tokenMap.set(`${collectionId}-${tokenId}-${chain.token}`, { collectionId, tokenId, network: chain.token });
-        Array.from(tokenMap.values()).map((item) => this.addUpdateTokenAndProperties(item));
+        this.addTokenToMap(tokenMap, collectionId, tokenId, chain.token);
       }
+
+      Array.from(tokenMap.values()).map((item) => this.addUpdateTokenAndProperties(item));
     }
+  }
+
+  private async findAllParents(ownerAddress, map: Map<string, TokenCollectionUpdate>, network: string) {
+    if (!ownerAddress) return;
+
+    const ownerToken = this.addressService.getParentCollectionAndToken(ownerAddress);
+    if (!ownerToken) return;
+
+    const { collectionId, tokenId } = ownerToken;
+
+    this.addTokenToMap(map, collectionId, tokenId, network);
+
+    const token: TokensEntity | null = await this.tokensRepository.findOne({
+      where: {
+        collectionId,
+        tokenId,
+      },
+    });
+    if (!token) return;
+
+    await this.findAllParents(token.owner_token, map, network);
+  }
+
+  private addTokenToMap(map: Map<string, TokenCollectionUpdate>, collectionId, tokenId, network) {
+    map.set(`${collectionId}-${tokenId}-${network}`, {
+      collectionId,
+      tokenId,
+      network,
+    });
   }
 
   /**
