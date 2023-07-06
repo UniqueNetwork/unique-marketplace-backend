@@ -1,7 +1,7 @@
 import { HasNextData, Sdk, SocketClient } from '@unique-nft/sdk/full';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getContractAbi } from '@app/contracts/scripts';
-import { ContractEntity, ContractService } from '@app/common/modules/database';
+import { ContractEntity, ContractService, SettingsService } from '@app/common/modules/database';
 import { CollectionEventsHandler, ContractEventsHandler } from './handlers';
 
 @Injectable()
@@ -17,6 +17,8 @@ export class ContractEventsService implements OnModuleInit {
     private readonly sdk: Sdk,
     @Inject(ContractService)
     private readonly contractService: ContractService,
+    @Inject(SettingsService)
+    private readonly settingsService: SettingsService,
     @Inject(CollectionEventsHandler)
     private readonly collectionEventsHandler: CollectionEventsHandler,
     @Inject(ContractEventsHandler)
@@ -40,7 +42,7 @@ export class ContractEventsService implements OnModuleInit {
       if (this.isModuleInit) {
         await this.initContracts();
       }
-      this.client.subscribeCollection();
+      await this.subscribeToCollection();
     });
   }
 
@@ -59,22 +61,24 @@ export class ContractEventsService implements OnModuleInit {
     contracts.forEach((contract) => {
       abiByAddress[contract.address] = getContractAbi(contract.version);
 
-      this.subscribe(contract);
+      this.subscribeToContract(contract);
     });
 
     this.collectionEventsHandler.init(abiByAddress);
     this.contractEventsHandler.init(abiByAddress);
   }
 
-  private async subscribe(contract: ContractEntity) {
-    this.logger.log(`subscribe v${contract.version}:${contract.address}`);
-
+  private async subscribeToContract(contract: ContractEntity) {
     const fromBlock = await this.contractService.getProcessedBlock(contract.address);
 
-    this.loadBlocks(contract.address, fromBlock);
+    this.logger.log(`subscribe to contract v${contract.version}:${contract.address}, from block ${fromBlock}`);
+
+    this.loadContractBlocks(contract.address, fromBlock);
   }
 
-  private loadBlocks(address: string, fromBlock: number) {
+  private loadContractBlocks(address: string, fromBlock: number) {
+    this.logger.log(`load contract ${address} from block ${fromBlock}`);
+
     this.client.subscribeContract({
       address,
       fromBlock,
@@ -83,7 +87,27 @@ export class ContractEventsService implements OnModuleInit {
 
   private onHasNext(room, data: HasNextData) {
     if (room.name === 'contract') {
-      this.loadBlocks(room.data.address, data.nextId);
+      this.loadContractBlocks(room.data.address, data.nextId);
     }
+
+    if (room.name === 'collection') {
+      this.loadCollectionsBlocks(data.nextId);
+    }
+  }
+
+  private async subscribeToCollection() {
+    const fromBlock = await this.settingsService.getSubscribeCollectionBlock();
+
+    this.logger.log(`subscribe to collection, from block ${fromBlock}`);
+
+    this.loadCollectionsBlocks(fromBlock);
+  }
+
+  private loadCollectionsBlocks(fromBlock: number | undefined) {
+    this.logger.log(`load collection from block ${fromBlock}`);
+
+    this.client.subscribeCollection({
+      fromBlock,
+    });
   }
 }

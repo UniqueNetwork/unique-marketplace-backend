@@ -32,7 +32,7 @@ import {
   MarketTradeToOfferEvents1684739540519,
   VerifyMessageContract1686310569001,
 } from './migrations';
-import { ContractService, OfferService } from './services';
+import { ContractService, OfferService, SettingsService } from './services';
 import { OfferEventService } from './services/offer-event.service';
 
 const entities = [
@@ -105,8 +105,8 @@ export class DatabaseModule {
           metadataTableName: 'new_typeorm_metadata',
         }),
       ],
-      providers: [ContractService, OfferService, OfferEventService],
-      exports: [ContractService, OfferService, OfferEventService],
+      providers: [ContractService, OfferService, OfferEventService, SettingsService],
+      exports: [ContractService, OfferService, OfferEventService, SettingsService],
     };
   }
 
@@ -119,8 +119,8 @@ export class DatabaseModule {
           logger: 'advanced-console',
         }),
       ],
-      providers: [ContractService, OfferService, OfferEventService],
-      exports: [ContractService, OfferService, OfferEventService],
+      providers: [ContractService, OfferService, OfferEventService, SettingsService],
+      exports: [ContractService, OfferService, OfferEventService, SettingsService],
     };
   }
 }
