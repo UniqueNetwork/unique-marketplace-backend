@@ -1,11 +1,4 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Index('Collection_and_token_idx', ['collectionId', 'tokenId'])
 @Entity('tokens', { schema: 'public' })
@@ -31,7 +24,10 @@ export class TokensEntity {
   owner_token: string;
 
   @Column('jsonb', { name: 'nested', default: {} })
-  nested: string;
+  nested: {
+    collectionId?: number;
+    tokenId?: number;
+  };
 
   @Column('jsonb', { name: 'other_owners', default: {} })
   otherOwners: string;

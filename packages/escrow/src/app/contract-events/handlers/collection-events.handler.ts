@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CollectionData, Sdk } from '@unique-nft/sdk/full';
-import { OfferEntity, OfferService } from '@app/common/modules/database';
+import { OfferEntity, OfferService, SettingsService } from '@app/common/modules/database';
 import { OfferStatus } from '@app/common/modules/types';
 import { TokensService } from '../../../collections/tokens.service';
 import { CollectionsService } from '../../../collections/collections.service';
@@ -21,6 +21,8 @@ export class CollectionEventsHandler {
     private readonly tokensService: TokensService,
     @Inject(CollectionsService)
     private readonly collectionsService: CollectionsService,
+    @Inject(SettingsService)
+    private readonly settingsService: SettingsService,
   ) {}
 
   public init(abiByAddress: Record<string, any>) {
@@ -28,9 +30,14 @@ export class CollectionEventsHandler {
   }
 
   public async onEvent(room, data: CollectionData) {
-    const { parsed } = data;
+    const { parsed, extrinsic } = data;
 
     const { collectionId, tokenId, event } = parsed;
+
+    // todo fix this blockId
+    // @ts-ignore
+    const blockId = extrinsic.blockId || extrinsic.block?.id || 0;
+    await this.settingsService.setSubscribeCollectionBlock(blockId);
 
     const { method } = event;
     if (tokenId) {
@@ -81,7 +88,7 @@ export class CollectionEventsHandler {
       from: offer.seller,
       to: offer.contract.address,
     });
-    console.log('runCheckApproved', isAllowed);
+
     if (!isAllowed && offer.status === OfferStatus.Opened) {
       await this.offerService.updateStatus(offer.id, OfferStatus.Canceled);
     }
@@ -90,7 +97,6 @@ export class CollectionEventsHandler {
   }
 
   private async runContractCheckApproved(offer: OfferEntity) {
-    console.log('runContractCheckApproved', this.queueIsBusy);
     if (this.queueIsBusy) {
       const exists = this.approveQueue.find(
         (o) =>
@@ -126,7 +132,7 @@ export class CollectionEventsHandler {
 
       await contract.send.submitWaitResult(args);
     } catch (err) {
-      console.log('checkApproved err', err);
+      //
     }
 
     this.queueIsBusy = false;
