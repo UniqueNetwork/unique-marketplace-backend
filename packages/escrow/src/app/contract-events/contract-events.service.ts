@@ -1,7 +1,6 @@
 import { HasNextData, Sdk, SocketClient } from '@unique-nft/sdk/full';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getContractAbi } from '@app/contracts/scripts';
-import { ContractEntity, ContractService } from '@app/common/modules/database';
 import { CollectionEventsHandler, ContractEventsHandler } from './handlers';
 
 @Injectable()
@@ -15,8 +14,6 @@ export class ContractEventsService implements OnModuleInit {
 
   constructor(
     private readonly sdk: Sdk,
-    @Inject(ContractService)
-    private readonly contractService: ContractService,
     @Inject(CollectionEventsHandler)
     private readonly collectionEventsHandler: CollectionEventsHandler,
     @Inject(ContractEventsHandler)
@@ -34,13 +31,14 @@ export class ContractEventsService implements OnModuleInit {
       this.logger.error(`connect error`, err);
     });
     this.client.on('has-next', this.onHasNext.bind(this));
+    // todo type it after update sdk
+    this.client.socket.on('subscribe-state', this.onSubscribeState.bind(this));
 
     this.client.socket.on('connect', async () => {
       this.isClientConnected = true;
       if (this.isModuleInit) {
         await this.initContracts();
       }
-      this.client.subscribeCollection();
     });
   }
 
@@ -52,38 +50,50 @@ export class ContractEventsService implements OnModuleInit {
   }
 
   async initContracts() {
-    const contracts = await this.contractService.getAll();
+    const contracts = await this.contractEventsHandler.getAllContract();
 
-    const abiByAddress: Record<string, any> = {};
+    const abiByAddress: Record<string, any> = contracts.reduce((data, contract) => {
+      return {
+        ...data,
+        [contract.address]: getContractAbi(contract.version),
+      };
+    }, {});
 
-    contracts.forEach((contract) => {
-      abiByAddress[contract.address] = getContractAbi(contract.version);
+    this.collectionEventsHandler.init(this.client, abiByAddress);
+    this.contractEventsHandler.init(this.client, abiByAddress);
 
-      this.subscribe(contract);
-    });
-
-    this.collectionEventsHandler.init(abiByAddress);
-    this.contractEventsHandler.init(abiByAddress);
-  }
-
-  private async subscribe(contract: ContractEntity) {
-    this.logger.log(`subscribe v${contract.version}:${contract.address}`);
-
-    const fromBlock = await this.contractService.getProcessedBlock(contract.address);
-
-    this.loadBlocks(contract.address, fromBlock);
-  }
-
-  private loadBlocks(address: string, fromBlock: number) {
-    this.client.subscribeContract({
-      address,
-      fromBlock,
-    });
+    contracts.forEach((contract) => this.contractEventsHandler.subscribe(contract));
+    this.collectionEventsHandler.subscribe().then();
   }
 
   private onHasNext(room, data: HasNextData) {
+    // todo type it after update sdk
     if (room.name === 'contract') {
-      this.loadBlocks(room.data.address, data.nextId);
+      this.contractEventsHandler.loadBlocks(room.data.address, data.nextId);
+    }
+
+    // todo type it after update sdk
+    if (room.name === 'collection') {
+      this.collectionEventsHandler.loadBlocks(data.nextId);
+    }
+  }
+
+  private async onSubscribeState(room, data) {
+    if (!data.switchToHead) {
+      return;
+    }
+
+    console.log('subscribe to head', room.name);
+
+    // todo type it after update sdk
+    if (room.name === 'contract') {
+      const { address } = room.data;
+      await this.contractEventsHandler.saveBlockId(address, data.toBlock);
+    }
+
+    // todo type it after update sdk
+    if (room.name === 'collection') {
+      await this.collectionEventsHandler.saveBlockId(data.toBlock);
     }
   }
 }

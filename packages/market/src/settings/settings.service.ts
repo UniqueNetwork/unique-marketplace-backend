@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SettingsDto } from './dto/setting.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CollectionEntity, ContractEntity, OfferEntity, SettingEntity } from '@app/common/modules/database';
+import { CollectionEntity, ContractEntity, OfferEntity } from '@app/common/modules/database';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { AddressService } from '@app/common/src/lib/address.service';
 import { CollectionStatus, CustomObject, OfferStatus } from '@app/common/modules/types';
@@ -36,8 +36,6 @@ export class SettingsService {
     private contractRepository: Repository<ContractEntity>,
     @InjectRepository(CollectionEntity)
     private collectionRepository: Repository<CollectionEntity>,
-    @InjectRepository(SettingEntity)
-    private settingsRepository: Repository<SettingEntity>,
     @InjectRepository(OfferEntity)
     private offerRepository: Repository<OfferEntity>,
   ) {}
@@ -102,9 +100,9 @@ export class SettingsService {
     // Transform and map collection data into a Map object
     const collectionMap = new Map();
     collections.map((elem) => {
-      const { allowedTokens, data } = elem;
+      const { collectionId, allowedTokens, data } = elem;
       const collectionDescription = this.collectionDataTransformation(data);
-      collectionMap.set(elem.collectionId, { allowedTokens: elem.allowedTokens, description: collectionDescription });
+      collectionMap.set(collectionId, { allowedTokens, description: collectionDescription });
     });
 
     // Return collectionMap as an object
