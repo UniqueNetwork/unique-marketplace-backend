@@ -14,7 +14,7 @@ import {
 import { OfferEventType, OfferStatus } from '@app/common/modules/types';
 import { ContractEntity, ContractService, OfferEntity, OfferEventEntity, OfferService } from '@app/common/modules/database';
 import { OfferEventService } from '@app/common/modules/database/services/offer-event.service';
-import { Sdk } from '@unique-nft/sdk/full';
+import { Sdk, SocketClient } from '@unique-nft/sdk/full';
 import { Address } from '@unique-nft/utils';
 import { CollectionsService } from '../../../collections/collections.service';
 import { TokensService } from '../../../collections/tokens.service';
@@ -31,6 +31,7 @@ export class ContractEventsHandler {
 
   private readonly eventHandlers: Record<string, LogEventHandler>;
 
+  private client: SocketClient;
   private abiByAddress: Record<string, any>;
 
   private chain;
@@ -58,12 +59,35 @@ export class ContractEventsHandler {
     // this.chain = Promise.all([this.sdkService.getChainProperties()]);
   }
 
-  public init(abiByAddress: Record<string, any>) {
+  public getAllContract() {
+    return this.contractService.getAll();
+  }
+
+  public init(client: SocketClient, abiByAddress: Record<string, any>) {
+    this.client = client;
     this.abiByAddress = abiByAddress;
+  }
+
+  public async subscribe(contract: ContractEntity) {
+    const fromBlock = await this.contractService.getProcessedBlock(contract.address);
+
+    this.logger.log(`subscribe to contract v${contract.version}:${contract.address}, from block ${fromBlock}`);
+
+    this.loadBlocks(contract.address, fromBlock);
+  }
+
+  public loadBlocks(address: string, fromBlock: number) {
+    this.logger.log(`load contract ${address} from block ${fromBlock}`);
+
+    this.client.subscribeContract({
+      address,
+      fromBlock,
+    });
   }
 
   async onEvent(room, data: ContractLogData) {
     const { log, extrinsic } = data;
+    console.log('onEvent', log);
 
     const { address } = log;
     const addressNormal = address.toLowerCase();
@@ -78,12 +102,11 @@ export class ContractEventsHandler {
       this.logger.error(`Not found ContractEntity ${addressNormal}`);
       return;
     }
-    console.log('onEvent', log);
 
     // todo fix this blockId
     // @ts-ignore
     const blockId = extrinsic.blockId || extrinsic.block?.id || 0;
-    await this.contractService.updateProcessedBlock(addressNormal, blockId);
+    await this.saveBlockId(addressNormal, blockId);
 
     const abi = this.abiByAddress[addressNormal];
 
@@ -106,6 +129,10 @@ export class ContractEventsHandler {
     } else {
       this.logger.warn(`Not found handler for event ${eventName}`);
     }
+  }
+
+  public async saveBlockId(address: string, blockId: number) {
+    await this.contractService.updateProcessedBlock(address.toLowerCase(), blockId);
   }
 
   private async createEventData(

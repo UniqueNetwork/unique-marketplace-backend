@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { CollectionData, Sdk } from '@unique-nft/sdk/full';
+import { CollectionData, Sdk, SocketClient } from '@unique-nft/sdk/full';
 import { OfferEntity, OfferService, SettingsService } from '@app/common/modules/database';
 import { OfferStatus } from '@app/common/modules/types';
 import { TokensService } from '../../../collections/tokens.service';
@@ -7,6 +7,7 @@ import { CollectionsService } from '../../../collections/collections.service';
 
 @Injectable()
 export class CollectionEventsHandler {
+  private client: SocketClient;
   private abiByAddress: Record<string, any>;
   private logger: Logger = new Logger(CollectionEventsHandler.name);
 
@@ -25,8 +26,25 @@ export class CollectionEventsHandler {
     private readonly settingsService: SettingsService,
   ) {}
 
-  public init(abiByAddress: Record<string, any>) {
+  public init(client: SocketClient, abiByAddress: Record<string, any>) {
+    this.client = client;
     this.abiByAddress = abiByAddress;
+  }
+
+  public async subscribe() {
+    const fromBlock = await this.settingsService.getSubscribeCollectionBlock();
+
+    this.logger.log(`subscribe to collection, from block ${fromBlock}`);
+
+    this.loadBlocks(fromBlock);
+  }
+
+  public loadBlocks(fromBlock: number | undefined) {
+    this.logger.log(`load collection from block ${fromBlock}`);
+
+    this.client.subscribeCollection({
+      fromBlock,
+    });
   }
 
   public async onEvent(room, data: CollectionData) {
@@ -37,7 +55,7 @@ export class CollectionEventsHandler {
     // todo fix this blockId
     // @ts-ignore
     const blockId = extrinsic.blockId || extrinsic.block?.id || 0;
-    await this.settingsService.setSubscribeCollectionBlock(blockId);
+    await this.saveBlockId(blockId);
 
     const { method } = event;
     if (tokenId) {
@@ -73,6 +91,10 @@ export class CollectionEventsHandler {
         await this.deleteCollectionOffers(collectionId);
       }
     }
+  }
+
+  public async saveBlockId(blockId: number) {
+    await this.settingsService.setSubscribeCollectionBlock(blockId);
   }
 
   private async deleteOffer(offer: OfferEntity) {
