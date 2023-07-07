@@ -37,7 +37,7 @@ export class ParseTokensFilterPipe implements PipeTransform<any, TransformationR
       }),
       searchLocale: value.searchLocale,
       searchText: value.searchText,
-      address: value.address,
+      address: value.address ? `${value.address}`.toLowerCase() : undefined,
       accessoryType: value.accessoryType as AccessoryTypes,
       saleType: value.saleType as SaleTypes,
       numberOfAttributes: HelperService.requestArray(value.numberOfAttributes)
