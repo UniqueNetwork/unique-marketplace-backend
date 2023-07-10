@@ -31,6 +31,7 @@ import {
   MarketTradeToOffers1684739540151,
   MarketTradeToOfferEvents1684739540519,
   VerifyMessageContract1686310569001,
+  NormalizeAddress1688973356000,
 } from './migrations';
 import { ContractService, OfferService, SettingsService } from './services';
 import { OfferEventService } from './services/offer-event.service';
@@ -64,6 +65,7 @@ const migrations = [
   MarketTradeToOffers1684739540151,
   MarketTradeToOfferEvents1684739540519,
   VerifyMessageContract1686310569001,
+  NormalizeAddress1688973356000,
 ];
 
 function typeOrmModulesFactory(
