@@ -155,7 +155,7 @@ export class TokensService {
         }
       });
     } else {
-      //query.addOrderBy('view_tokens.offer_id', 'ASC');
+      query.addOrderBy('view_tokens_token_id', 'ASC');
     }
     return query;
   }
@@ -422,7 +422,6 @@ export class TokensService {
       .distinct()
       .andWhere('view_tokens_collection_id = :collectionId', { collectionId })
       .from(`(${queryFilter.getQuery()})`, 'view_tokens')
-      .addOrderBy('view_tokens_offer_status', 'ASC')
       .setParameters(queryFilter.getParameters()) as SelectQueryBuilder<TokensViewer>);
   }
 
