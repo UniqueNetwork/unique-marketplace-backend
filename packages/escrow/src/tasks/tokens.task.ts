@@ -93,7 +93,7 @@ export class TokensTask {
       return;
     }
     const otherOwners = JSON.parse(JSON.stringify(token?.tokenOwners));
-    const owner_token = token.owner;
+    const owner_token = Address.extract.addressNormalized(token.owner);
 
     const nested = JSON.parse(JSON.stringify(this.nestedCollectionAndToken(token.owner))) || {};
 

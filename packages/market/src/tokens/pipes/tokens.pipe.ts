@@ -4,6 +4,7 @@ import { ParseOffersFilterPipeOptions, TransformationResult } from '../../offers
 import { AccessoryTypes, SaleTypes, TokensViewFilterDto } from '../dto/tokens.dto';
 import { HelperService } from '@app/common/src/lib/helper.service';
 import { UntypedRequest } from '@app/common/modules/types';
+import { Address } from '@unique-nft/utils';
 
 @Injectable()
 export class ParseTokensFilterPipe implements PipeTransform<any, TransformationResult<TokensViewFilterDto>> {
@@ -37,7 +38,7 @@ export class ParseTokensFilterPipe implements PipeTransform<any, TransformationR
       }),
       searchLocale: value.searchLocale,
       searchText: value.searchText,
-      address: value.address,
+      address: Address.extract.addressNormalizedSafe(value.address) || value.address,
       accessoryType: value.accessoryType as AccessoryTypes,
       saleType: value.saleType as SaleTypes,
       numberOfAttributes: HelperService.requestArray(value.numberOfAttributes)
