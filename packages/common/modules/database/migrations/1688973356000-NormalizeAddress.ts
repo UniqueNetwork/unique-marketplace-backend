@@ -22,6 +22,7 @@ export abstract class NormalizeAddress1688973356000 implements MigrationInterfac
       const items = await repository.find({
         take,
         skip,
+        order: { [criteriaColumn]: 'asc' },
       });
 
       foundCount = items.length;
