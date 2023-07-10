@@ -13,3 +13,4 @@ export * from './1684221119187-ViewTokens';
 export * from './1684739540151-MarketTradeToOffers';
 export * from './1684739540519-MarketTradeToOfferEvents';
 export * from './1686310569001-VerifyMessageContract';
+export * from './1688973356000-NormalizeAddress';
