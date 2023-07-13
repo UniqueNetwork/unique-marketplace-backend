@@ -4,7 +4,6 @@ import { ethers } from 'ethers';
 import { LogDescription } from '@ethersproject/abi/src.ts/interface';
 import {
   CrossAddressStructOutput,
-  LogEventObject,
   MarketEventNames,
   TokenIsApprovedEventObject,
   TokenIsPurchasedEventObject,
@@ -87,7 +86,7 @@ export class ContractEventsHandler {
 
   async onEvent(room, data: ContractLogData) {
     const { log, extrinsic } = data;
-    console.log('onEvent', log);
+    this.logger.log(`onEvent, block id: ${extrinsic?.block?.id}`, log);
 
     const { address } = log;
     const addressNormal = address.toLowerCase();
@@ -113,15 +112,13 @@ export class ContractEventsHandler {
     const contract = new ethers.utils.Interface(abi);
 
     const decoded: LogDescription = contract.parseLog(log);
+    this.logger.log('decoded', {
+      name: decoded.name,
+      topic: decoded.topic,
+      args: decoded.args,
+    });
 
     const { name, args } = decoded;
-    console.log(' name', name);
-
-    if (name === 'Log') {
-      const logArgs: LogEventObject = args as unknown as LogEventObject;
-      console.log('log', logArgs.message);
-      return;
-    }
 
     const eventName: MarketEventNames = name as MarketEventNames;
     if (eventName in this.eventHandlers) {
@@ -151,7 +148,7 @@ export class ContractEventsHandler {
     // todo fix double events error
     const foundEvent = await this.offerEventService.find(offer, eventType, blockId, address);
     if (foundEvent) {
-      console.error('!!!Double offer event', extrinsic.block, offer);
+      console.error('!!!Double offer event', extrinsic.block, `offer: ${offer?.id || undefined}`);
       return;
     }
 
@@ -172,7 +169,7 @@ export class ContractEventsHandler {
   private async tokenIsUpForSale(extrinsic: Extrinsic, contractEntity: ContractEntity, tokenUpArgs: TokenIsUpForSaleEventObject) {
     const offer = await this.offerService.update(contractEntity, tokenUpArgs.item, OfferStatus.Opened, this.chain);
 
-    console.log('tokenIsUpForSale', offer);
+    this.logger.log(`tokenIsUpForSale, offer: ${offer?.id || undefined}`);
     if (offer) {
       const eventData = await this.createEventData(
         offer,
@@ -183,14 +180,6 @@ export class ContractEventsHandler {
       );
       if (eventData) {
         await this.offerEventService.create(eventData);
-        console.dir(
-          {
-            method: 'tokenIsUpForSale',
-            tokenId: tokenUpArgs.item.tokenId,
-            collectionId: tokenUpArgs.item.collectionId,
-          },
-          { depth: 10 },
-        );
         await this.tokensService.observer(tokenUpArgs.item.collectionId, tokenUpArgs.item.tokenId);
       }
     }
@@ -208,6 +197,7 @@ export class ContractEventsHandler {
     const offerStatus = tokenRevokeArgs.item.amount === 0 ? OfferStatus.Canceled : OfferStatus.Opened;
 
     const offer = await this.offerService.update(contractEntity, tokenRevokeArgs.item, offerStatus);
+    this.logger.log(`tokenRevoke, offer: ${offer?.id || undefined}`);
 
     if (offer) {
       const eventType = tokenRevokeArgs.item.amount === 0 ? OfferEventType.Cancel : OfferEventType.Revoke;
@@ -234,6 +224,7 @@ export class ContractEventsHandler {
 
     const offer = await this.offerService.update(contractEntity, tokenIsPurchasedArgs.item, offerStatus);
 
+    this.logger.log(`tokenIsPurchased, offer: ${offer?.id || undefined}`);
     if (offer) {
       const eventData = await this.createEventData(
         offer,
@@ -245,14 +236,6 @@ export class ContractEventsHandler {
       if (eventData) {
         await this.offerEventService.create(eventData);
         await this.tokensService.observer(tokenIsPurchasedArgs.item.collectionId, tokenIsPurchasedArgs.item.tokenId);
-        console.dir(
-          {
-            method: 'tokenIsPurchased',
-            tokenId: tokenIsPurchasedArgs.item.tokenId,
-            collectionId: tokenIsPurchasedArgs.item.collectionId,
-          },
-          { depth: 10 },
-        );
       }
     }
   }

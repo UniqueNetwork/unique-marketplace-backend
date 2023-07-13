@@ -20,7 +20,7 @@ export class SessionService {
       collection_id: collectionId,
       metadata,
     });
-    console.dir(sessionId, { depth: 10 });
+
     await this.adminRepository.save(sessionId);
   }
 }

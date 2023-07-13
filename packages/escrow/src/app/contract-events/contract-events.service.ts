@@ -83,7 +83,7 @@ export class ContractEventsService implements OnModuleInit {
       return;
     }
 
-    console.log('subscribe to head', room.name);
+    this.logger.log('subscribe to head', room.name);
 
     // todo type it after update sdk
     if (room.name === 'contract') {

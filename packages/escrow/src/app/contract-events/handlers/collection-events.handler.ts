@@ -49,6 +49,7 @@ export class CollectionEventsHandler {
 
   public async onEvent(room, data: CollectionData) {
     const { parsed, extrinsic } = data;
+    this.logger.log(`onEvent, block id: ${extrinsic?.block?.id}`, parsed);
 
     const { collectionId, tokenId, event } = parsed;
 

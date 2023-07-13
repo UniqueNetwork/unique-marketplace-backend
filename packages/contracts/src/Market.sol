@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import { UniqueNFT, CrossAddress } from "@unique-nft/solidity-interfaces/contracts/UniqueNFT.sol";
 import { UniqueFungible, CrossAddress as CrossAddressF } from "@unique-nft/solidity-interfaces/contracts/UniqueFungible.sol";
 import "@unique-nft/solidity-interfaces/contracts/CollectionHelpers.sol";
-import "./utils.sol";
 import "./royalty/UniqueRoyaltyHelper.sol";
 
 contract Market is Ownable, ReentrancyGuard {
@@ -29,7 +28,6 @@ contract Market is Ownable, ReentrancyGuard {
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     CollectionHelpers private constant collectionHelpers =
         CollectionHelpers(0x6C4E9fE1AE37a41E93CEE429e8E1881aBdcbb54F);
-    Utils private utils = new Utils();
 
     mapping(uint32 => bool) blacklist;
     mapping(uint32 => mapping(uint32 => Order)) orders;
@@ -49,7 +47,6 @@ contract Market is Ownable, ReentrancyGuard {
       CrossAddress buyer,
       RoyaltyAmount[] royalties
     );
-    event Log(string message);
 
     error InvalidArgument(string info);
     error InvalidMarketFee();

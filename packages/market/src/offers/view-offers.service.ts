@@ -130,7 +130,6 @@ export class ViewOffersService {
   }
 
   applyFlatSort(query: SelectQueryBuilder<any>, { sort = [] }: OfferSortingRequest) {
-    console.dir({ sort }, { depth: 10 });
     for (const sortingParameter of sort) {
       const sort = this.getFlatSort(sortingParameter);
       if (sort) {

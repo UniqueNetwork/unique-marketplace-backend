@@ -302,28 +302,4 @@ export class PropertiesTask {
     }
     return attribute.value._ ? [attribute.value._] : [attribute.value];
   }
-
-  private async clearAndReplacePropertiesData(tokenId: number, collectionId: number) {
-    const tokenProperty = await this.propertiesRepository
-      .createQueryBuilder('property')
-      .select('DISTINCT property.nested', 'nested')
-      .where('property.collection_id = :collectionId', { collectionId })
-      .andWhere('property.token_id = :tokenId', { tokenId })
-      .getRawOne();
-    // console.dir(tokenProperty, { depth: 10 });
-    if (tokenProperty == null) {
-      return;
-    }
-    if (tokenProperty.length != 0) {
-      tokenProperty.nested.map(async (item) => {
-        console.dir({ process: 'Replace properties', item }, { depth: 10 });
-        //await this.propertiesRepository.delete({ collection_id: item.collection_id, token_id: item.token_id });
-        if (tokenId === item.tokenId) {
-          return;
-        }
-        const chain = await this.sdkService.getChainProperties();
-        console.dir({ process: 'Update properties', item }, { depth: 10 });
-      });
-    }
-  }
 }

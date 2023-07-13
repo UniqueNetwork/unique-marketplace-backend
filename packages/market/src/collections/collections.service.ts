@@ -52,7 +52,7 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
     const qb = await this.collectionRepository.createQueryBuilder();
     const { items, meta } = await paginate(qb, options);
     items.map((item) => this.updateTokensOneMarket(item.collectionId));
-    console.dir(items, { depth: 2 });
+
     return {
       meta,
       items,

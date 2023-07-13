@@ -128,7 +128,6 @@ export class TokensEntityDto {
   collectionDescription: CollectionDescriptionDto;
 
   static fromViewer(offersData: any): TokensEntityDto {
-    console.dir(offersData, { depth: 10 });
     const plain: Record<string, any> = {
       ...offersData,
       collectionId: +offersData.collection_id,
