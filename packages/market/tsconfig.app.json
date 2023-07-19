@@ -12,7 +12,9 @@
       "@app/common": ["packages/common/index.ts"],
       "@app/common/*": ["packages/common/*"],
       "@app/contracts": ["packages/contracts"],
-      "@app/contracts/*": ["packages/contracts/*"]
+      "@app/contracts/*": ["packages/contracts/*"],
+      "@app/escrow": ["packages/escrow/index.ts"],
+      "@app/escrow/*": ["packages/escrow/*"]
     }
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
