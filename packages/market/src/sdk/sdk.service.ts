@@ -1,12 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Sdk } from '@unique-nft/sdk/full';
-import { ResponseTokenSchema } from '../../../escrow/src/app/sdk.service';
-import Web3 from 'web3';
 import { abiVerifyMessage } from '@app/contracts/scripts';
-import { ethers } from 'ethers';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SettingEntity } from '@app/common/modules/database';
 import { Repository } from 'typeorm';
+import { ResponseTokenSchema } from '@app/escrow/src/app/sdk.service';
 
 @Injectable()
 export class SdkMarketService {
@@ -61,22 +59,23 @@ export class SdkMarketService {
     const v = parseInt(payload.signature.slice(130, 132), 16);
 
     const callArgs = {
-      funcName: 'VerifyMessage',
+      funcName: 'VerifyString',
       address: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
       args: {
-        _hashedMessage: payload.message,
-        _v: v,
-        _r: r,
-        _s: s,
+        message: payload.message,
+        v,
+        r,
+        s,
       },
     };
 
     try {
-      const result = await contract.call(callArgs);
-      if (result.toString() === payload.metamask && result.toString() === addressMetamask) {
+      const result = (await contract.call(callArgs)).toString().toLowerCase();
+      if (result === payload.metamask.toLowerCase() && result === addressMetamask.toLowerCase()) {
         return true;
       }
     } catch (err) {
+      console.log('err', err);
       throw new BadRequestException(err);
     }
   }

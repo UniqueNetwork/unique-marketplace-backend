@@ -40,8 +40,6 @@ export class CollectionsService {
    * @param data
    */
   async addNewCollection(data: { collectionId: number; forceUpdate: boolean }): Promise<void> {
-    console.dir({ data }, { depth: 10 });
-
     const { collectionId, forceUpdate } = data;
     this.logger.verbose(`Collection ID: ${collectionId} active`);
     const collectionData = await this.collectionRepository.findOne({ where: { collectionId: collectionId } });

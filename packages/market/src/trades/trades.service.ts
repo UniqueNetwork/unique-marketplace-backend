@@ -36,7 +36,6 @@ export class TradesService {
     paginationRequest: PaginationRouting,
     sort: SortingRequest,
   ): Promise<any> {
-    console.dir({ tradesFilter, accountId, paginationRequest, sort }, { depth: 10 });
     let tradesQuery: SelectQueryBuilder<TradeViewEntity>;
     let paginationResult;
 
@@ -157,7 +156,6 @@ export class TradesService {
     if (nullOrWhitespace(accountId)) {
       return query;
     }
-    console.dir(accountId, { depth: 10 });
     return query.andWhere('(trade.seller = :accountId OR trade.buyer = :accountId)', {
       accountId: accountId,
     });

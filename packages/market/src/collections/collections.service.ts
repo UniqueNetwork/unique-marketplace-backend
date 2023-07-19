@@ -9,7 +9,6 @@ import { pgNotifyClient } from '@app/common/pg-transport/pg-notify-client.symbol
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { PgTransportClient } from '@app/common/pg-transport/pg-transport.client';
 import { OfferStatus } from '@app/common/modules/types';
-import { SdkService } from '../../../escrow/src/app/sdk.service';
 import { SdkMarketService } from '../sdk/sdk.service';
 
 @Injectable()
@@ -31,7 +30,7 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
     super({});
   }
 
-  async addCollection(collectionId: number, forceUpdate: boolean = false): Promise<any> {
+  async addCollection(collectionId: number, forceUpdate: boolean): Promise<any> {
     //await this.hasCollection(collectionId);
     this.client.emit('new-collection-added', {
       collectionId,
@@ -52,7 +51,7 @@ export class CollectionsService extends BaseService<CollectionEntity, Collection
     const qb = await this.collectionRepository.createQueryBuilder();
     const { items, meta } = await paginate(qb, options);
     items.map((item) => this.updateTokensOneMarket(item.collectionId));
-    console.dir(items, { depth: 2 });
+
     return {
       meta,
       items,

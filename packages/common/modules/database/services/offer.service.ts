@@ -59,7 +59,6 @@ export class OfferService {
     offer.contract = contract;
     offer.status = status;
 
-    console.log('save data', offer);
     await this.offerEntityRepository.save(offer);
 
     return offer;
