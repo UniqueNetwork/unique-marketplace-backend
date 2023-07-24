@@ -1,6 +1,15 @@
 import { createCacheConfig } from './cache.config';
-import { Config } from './types';
+import { Config, FileStorageConfig } from './types';
 import { loadDatabaseConfig } from './database.config';
+
+function loadFileStorageConfig(): FileStorageConfig {
+  return {
+    endPoint: process.env.MINIO_END_POINT,
+    accessKey: process.env.MINIO_ACCESS_KEY,
+    secretKey: process.env.MINIO_SECRET_KEY,
+    bucketName: process.env.MINIO_BUCKET_NAME,
+  };
+}
 
 export const loadConfig = (): Config => ({
   environment: process.env.ENVIRONMENT || 'development',
@@ -34,4 +43,7 @@ export const loadConfig = (): Config => ({
 
   uniqueSdkRestUrl: process.env.UNIQUE_SDK_REST_URL,
   uniqueRpcUrl: process.env.UNIQUE_RPC_URL,
+
+  fileStorage: loadFileStorageConfig(),
+  adminSecretKey: process.env.ADMIN_SECRET_KEY,
 });

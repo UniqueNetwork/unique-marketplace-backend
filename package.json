@@ -1,6 +1,6 @@
 {
   "name": "unique-marketplace-backend",
-  "version": "3.0.213",
+  "version": "3.0.214",
   "description": "Backend project for unique marketplace",
   "author": "Unique Network",
   "private": true,
@@ -50,6 +50,7 @@
     "@nestjs/websockets": "^9.3.9",
     "@openzeppelin/contracts": "^4.8.1",
     "@sentry/node": "^7.38.0",
+    "@types/multer": "^1.4.7",
     "@unique-nft/accounts": "^0.3.5",
     "@unique-nft/sdk": "^0.2.11",
     "@unique-nft/solidity-interfaces": "^0.55.1",
@@ -63,6 +64,7 @@
     "eslint-plugin-regex": "^1.10.0",
     "helmet": "^6.1.2",
     "husky": "^8.0.3",
+    "minio": "^7.1.1",
     "nestjs-graphile-worker": "^0.3.1",
     "nestjs-typeorm-paginate": "^4.0.3",
     "pg": "^8.9.0",

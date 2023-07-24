@@ -14,6 +14,7 @@ import {
   AdminSessionEntity,
   TradeViewEntity,
   TokensViewer,
+  BannerEntity,
 } from './entities';
 import {
   AdminSessionsTable1683194096000,
@@ -33,8 +34,9 @@ import {
   VerifyMessageContract1686310569001,
   NormalizeAddress1688973356000,
 } from './migrations';
-import { ContractService, OfferService, SettingsService } from './services';
+import { BannersService, ContractService, OfferService, SettingsService } from './services';
 import { OfferEventService } from './services/offer-event.service';
+import { BannersEntity1689929097000 } from './migrations/1689929097000-BannersEntity';
 
 const entities = [
   SettingEntity,
@@ -48,6 +50,7 @@ const entities = [
   AdminSessionEntity,
   TradeViewEntity,
   TokensViewer,
+  BannerEntity,
 ];
 const migrations = [
   SettingsTable1677511684518,
@@ -66,6 +69,7 @@ const migrations = [
   MarketTradeToOfferEvents1684739540519,
   VerifyMessageContract1686310569001,
   NormalizeAddress1688973356000,
+  BannersEntity1689929097000,
 ];
 
 function typeOrmModulesFactory(
@@ -107,8 +111,8 @@ export class DatabaseModule {
           metadataTableName: 'new_typeorm_metadata',
         }),
       ],
-      providers: [ContractService, OfferService, OfferEventService, SettingsService],
-      exports: [ContractService, OfferService, OfferEventService, SettingsService],
+      providers: [ContractService, OfferService, OfferEventService, SettingsService, BannersService],
+      exports: [ContractService, OfferService, OfferEventService, SettingsService, BannersService],
     };
   }
 
@@ -121,8 +125,8 @@ export class DatabaseModule {
           logger: 'advanced-console',
         }),
       ],
-      providers: [ContractService, OfferService, OfferEventService, SettingsService],
-      exports: [ContractService, OfferService, OfferEventService, SettingsService],
+      providers: [ContractService, OfferService, OfferEventService, SettingsService, BannersService],
+      exports: [ContractService, OfferService, OfferEventService, SettingsService, BannersService],
     };
   }
 }
