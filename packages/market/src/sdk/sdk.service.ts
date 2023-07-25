@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Sdk } from '@unique-nft/sdk/full';
 import { abiVerifyMessage } from '@app/contracts/scripts';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,6 +8,8 @@ import { ResponseTokenSchema } from '@app/escrow/src/app/sdk.service';
 
 @Injectable()
 export class SdkMarketService {
+  private logger = new Logger(SdkMarketService.name);
+
   constructor(private readonly sdk: Sdk, @InjectRepository(SettingEntity) private settingRepository: Repository<SettingEntity>) {}
 
   async checkCollectionOwner(owner: string, collectionId: number): Promise<boolean> {
@@ -75,7 +77,7 @@ export class SdkMarketService {
         return true;
       }
     } catch (err) {
-      console.log('err', err);
+      this.logger.error(`verify message error: ${err.message}`, err);
       throw new BadRequestException(err);
     }
   }

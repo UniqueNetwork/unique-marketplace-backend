@@ -13,6 +13,7 @@ import { sdkProvider } from '@app/common/modules/sdk/sdk.provider';
 import { SdkMarketService } from './sdk/sdk.service';
 import { TradesModule } from './trades/trades.module';
 import { ContractModule } from './contracts/contract.module';
+import { BannersModule } from './banners/banners.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ContractModule } from './contracts/contract.module';
     TradesModule,
     SettingsModule,
     ContractModule,
+    BannersModule.register(),
   ],
   providers: [sdkProvider, SdkMarketService],
   exports: [SdkMarketService],
