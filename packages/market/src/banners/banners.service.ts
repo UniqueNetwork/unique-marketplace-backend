@@ -37,7 +37,7 @@ export class BannersService {
     }
   }
 
-  private async uploadFile(id: string, file: Express.Multer.File) {
+  private async uploadFile(id: string, file) {
     const exec = file.originalname ? /(?<ext>\.\w+)$/.exec(file.originalname) : null;
     const ext = exec ? exec.groups.ext : '';
     const filename = `${id}-${Date.now()}${ext}`;
@@ -71,7 +71,7 @@ export class BannersService {
     };
   }
 
-  public async create(secretKey: string, dto: CreateBannerDto, file: Express.Multer.File) {
+  public async create(secretKey: string, dto: CreateBannerDto, file) {
     this.checkSecret(secretKey);
 
     if (!file) {
@@ -102,7 +102,7 @@ export class BannersService {
     };
   }
 
-  public async edit(secretKey: string, id: string, dto: EditBannerDto, file: Express.Multer.File) {
+  public async edit(secretKey: string, id: string, dto: EditBannerDto, file) {
     this.checkSecret(secretKey);
 
     let banner = await this.bannerDbService.getById(id);

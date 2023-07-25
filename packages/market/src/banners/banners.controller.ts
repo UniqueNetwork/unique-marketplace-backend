@@ -21,11 +21,7 @@ export class BannersController {
     schema: bannerSchema,
   })
   @UseInterceptors(FileInterceptor('file'))
-  async createBanner(
-    @Query('secretKey') secretKey: string,
-    @Body() dto: CreateBannerDto,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
+  async createBanner(@Query('secretKey') secretKey: string, @Body() dto: CreateBannerDto, @UploadedFile() file) {
     return this.bannersService.create(secretKey, dto, file);
   }
 
@@ -44,7 +40,7 @@ export class BannersController {
     @Query('secretKey') secretKey: string,
     @Param('bannerId') bannerId: string,
     @Body() dto: EditBannerDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file,
   ) {
     return this.bannersService.edit(secretKey, bannerId, dto, file);
   }
