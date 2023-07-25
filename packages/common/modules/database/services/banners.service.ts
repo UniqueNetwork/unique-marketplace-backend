@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BannerEntity } from '../entities';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 
 @Injectable()
 export class BannersService {
@@ -54,5 +54,16 @@ export class BannersService {
     });
 
     return true;
+  }
+
+  public async findCuratedCollections(): Promise<number[]> {
+    const banners = await this.bannerEntityRepository.find({
+      where: {
+        collectionId: Not(0),
+        off: false,
+      },
+    });
+
+    return banners.map((b) => b.collectionId);
   }
 }
