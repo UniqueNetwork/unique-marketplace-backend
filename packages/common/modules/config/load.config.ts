@@ -2,7 +2,7 @@ import { createCacheConfig } from './cache.config';
 import { Config, FileStorageConfig } from './types';
 import { loadDatabaseConfig } from './database.config';
 
-function loadFileStorageConfig(): FileStorageConfig {
+export function loadFileStorageConfig(): FileStorageConfig {
   return {
     endPoint: process.env.MINIO_END_POINT,
     accessKey: process.env.MINIO_ACCESS_KEY,

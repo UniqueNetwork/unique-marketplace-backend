@@ -20,8 +20,8 @@ export class BannersService {
   private readonly minioClient: Minio.Client;
 
   constructor(config: ConfigService, private readonly bannerDbService: BannersServiceDb) {
-    this.fileStorageConfig = config.getOrThrow('fileStorage');
-    this.adminSecretKey = config.getOrThrow('adminSecretKey');
+    this.fileStorageConfig = config.get('fileStorage');
+    this.adminSecretKey = config.get('adminSecretKey');
 
     const { endPoint, accessKey, secretKey } = this.fileStorageConfig;
     this.minioClient = new Minio.Client({

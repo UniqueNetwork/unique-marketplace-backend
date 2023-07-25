@@ -29,7 +29,7 @@ import { BannersModule } from './banners/banners.module';
     TradesModule,
     SettingsModule,
     ContractModule,
-    BannersModule,
+    BannersModule.register(),
   ],
   providers: [sdkProvider, SdkMarketService],
   exports: [SdkMarketService],
