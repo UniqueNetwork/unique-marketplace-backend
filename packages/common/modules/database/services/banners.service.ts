@@ -29,6 +29,7 @@ export class BannersService {
     banner.buttonUrl = data.buttonUrl;
     banner.buttonTitle = data.buttonTitle;
     banner.sortIndex = data.sortIndex;
+    banner.collectionId = data.collectionId;
     banner.createdAt = new Date();
     banner.off = false;
 
