@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SettingsDto } from './dto/setting.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CollectionEntity, ContractEntity, OfferEntity } from '@app/common/modules/database';
+import { BannersService, CollectionEntity, ContractEntity, OfferEntity } from '@app/common/modules/database';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { AddressService } from '@app/common/src/lib/address.service';
 import { CollectionStatus, CustomObject, OfferStatus } from '@app/common/modules/types';
@@ -38,6 +38,7 @@ export class SettingsService {
     private collectionRepository: Repository<CollectionEntity>,
     @InjectRepository(OfferEntity)
     private offerRepository: Repository<OfferEntity>,
+    private bannersService: BannersService,
   ) {}
 
   async prepareSettings() {
@@ -77,6 +78,8 @@ export class SettingsService {
    * @returns {Promise<Object>} Object containing collection settings.
    */
   async getCollectionSettings() {
+    const curatedCollections = await this.bannersService.findCuratedCollections();
+
     // Retrieve distinct collection IDs from offers table
     const offers = await this.offerRepository
       .createQueryBuilder('offers')
@@ -102,7 +105,11 @@ export class SettingsService {
     collections.map((elem) => {
       const { collectionId, allowedTokens, data } = elem;
       const collectionDescription = this.collectionDataTransformation(data);
-      collectionMap.set(collectionId, { allowedTokens, description: collectionDescription });
+      collectionMap.set(collectionId, {
+        isCurated: curatedCollections.includes(collectionId),
+        allowedTokens,
+        description: collectionDescription,
+      });
     });
 
     // Return collectionMap as an object
