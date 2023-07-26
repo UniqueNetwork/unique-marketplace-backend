@@ -22,7 +22,7 @@ export class MarketTradeToOffers1684739540151 implements MigrationInterface {
         INSERT INTO ${offersTable} (id, order_id, collection_id, token_id, price_parsed, price_raw, amount, seller, contract_address, status, created_at, updated_at)
         SELECT
           ID,
-          1 AS order_id,
+          -1 AS order_id,
           collection_id,
           token_id,
           CAST(price / 1000000000000.0 AS numeric(38,18)) as price_parsed,
