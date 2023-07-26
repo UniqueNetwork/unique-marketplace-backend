@@ -11,7 +11,7 @@ import { BannerEntity } from '@app/common/modules/database';
 import * as Minio from 'minio';
 import { ConfigService } from '@nestjs/config';
 import { FileStorageConfig } from '@app/common/modules/config/types';
-import { BannerEditData } from './types';
+import { BannerClient, BannerEditData } from './types';
 
 @Injectable()
 export class BannersService {
@@ -37,23 +37,33 @@ export class BannersService {
     }
   }
 
-  private async uploadFile(id: string, file) {
+  private async uploadFile(banner: BannerEntity, file) {
     const exec = file.originalname ? /(?<ext>\.\w+)$/.exec(file.originalname) : null;
     const ext = exec ? exec.groups.ext : '';
-    const filename = `${id}-${Date.now()}${ext}`;
+    const filename = `${banner.id}-${Date.now()}${ext}`;
     const result = await this.minioClient.putObject(this.fileStorageConfig.bucketName, filename, file.buffer);
 
     if (!result || !result.etag) {
       throw new InternalServerErrorException('Invalid upload file');
     }
 
-    await this.bannerDbService.edit(id, {
+    await this.bannerDbService.edit(banner.id, {
       minioFile: filename,
     });
+
+    banner.minioFile = filename;
+  }
+
+  private prepareEntity(banner: BannerEntity): BannerClient {
+    const { endPoint, bucketName } = this.fileStorageConfig;
+    return {
+      ...banner,
+      mediaUrl: banner.minioFile ? `https://${endPoint}/${bucketName}/${banner.minioFile}` : '',
+    };
   }
 
   public async getAll() {
-    const banners = await this.bannerDbService.getAll();
+    const banners = (await this.bannerDbService.getAll()).map((banner) => this.prepareEntity(banner));
     return {
       banners,
     };
@@ -67,7 +77,7 @@ export class BannersService {
     }
 
     return {
-      banner,
+      banner: this.prepareEntity(banner),
     };
   }
 
@@ -95,10 +105,10 @@ export class BannersService {
 
     const banner = await this.bannerDbService.create(data);
 
-    await this.uploadFile(banner.id, file);
+    await this.uploadFile(banner, file);
 
     return {
-      banner,
+      banner: this.prepareEntity(banner),
     };
   }
 
@@ -129,11 +139,11 @@ export class BannersService {
         await this.minioClient.removeObject(this.fileStorageConfig.bucketName, banner.minioFile);
       }
 
-      await this.uploadFile(banner.id, file);
+      await this.uploadFile(banner, file);
     }
 
     return {
-      banner,
+      banner: this.prepareEntity(banner),
     };
   }
 
