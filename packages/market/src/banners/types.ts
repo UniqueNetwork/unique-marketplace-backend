@@ -7,3 +7,9 @@ export type BannerEditData = Partial<BannerCreateData>;
 export type BannerClient = BannerEntity & {
   mediaUrl: string;
 };
+
+export enum OffFilter {
+  All = 'All',
+  Off = 'Off',
+  On = 'On',
+}

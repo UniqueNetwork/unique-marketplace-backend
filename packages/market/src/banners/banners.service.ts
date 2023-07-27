@@ -1,17 +1,18 @@
 import {
   BadRequestException,
   Injectable,
-  NotFoundException,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { BannersService as BannersServiceDb } from '@app/common/modules/database/services';
-import { EditBannerDto, CreateBannerDto } from './dto';
+import { CreateBannerDto, EditBannerDto } from './dto';
 import { BannerEntity } from '@app/common/modules/database';
 import * as Minio from 'minio';
 import { ConfigService } from '@nestjs/config';
 import { FileStorageConfig } from '@app/common/modules/config/types';
-import { BannerClient, BannerEditData } from './types';
+import { BannerClient, BannerEditData, OffFilter } from './types';
+import { GetAllDto } from './dto/get-all.dto';
 
 @Injectable()
 export class BannersService {
@@ -62,8 +63,20 @@ export class BannersService {
     };
   }
 
-  public async getAll() {
-    const banners = (await this.bannerDbService.getAll()).map((banner) => this.prepareEntity(banner));
+  public async getAll(dto?: GetAllDto) {
+    const offMode = dto?.offFilter || OffFilter.All;
+    let bannersEntities;
+    if (offMode === OffFilter.All) {
+      bannersEntities = await this.bannerDbService.getAll();
+    } else if (offMode === OffFilter.Off) {
+      bannersEntities = await this.bannerDbService.getAllOff();
+    } else if (offMode === OffFilter.On) {
+      bannersEntities = await this.bannerDbService.getAllOn();
+    } else {
+      throw new Error(`Invalid parameters offMode=${offMode}`);
+    }
+
+    const banners = bannersEntities.map((banner) => this.prepareEntity(banner));
     return {
       banners,
     };
