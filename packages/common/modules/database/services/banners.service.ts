@@ -57,10 +57,15 @@ export class BannersService {
     banner.minioFile = data.minioFile;
     banner.buttonUrl = data.buttonUrl;
     banner.buttonTitle = data.buttonTitle;
+    banner.buttonColor = data.buttonColor;
     banner.sortIndex = data.sortIndex;
     banner.collectionId = data.collectionId;
     banner.createdAt = new Date();
     banner.off = false;
+    banner.backgroundColor = data.backgroundColor;
+    banner.secondaryButtonUrl = data.secondaryButtonUrl;
+    banner.secondaryButtonTitle = data.secondaryButtonTitle;
+    banner.secondaryButtonColor = data.secondaryButtonColor;
 
     await this.bannerEntityRepository.save(banner);
 
