@@ -285,7 +285,22 @@ export class ViewOffersService {
     if (HelperService.nullOrWhitespace(trait)) {
       return query;
     }
-    return query.andWhere(`view_offers.traits ilike concat('%', cast(:trait as text), '%')`, { trait });
+
+    const collectionId = +trait || 0;
+
+    if (collectionId) {
+      return query.andWhere(
+        `(view_offers.traits ilike concat('%', cast(:trait as text), '%') or collection_id = :collectionId)`,
+        {
+          trait,
+          collectionId,
+        },
+      );
+    } else {
+      return query.andWhere(`view_offers.traits ilike concat('%', cast(:trait as text), '%')`, {
+        trait,
+      });
+    }
   }
 
   private byNumberOfAttributes(
