@@ -289,12 +289,15 @@ export class ViewOffersService {
     const collectionId = +trait || 0;
 
     if (collectionId) {
-      return query.andWhere(`(view_offers.traits ilike concat('%', cast(:trait as text), '%') or collection_id = :id)`, {
-        trait,
-        collectionId,
-      });
+      return query.andWhere(
+        `(view_offers.traits ilike concat('%', cast(:trait as text), '%') or collection_id = :collectionId)`,
+        {
+          trait,
+          collectionId,
+        },
+      );
     } else {
-      return query.andWhere(`view_offers.traits ilike concat('%', cast(:trait as text), '%'`, {
+      return query.andWhere(`view_offers.traits ilike concat('%', cast(:trait as text), '%')`, {
         trait,
       });
     }
