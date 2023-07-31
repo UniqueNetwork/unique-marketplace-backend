@@ -20,6 +20,9 @@ export class BannerEntity {
   @Column({ name: 'button_url', type: 'varchar' })
   buttonUrl: string;
 
+  @Column({ name: 'button_color', type: 'varchar', default: '0xffffff' })
+  buttonColor: string;
+
   @Column({ name: 'sort_index', default: 0 })
   sortIndex: number;
 
@@ -31,4 +34,16 @@ export class BannerEntity {
 
   @Column({ name: 'collection_id', default: 0 })
   collectionId: number;
+
+  @Column({ name: 'background_color', default: '0xffffff' })
+  backgroundColor: string;
+
+  @Column({ name: 'secondary_button_title', type: 'varchar' })
+  secondaryButtonTitle: string;
+
+  @Column({ name: 'secondary_button_url', type: 'varchar' })
+  secondaryButtonUrl: string;
+
+  @Column({ name: 'secondary_button_color', type: 'varchar', default: '0xffffff' })
+  secondaryButtonColor: string;
 }

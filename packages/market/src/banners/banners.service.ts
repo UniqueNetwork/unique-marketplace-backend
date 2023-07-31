@@ -107,9 +107,14 @@ export class BannersService {
       minioFile: '',
       buttonTitle: dto.buttonTitle,
       buttonUrl: dto.buttonUrl,
+      buttonColor: dto.buttonColor || '0xffffff',
       sortIndex: +dto.sortIndex || 0,
       off: dto.off === 'true',
       collectionId: +dto.collectionId || 0,
+      backgroundColor: dto.backgroundColor || '0xffffff',
+      secondaryButtonTitle: dto.secondaryButtonTitle || null,
+      secondaryButtonUrl: dto.secondaryButtonUrl || null,
+      secondaryButtonColor: dto.secondaryButtonColor || null,
     };
 
     if (!data.title || !data.description || !data.buttonTitle || !data.buttonUrl) {
