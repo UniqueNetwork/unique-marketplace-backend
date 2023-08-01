@@ -43,7 +43,4 @@ export class BannerEntity {
 
   @Column({ name: 'secondary_button_url', type: 'varchar' })
   secondaryButtonUrl: string;
-
-  @Column({ name: 'secondary_button_color', type: 'varchar', default: '0xffffff' })
-  secondaryButtonColor: string;
 }
