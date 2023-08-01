@@ -1,35 +1,26 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional, IsString, IsIn, Length, IsUrl } from 'class-validator';
-import {
-  ButtonTitleMaxLen,
-  ButtonTitleMinLen,
-  ButtonUrlMaxLen,
-  ButtonUrlMinLen,
-  DescriptionMaxLen,
-  DescriptionMinLen,
-  TitleMaxLen,
-  TitleMinLen,
-} from '../types';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { ButtonTitleMaxLen, ButtonUrlMaxLen, DescriptionMaxLen, TitleMaxLen } from '../types';
 
 export class CreateBannerDto {
   @ApiProperty()
   @IsString()
-  @Length(TitleMinLen, TitleMaxLen)
+  @MaxLength(TitleMaxLen)
   title: string;
 
   @ApiProperty()
   @IsString()
-  @Length(DescriptionMinLen, DescriptionMaxLen)
+  @MaxLength(DescriptionMaxLen)
   description: string;
 
   @ApiProperty()
   @IsString()
-  @Length(ButtonTitleMinLen, ButtonTitleMaxLen)
+  @MaxLength(ButtonTitleMaxLen)
   buttonTitle: string;
 
   @ApiProperty()
   @IsString()
-  @Length(ButtonUrlMinLen, ButtonUrlMaxLen)
+  @MaxLength(ButtonUrlMaxLen)
   buttonUrl: string;
 
   @ApiProperty()
@@ -51,19 +42,14 @@ export class CreateBannerDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  @Length(ButtonTitleMinLen, ButtonTitleMaxLen)
+  @MaxLength(ButtonTitleMaxLen)
   secondaryButtonTitle: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  @Length(ButtonUrlMinLen, ButtonUrlMaxLen)
+  @MaxLength(ButtonUrlMaxLen)
   secondaryButtonUrl: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  secondaryButtonColor: string;
 
   @ApiProperty()
   @IsOptional()

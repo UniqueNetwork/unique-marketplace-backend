@@ -14,13 +14,9 @@ export enum OffFilter {
   On = 'On',
 }
 
-export const TitleMinLen = 3;
-export const TitleMaxLen = 100;
-
-export const DescriptionMinLen = 3;
-export const DescriptionMaxLen = 2000;
-
-export const ButtonTitleMinLen = 3;
-export const ButtonTitleMaxLen = 100;
-export const ButtonUrlMinLen = 3;
+export const FileMaxSize = 100;
+export const TitleMaxLen = 50;
+export const DescriptionMaxLen = 300;
+export const ButtonTitleMaxLen = 20;
 export const ButtonUrlMaxLen = 100;
+export const ButtonDefaultColor = '#009CF0';
