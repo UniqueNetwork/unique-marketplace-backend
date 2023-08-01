@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BaseController } from '@app/common/src/lib/base.controller';
 import { readApiDocs } from '../utils/utils';
@@ -22,5 +22,14 @@ export class ContractsController extends BaseController<ContractsService> {
   @ApiBearerAuthMetamaskAndSubstrate()
   checkApproved(@Body() dto: CheckApprovedDto) {
     return this.contractsService.checkApproved(dto);
+  }
+
+  @Get('/abi')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get contracts abi',
+  })
+  getAllAbi() {
+    return this.contractsService.getAllAbi();
   }
 }
