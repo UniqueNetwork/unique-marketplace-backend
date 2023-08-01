@@ -65,7 +65,6 @@ export class BannersService {
     banner.backgroundColor = data.backgroundColor;
     banner.secondaryButtonUrl = data.secondaryButtonUrl;
     banner.secondaryButtonTitle = data.secondaryButtonTitle;
-    banner.secondaryButtonColor = data.secondaryButtonColor;
 
     await this.bannerEntityRepository.save(banner);
 

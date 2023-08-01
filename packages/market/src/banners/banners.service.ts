@@ -147,7 +147,9 @@ export class BannersService {
     if (dto.sortIndex) data.sortIndex = +dto.sortIndex || 0;
     if (dto.collectionId) data.collectionId = +dto.collectionId || 0;
 
-    await this.bannerDbService.edit(id, data);
+    if (Object.keys(data).length) {
+      await this.bannerDbService.edit(id, data);
+    }
 
     banner = await this.bannerDbService.getById(id);
 
