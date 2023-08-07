@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
-import { ButtonTitleMaxLen, ButtonUrlMaxLen, DescriptionMaxLen, TitleMaxLen } from '../types';
+import { BannerKeys, ButtonTitleMaxLen, ButtonUrlMaxLen, DescriptionMaxLen, TitleMaxLen } from '../types';
 
-export class CreateBannerDto {
+export class CreateBannerDto implements Record<BannerKeys, any> {
   @ApiProperty()
   @IsString()
   @MaxLength(TitleMaxLen)
@@ -24,6 +24,7 @@ export class CreateBannerDto {
   buttonUrl: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsString()
   buttonColor: string;
 

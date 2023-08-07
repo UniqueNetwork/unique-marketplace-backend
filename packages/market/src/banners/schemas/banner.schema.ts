@@ -1,8 +1,5 @@
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import { ButtonDefaultColor, ButtonTitleMaxLen, DescriptionMaxLen, FileMaxSize, TitleMaxLen } from '../types';
-import { BannerEntity } from '@app/common/modules/database';
-
-type BannerKeys = Exclude<keyof BannerEntity, 'id' | 'minioFile' | 'createdAt'>;
+import { BannerKeys, ButtonDefaultColor, ButtonTitleMaxLen, DescriptionMaxLen, FileMaxSize, TitleMaxLen } from '../types';
 
 const properties: Record<BannerKeys | 'file', SchemaObject> = {
   file: {

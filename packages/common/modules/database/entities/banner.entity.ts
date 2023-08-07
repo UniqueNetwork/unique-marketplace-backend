@@ -26,9 +26,6 @@ export class BannerEntity {
   @Column({ name: 'sort_index', default: 0 })
   sortIndex: number;
 
-  @Column({ name: 'created_at' })
-  createdAt: Date;
-
   @Column({ default: false })
   off: boolean;
 
@@ -43,4 +40,7 @@ export class BannerEntity {
 
   @Column({ name: 'secondary_button_url', type: 'varchar' })
   secondaryButtonUrl: string;
+
+  @Column({ name: 'created_at' })
+  createdAt: Date;
 }
