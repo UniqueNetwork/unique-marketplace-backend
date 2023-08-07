@@ -1,63 +1,63 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
-import { ButtonDefaultColor, ButtonTitleMaxLen, ButtonUrlMaxLen, DescriptionMaxLen, TitleMaxLen } from '../types';
+import { BannerOptional, ButtonDefaultColor, ButtonTitleMaxLen, ButtonUrlMaxLen, DescriptionMaxLen, TitleMaxLen } from '../types';
 
-export class EditBannerDto {
+export class EditBannerDto implements BannerOptional {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   @MaxLength(TitleMaxLen)
-  title?: string;
+  title: string | undefined;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   @MaxLength(DescriptionMaxLen)
-  description?: string;
+  description: string | undefined;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   @MaxLength(ButtonTitleMaxLen)
-  buttonTitle?: string;
+  buttonTitle: string | undefined;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   @MaxLength(ButtonUrlMaxLen)
-  buttonUrl?: string;
+  buttonUrl: string | undefined;
 
   @ApiProperty({ required: false, default: ButtonDefaultColor })
   @IsOptional()
   @IsString()
-  buttonColor: string;
+  buttonColor: string | undefined;
 
   @ApiProperty({ required: false })
   @IsOptional()
-  sortIndex?: string;
+  sortIndex: string | undefined;
 
   @ApiProperty({ required: false, default: 'false' })
   @IsOptional()
-  off?: string;
+  off: string | undefined;
 
   @ApiProperty({ required: false, default: '0' })
   @IsOptional()
-  collectionId?: string;
+  collectionId: string | undefined;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   @MaxLength(ButtonTitleMaxLen)
-  secondaryButtonTitle: string;
+  secondaryButtonTitle: string | undefined;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   @MaxLength(ButtonUrlMaxLen)
-  secondaryButtonUrl: string;
+  secondaryButtonUrl: string | undefined;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  backgroundColor: string;
+  backgroundColor: string | undefined;
 }

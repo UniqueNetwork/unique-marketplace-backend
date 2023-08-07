@@ -14,6 +14,12 @@ export enum OffFilter {
   On = 'On',
 }
 
+export type BannerKeys = Exclude<keyof BannerEntity, 'id' | 'minioFile' | 'createdAt'>;
+
+export type BannerOptional = {
+  [Property in BannerKeys]: string | undefined;
+};
+
 export const FileMaxSize = 100;
 export const TitleMaxLen = 50;
 export const DescriptionMaxLen = 300;

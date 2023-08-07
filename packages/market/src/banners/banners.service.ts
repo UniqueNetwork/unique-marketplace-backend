@@ -6,12 +6,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { BannersService as BannersServiceDb } from '@app/common/modules/database/services';
-import { CreateBannerDto, EditBannerDto } from './dto';
+import { CreateBannerDto } from './dto';
 import { BannerEntity } from '@app/common/modules/database';
 import * as Minio from 'minio';
 import { ConfigService } from '@nestjs/config';
 import { FileStorageConfig } from '@app/common/modules/config/types';
-import { BannerClient, BannerEditData, ButtonDefaultColor, OffFilter } from './types';
+import { BannerClient, BannerEditData, BannerKeys, ButtonDefaultColor, OffFilter } from './types';
 import { GetAllDto } from './dto/get-all.dto';
 
 @Injectable()
@@ -129,7 +129,7 @@ export class BannersService {
     };
   }
 
-  public async edit(secretKey: string, id: string, dto: EditBannerDto, file) {
+  public async edit(secretKey: string, id: string, dto: Partial<Record<BannerKeys, string>>, file) {
     this.checkSecret(secretKey);
 
     let banner = await this.bannerDbService.getById(id);
@@ -141,8 +141,12 @@ export class BannersService {
 
     if (dto.title) data.title = dto.title;
     if (dto.description) data.description = dto.description;
+    if (dto.backgroundColor) data.backgroundColor = dto.backgroundColor;
     if (dto.buttonUrl) data.buttonUrl = dto.buttonUrl;
     if (dto.buttonTitle) data.buttonTitle = dto.buttonTitle;
+    if (dto.buttonColor) data.buttonColor = dto.buttonColor;
+    if (dto.secondaryButtonTitle) data.secondaryButtonTitle = dto.secondaryButtonTitle;
+    if (dto.secondaryButtonUrl) data.secondaryButtonUrl = dto.secondaryButtonUrl;
     if (dto.off) data.off = dto.off === 'true';
     if (dto.sortIndex) data.sortIndex = +dto.sortIndex || 0;
     if (dto.collectionId) data.collectionId = +dto.collectionId || 0;
