@@ -17,6 +17,7 @@ import { Sdk, SocketClient } from '@unique-nft/sdk/full';
 import { Address } from '@unique-nft/utils';
 import { CollectionsService } from '../../../collections/collections.service';
 import { TokensService } from '../../../collections/tokens.service';
+import { TokenPriceChangedEventObject } from '@app/contracts/assemblies/1/market';
 
 type LogEventHandler = (
   extrinsic: Extrinsic,
@@ -50,6 +51,7 @@ export class ContractEventsHandler {
   ) {
     this.eventHandlers = {
       TokenIsUpForSale: this.tokenIsUpForSale.bind(this),
+      TokenPriceChanged: this.tokenPriceChanged.bind(this),
       TokenIsPurchased: this.tokenIsPurchased.bind(this),
       TokenRevoke: this.tokenRevoke.bind(this),
       TokenIsApproved: this.tokenIsApproved.bind(this),
@@ -183,6 +185,16 @@ export class ContractEventsHandler {
         await this.tokensService.observer(tokenUpArgs.item.collectionId, tokenUpArgs.item.tokenId);
       }
     }
+  }
+
+  private async tokenPriceChanged(
+    extrinsic: Extrinsic,
+    contractEntity: ContractEntity,
+    tokenPriceChangedArgs: TokenPriceChangedEventObject,
+  ) {
+    const offer = await this.offerService.update(contractEntity, tokenPriceChangedArgs.item, OfferStatus.Opened, this.chain);
+
+    this.logger.log(`tokenPriceChanged, offer: ${offer?.id || undefined}`);
   }
 
   private async tokenIsApproved(

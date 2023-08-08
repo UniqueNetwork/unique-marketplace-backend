@@ -82,6 +82,7 @@ export interface MarketInterface extends utils.Interface {
     "admins(address)": FunctionFragment;
     "buildVersion()": FunctionFragment;
     "buy(uint32,uint32,uint32,(address,uint256))": FunctionFragment;
+    "changePrice(uint32,uint32,uint256)": FunctionFragment;
     "checkApproved(uint32,uint32)": FunctionFragment;
     "ctime()": FunctionFragment;
     "getOrder(uint32,uint32)": FunctionFragment;
@@ -107,6 +108,7 @@ export interface MarketInterface extends utils.Interface {
       | "admins"
       | "buildVersion"
       | "buy"
+      | "changePrice"
       | "checkApproved"
       | "ctime"
       | "getOrder"
@@ -148,6 +150,14 @@ export interface MarketInterface extends utils.Interface {
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
       CrossAddressStruct
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "changePrice",
+    values: [
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>
     ]
   ): string;
   encodeFunctionData(
@@ -225,6 +235,10 @@ export interface MarketInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "changePrice",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "checkApproved",
     data: BytesLike
   ): Result;
@@ -270,6 +284,7 @@ export interface MarketInterface extends utils.Interface {
     "TokenIsApproved(uint32,tuple)": EventFragment;
     "TokenIsPurchased(uint32,tuple,uint32,tuple,tuple[])": EventFragment;
     "TokenIsUpForSale(uint32,tuple)": EventFragment;
+    "TokenPriceChanged(uint32,tuple)": EventFragment;
     "TokenRevoke(uint32,tuple,uint32)": EventFragment;
   };
 
@@ -277,6 +292,7 @@ export interface MarketInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "TokenIsApproved"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenIsPurchased"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenIsUpForSale"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "TokenPriceChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenRevoke"): EventFragment;
 }
 
@@ -335,6 +351,18 @@ export type TokenIsUpForSaleEvent = TypedEvent<
 
 export type TokenIsUpForSaleEventFilter =
   TypedEventFilter<TokenIsUpForSaleEvent>;
+
+export interface TokenPriceChangedEventObject {
+  version: number;
+  item: Market.OrderStructOutput;
+}
+export type TokenPriceChangedEvent = TypedEvent<
+  [number, Market.OrderStructOutput],
+  TokenPriceChangedEventObject
+>;
+
+export type TokenPriceChangedEventFilter =
+  TypedEventFilter<TokenPriceChangedEvent>;
 
 export interface TokenRevokeEventObject {
   version: number;
@@ -398,6 +426,13 @@ export interface Market extends BaseContract {
       amount: PromiseOrValue<BigNumberish>,
       buyer: CrossAddressStruct,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    changePrice(
+      collectionId: PromiseOrValue<BigNumberish>,
+      tokenId: PromiseOrValue<BigNumberish>,
+      price: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
     checkApproved(
@@ -500,6 +535,13 @@ export interface Market extends BaseContract {
     overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  changePrice(
+    collectionId: PromiseOrValue<BigNumberish>,
+    tokenId: PromiseOrValue<BigNumberish>,
+    price: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   checkApproved(
     collectionId: PromiseOrValue<BigNumberish>,
     tokenId: PromiseOrValue<BigNumberish>,
@@ -597,6 +639,13 @@ export interface Market extends BaseContract {
       tokenId: PromiseOrValue<BigNumberish>,
       amount: PromiseOrValue<BigNumberish>,
       buyer: CrossAddressStruct,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    changePrice(
+      collectionId: PromiseOrValue<BigNumberish>,
+      tokenId: PromiseOrValue<BigNumberish>,
+      price: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -710,6 +759,15 @@ export interface Market extends BaseContract {
     ): TokenIsUpForSaleEventFilter;
     TokenIsUpForSale(version?: null, item?: null): TokenIsUpForSaleEventFilter;
 
+    "TokenPriceChanged(uint32,tuple)"(
+      version?: null,
+      item?: null
+    ): TokenPriceChangedEventFilter;
+    TokenPriceChanged(
+      version?: null,
+      item?: null
+    ): TokenPriceChangedEventFilter;
+
     "TokenRevoke(uint32,tuple,uint32)"(
       version?: null,
       item?: null,
@@ -746,6 +804,13 @@ export interface Market extends BaseContract {
       amount: PromiseOrValue<BigNumberish>,
       buyer: CrossAddressStruct,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    changePrice(
+      collectionId: PromiseOrValue<BigNumberish>,
+      tokenId: PromiseOrValue<BigNumberish>,
+      price: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     checkApproved(
@@ -849,6 +914,13 @@ export interface Market extends BaseContract {
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    changePrice(
+      collectionId: PromiseOrValue<BigNumberish>,
+      tokenId: PromiseOrValue<BigNumberish>,
+      price: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
     checkApproved(
       collectionId: PromiseOrValue<BigNumberish>,
       tokenId: PromiseOrValue<BigNumberish>,
@@ -926,4 +998,4 @@ export interface Market extends BaseContract {
 }
 
 
-export type MarketEventNames = "OwnershipTransferred" | "TokenIsApproved" | "TokenIsPurchased" | "TokenIsUpForSale" | "TokenRevoke";
+export type MarketEventNames = "OwnershipTransferred" | "TokenIsApproved" | "TokenIsPurchased" | "TokenIsUpForSale" | "TokenPriceChanged" | "TokenRevoke";

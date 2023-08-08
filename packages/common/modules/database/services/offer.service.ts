@@ -33,10 +33,11 @@ export class OfferService {
     status: OfferStatus,
     chain?: ChainPropertiesResponse,
   ): Promise<OfferEntity | null> {
-    let offer = await this.offerEntityRepository.findOne({
-      where: {
-        orderId: order.id,
+    let offer = await this.offerEntityRepository.findOneBy({
+      contract: {
+        address: contract.address,
       },
+      orderId: order.id,
     });
 
     if (!offer) {
