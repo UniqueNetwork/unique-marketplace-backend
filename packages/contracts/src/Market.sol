@@ -38,6 +38,7 @@ contract Market is Ownable, ReentrancyGuard {
     mapping(address => bool) public admins;
 
     event TokenIsUpForSale(uint32 version, Order item);
+    event TokenPriceChanged(uint32 version, Order item);
     event TokenRevoke(uint32 version, Order item, uint32 amount);
     event TokenIsApproved(uint32 version, Order item);
     event TokenIsPurchased(
@@ -77,6 +78,21 @@ contract Market is Ownable, ReentrancyGuard {
       }
 
       _;
+    }
+
+    function validOwner(uint32 collectionId, uint32 tokenId, CrossAddress memory seller) private view {
+      IERC721 erc721 = getErc721(collectionId);
+
+      address ethAddress;
+      if (seller.eth != address(0)) {
+        ethAddress = seller.eth;
+      } else {
+        ethAddress = payable(address(uint160(seller.sub >> 96)));
+      }
+
+      if (erc721.ownerOf(tokenId) != ethAddress || ethAddress != msg.sender) {
+        revert SellerIsNotOwner();
+      }
     }
 
     constructor(uint32 fee, uint64 timestamp) {
@@ -173,6 +189,8 @@ contract Market is Ownable, ReentrancyGuard {
         uint32 amount,
         CrossAddress memory seller
     ) public validCrossAddress(seller.eth, seller.sub) {
+        validOwner(collectionId, tokenId, seller);
+
         if (price == 0) {
           revert InvalidArgument("price must not be zero");
         }
@@ -211,6 +229,31 @@ contract Market is Ownable, ReentrancyGuard {
         orders[collectionId][tokenId] = order;
 
         emit TokenIsUpForSale(version, order);
+    }
+
+    /**
+     * Change NFT price
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenId: ID of the token
+     * @param price: New Price (with proper network currency decimals)
+     */
+    function changePrice(
+      uint32 collectionId,
+      uint32 tokenId,
+      uint256 price
+    ) external {
+      Order memory order = orders[collectionId][tokenId];
+
+      if (order.price == 0) {
+        revert OrderNotFound();
+      }
+
+      validOwner(collectionId, tokenId, order.seller);
+
+      order.price = price;
+
+      emit TokenPriceChanged(version, order);
     }
 
     /**
@@ -253,17 +296,7 @@ contract Market is Ownable, ReentrancyGuard {
           revert TooManyAmountRequested();
         }
 
-        IERC721 erc721 = getErc721(collectionId);
-
-        address ethAddress;
-        if (order.seller.eth != address(0)) {
-          ethAddress = order.seller.eth;
-        } else {
-          ethAddress = payable(address(uint160(order.seller.sub >> 96)));
-        }
-        if (erc721.ownerOf(tokenId) != ethAddress) {
-          revert SellerIsNotOwner();
-        }
+        validOwner(collectionId, tokenId, order.seller);
 
         order.amount -= amount;
         if (order.amount == 0) {

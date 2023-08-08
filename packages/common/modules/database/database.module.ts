@@ -33,10 +33,11 @@ import {
   MarketTradeToOfferEvents1684739540519,
   VerifyMessageContract1686310569001,
   NormalizeAddress1688973356000,
+  BannersEntity1689929097000,
+  DeployContractV1_1690877576943,
 } from './migrations';
 import { BannersService, ContractService, OfferService, SettingsService } from './services';
 import { OfferEventService } from './services/offer-event.service';
-import { BannersEntity1689929097000 } from './migrations/1689929097000-BannersEntity';
 
 const entities = [
   SettingEntity,
@@ -70,6 +71,7 @@ const migrations = [
   VerifyMessageContract1686310569001,
   NormalizeAddress1688973356000,
   BannersEntity1689929097000,
+  DeployContractV1_1690877576943,
 ];
 
 function typeOrmModulesFactory(

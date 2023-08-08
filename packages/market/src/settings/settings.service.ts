@@ -56,7 +56,9 @@ export class SettingsService {
           restUrl: this.configService.get('uniqueSdkRestUrl'),
           rpcUrl: this.configService.get('uniqueRpcUrl'),
           collections: await this.getCollectionSettings(),
-          contracts,
+          contracts: contracts.sort((c1, c2) => {
+            return c2.version - c1.version;
+          }),
         },
       },
     };

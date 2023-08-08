@@ -102,4 +102,14 @@ export class ContractsService {
 
     return sellerNormalized === owner;
   }
+
+  public async getAllAbi() {
+    const contracts = await this.contractService.find();
+    return contracts.reduce((d, contract) => {
+      return {
+        ...d,
+        [contract.address]: getContractAbi(contract.version),
+      };
+    }, {});
+  }
 }
