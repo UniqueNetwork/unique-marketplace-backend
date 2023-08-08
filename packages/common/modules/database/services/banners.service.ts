@@ -12,7 +12,36 @@ export class BannersService {
   ) {}
 
   public getAll(): Promise<BannerEntity[]> {
-    return this.bannerEntityRepository.find();
+    return this.bannerEntityRepository.find({
+      order: {
+        sortIndex: 1,
+        createdAt: 1,
+      },
+    });
+  }
+
+  public getAllOff(): Promise<BannerEntity[]> {
+    return this.bannerEntityRepository.find({
+      where: {
+        off: true,
+      },
+      order: {
+        sortIndex: 1,
+        createdAt: 1,
+      },
+    });
+  }
+
+  public getAllOn(): Promise<BannerEntity[]> {
+    return this.bannerEntityRepository.find({
+      where: {
+        off: false,
+      },
+      order: {
+        sortIndex: 1,
+        createdAt: 1,
+      },
+    });
   }
 
   public getById(id: string): Promise<BannerEntity | null> {
@@ -28,10 +57,14 @@ export class BannersService {
     banner.minioFile = data.minioFile;
     banner.buttonUrl = data.buttonUrl;
     banner.buttonTitle = data.buttonTitle;
+    banner.buttonColor = data.buttonColor;
     banner.sortIndex = data.sortIndex;
     banner.collectionId = data.collectionId;
-    banner.createdAt = new Date();
     banner.off = false;
+    banner.backgroundColor = data.backgroundColor;
+    banner.secondaryButtonUrl = data.secondaryButtonUrl;
+    banner.secondaryButtonTitle = data.secondaryButtonTitle;
+    banner.createdAt = new Date();
 
     await this.bannerEntityRepository.save(banner);
 
@@ -39,6 +72,10 @@ export class BannersService {
   }
 
   public async edit(id: string, data: Partial<Omit<BannerEntity, 'id' | 'createdAt'>>): Promise<BannerEntity | null> {
+    if (data.off) {
+      data.sortIndex = 0;
+    }
+
     await this.bannerEntityRepository.update(
       {
         id,

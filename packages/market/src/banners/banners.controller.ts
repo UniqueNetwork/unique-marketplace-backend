@@ -5,6 +5,7 @@ import { CreateBannerDto, EditBannerDto } from './dto';
 import { BannersService } from './banners.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { bannerSchema } from './schemas/banner.schema';
+import { GetAllDto } from './dto/get-all.dto';
 
 @ApiTags('Banners')
 @Controller('banners')
@@ -58,8 +59,8 @@ export class BannersController {
   @ApiOperation({
     summary: 'Get all banners',
   })
-  async getAll() {
-    return this.bannersService.getAll();
+  async getAll(@Query() dto: GetAllDto) {
+    return this.bannersService.getAll(dto);
   }
 
   @Get(':bannerId')
