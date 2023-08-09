@@ -97,7 +97,6 @@ export class BannersService {
     const banners = await this.bannerEntityRepository.find({
       where: {
         collectionId: Not(0),
-        off: false,
       },
     });
 
