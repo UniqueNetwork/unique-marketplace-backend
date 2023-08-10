@@ -8,7 +8,7 @@ import { ViewOffers } from '@app/common/modules/database/entities/offers-view.en
 import { TraitDto } from './dto/trait.dto';
 import { ViewOffersService } from './view-offers.service';
 import { PropertiesEntity } from '@app/common/modules/database/entities/properties.entity';
-import { OfferPrice, OffersFilterType, OffersItemType } from './interfaces/offers.interface';
+import { GetOneFilter, OfferPrice, OffersFilterType, OffersItemType } from './interfaces/offers.interface';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 
 @Injectable()
@@ -26,10 +26,6 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     private viewOffersService: ViewOffersService,
   ) {
     super({});
-  }
-
-  getOfferById(id: string): Promise<OfferEntity> {
-    return this.offersRepository.findOne({ where: { id } });
   }
 
   /**
@@ -76,10 +72,8 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
    *
    * this.getOne({ collectionId: number; tokenId: number })
    */
-  async getOne(filter: { collectionId: number; tokenId: number }): Promise<OfferEntityDto | null> {
-    const { collectionId, tokenId } = filter;
-
-    const source = await this.viewOffersService.filterByOne(collectionId, tokenId);
+  async getOne(filter: GetOneFilter): Promise<OfferEntityDto | null> {
+    const source = await this.viewOffersService.filterByOne(filter);
 
     const properties_filter = await this.searchInProperties(this.parserCollectionIdTokenId(source));
     const collections = await this.collections(this.getCollectionIds(source));
@@ -141,6 +135,7 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
           price: price,
           seller: item.offer_seller,
           created_at: item.offer_created_at,
+          contract_address: item.contract_address,
           tokenDescription: token ? token?.attributes : null,
           collectionDescription: {
             mode: collection?.mode,
