@@ -84,3 +84,9 @@ export type OffersItemType = {
   creationDate: Date | null;
   [key: string]: any;
 };
+
+export interface GetOneFilter {
+  offerId?: string;
+  collectionId?: number;
+  tokenId?: number;
+}

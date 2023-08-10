@@ -4,7 +4,6 @@ import { OffersService } from './offers.service';
 import { readApiDocs } from '../utils/utils';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 import { OfferEntityDto, OffersFilter, OffersResultDto } from './dto/offers.dto';
-import { OfferEntity } from '@app/common/modules/database';
 import { ParseOffersFilterPipe } from './pipes/offer-filter.pipe';
 import { SortingOfferRequest } from '@app/common/modules/types/requests';
 import { ParseSortFilterPipe } from './pipes/sort-order.pipe';
@@ -37,8 +36,8 @@ export class OffersController {
   @ApiOperation({
     summary: 'Get offer by ID',
   })
-  getById(@Param('id') id: string): Promise<OfferEntity> {
-    return this.offersService.getOfferById(id);
+  getById(@Param('id') offerId: string): Promise<OfferEntityDto | null> {
+    return this.offersService.getOne({ offerId });
   }
 
   @Get('/:collectionId/:tokenId')

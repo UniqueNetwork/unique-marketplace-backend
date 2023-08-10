@@ -1,16 +1,16 @@
 import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OfferEntity, TradeViewEntity, ViewOffers } from '@app/common/modules/database';
+import { OfferEntity, ViewOffers } from '@app/common/modules/database';
 import { DataSource, Repository, SelectQueryBuilder, ValueTransformer } from 'typeorm';
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import { OfferAttributes, OffersFilter, OfferSortingRequest, PaginationRequest } from './dto/offers.dto';
 import { BundleService } from './bundle.service';
 import { OfferTraits, TraitDto } from './dto/trait.dto';
 import { paginateRaw } from 'nestjs-typeorm-paginate';
-import { SortingOrder, SortingParameter } from './interfaces/offers.interface';
+import { GetOneFilter, SortingOrder, SortingParameter } from './interfaces/offers.interface';
 import { HelperService } from '@app/common/src/lib/helper.service';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
-import { SortingOfferRequest, SortingRequest } from '@app/common/modules/types/requests';
+import { SortingOfferRequest } from '@app/common/modules/types/requests';
 
 const offersMapping = {
   priceRaw: 'price_raw',
@@ -140,10 +140,19 @@ export class ViewOffersService {
     return query;
   }
 
-  public async filterByOne(collectionId: number, tokenId: number): Promise<any> {
-    let queryFilter = this.viewOffersRepository
-      .createQueryBuilder('view_offers')
-      .where({ collection_id: collectionId, token_id: tokenId });
+  public async filterByOne(whereFilter: GetOneFilter): Promise<any> {
+    const { collectionId, tokenId, offerId } = whereFilter;
+    const where: { collection_id?: number; token_id?: number; offerId?: string } = {};
+
+    if (offerId) {
+      where.offerId = offerId;
+    } else if (collectionId && tokenId) {
+      where.collection_id = collectionId;
+      where.token_id = tokenId;
+    }
+
+    let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers').where(where);
+
     // TODO: deal with the error by bundles, collector may be fail
     // const bundle = await this.bundle(collectionId, tokenId);
     // queryFilter = this.byCollectionTokenId(queryFilter, bundle.collectionId, bundle.tokenId);
@@ -367,6 +376,7 @@ export class ViewOffersService {
         'view_offers_offer_status as offer_status',
         'view_offers_collection_id as collection_id',
         'view_offers_token_id as token_id',
+        'view_offers_contract_address as contract_address',
         'view_offers_offer_price_parsed as offer_price_parsed',
         'view_offers_offer_price_raw as offer_price_raw',
         'view_offers_offer_seller as offer_seller',

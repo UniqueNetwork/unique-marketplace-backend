@@ -20,6 +20,7 @@ import { PropertiesEntity } from './properties.entity';
       'offer.updated_at AS offer_updated_at',
       'offer.collection_id AS collection_id',
       'offer.token_id AS token_id',
+      'offer.contract_address AS contract_address',
       'properties_filter.network',
       'properties_filter.is_trait',
       'properties_filter.locale',
@@ -34,9 +35,11 @@ import { PropertiesEntity } from './properties.entity';
       (selectQueryBuilder: SelectQueryBuilder<OfferEntity>) => {
         const propsQueryBuilder = selectQueryBuilder.subQuery();
         propsQueryBuilder.select([
+          'offer_id',
           'collection_id',
           'network',
           'token_id',
+          'contract_address',
           'is_trait',
           'locale',
           'unnest(prop.items) AS traits',
@@ -90,6 +93,9 @@ export class ViewOffers {
 
   @ViewColumn({ name: 'token_id' })
   token_id: number; // token id from search_index
+
+  @ViewColumn({ name: 'contract_address' })
+  contract_address: string;
 
   @ViewColumn({ name: 'is_trait' })
   isTrait: boolean;

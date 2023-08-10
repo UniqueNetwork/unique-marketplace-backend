@@ -1,10 +1,9 @@
-import { ContractEntity, OfferEntity, OfferEventEntity, ViewOffers } from '@app/common/modules/database';
 import { OfferEventType, OfferStatus } from '@app/common/modules/types';
 import { ApiProperty } from '@nestjs/swagger';
 import { ContractDto } from './contract.dto';
 import { Exclude, Expose, plainToInstance, Type } from 'class-transformer';
 import { IsOptional } from 'class-validator';
-import { OfferPrice, PaginationResult, SortingParameter, TokenDescription } from '../interfaces/offers.interface';
+import { PaginationResult, SortingParameter, TokenDescription } from '../interfaces/offers.interface';
 
 export class OffersDto {
   @ApiProperty({ example: 200 })
@@ -221,6 +220,10 @@ export class OfferEntityDto {
   @Expose()
   status: string;
 
+  @ApiProperty({ description: 'Contract address', example: '0x5fa88ae80ef8258063421e63b0b9307f4a931d92' })
+  @Expose()
+  contractAddress: string;
+
   @ApiProperty({ description: 'Data created', example: new Date() })
   @Expose()
   creationAt: Date;
@@ -244,7 +247,8 @@ export class OfferEntityDto {
       price: offersData.price,
       seller: offersData.seller,
       creationAt: offersData.created_at,
-      status: offersData.offerStatus,
+      status: offersData.status,
+      contractAddress: offersData.contract_address,
     };
 
     return plainToInstance<OfferEntityDto, Record<string, any>>(OfferEntityDto, plain, {
