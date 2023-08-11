@@ -1,18 +1,18 @@
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import { BannerKeys, ButtonDefaultColor, ButtonTitleMaxLen, DescriptionMaxLen, FileMaxSize, TitleMaxLen } from '../types';
+import { BannerKeys, ButtonDefaultColor, ButtonTitleMaxLen, FileMaxSize, TitleMaxLen } from '../types';
 
 const properties: Record<BannerKeys | 'file', SchemaObject> = {
   file: {
     type: 'string',
     format: 'binary',
-    description: `The banner picture; required; max size ${FileMaxSize} MB; supported formats: png, jpg, gif, svg, .mp4, webm, ogv, HTML; aspect ratio: 3*4`,
+    description: `The banner picture; required; max size ${FileMaxSize} MB; supported formats: png, jpg, gif, svg, .mp4, ogv, HTML; aspect ratio: 3*4`,
   },
   title: {
     description: `Title for the banner; required; max ${TitleMaxLen} symbols`,
     type: 'string',
   },
   description: {
-    description: `Text for the banner; required; max ${DescriptionMaxLen} symbols; you can use html tags`,
+    description: `Text for the banner; required; max 4 lines 48 symbols each; you can use html tags`,
     type: 'string',
   },
   backgroundColor: {
@@ -20,7 +20,7 @@ const properties: Record<BannerKeys | 'file', SchemaObject> = {
     type: 'string',
   },
   buttonTitle: {
-    description: `Text on the button; required; recommended: 'Explore the collection'; Max ${ButtonTitleMaxLen} symbols`,
+    description: `Text on the button; required; recommended: 'Explore collection'; Max ${ButtonTitleMaxLen} symbols`,
     type: 'string',
   },
   buttonUrl: {
