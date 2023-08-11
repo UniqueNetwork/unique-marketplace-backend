@@ -60,7 +60,7 @@ export class BannersService {
     banner.buttonColor = data.buttonColor;
     banner.sortIndex = data.sortIndex;
     banner.collectionId = data.collectionId;
-    banner.off = false;
+    banner.off = data.off;
     banner.backgroundColor = data.backgroundColor;
     banner.secondaryButtonUrl = data.secondaryButtonUrl;
     banner.secondaryButtonTitle = data.secondaryButtonTitle;

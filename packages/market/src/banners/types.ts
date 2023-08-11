@@ -24,5 +24,5 @@ export const FileMaxSize = 100;
 export const TitleMaxLen = 50;
 export const DescriptionMaxLen = 300;
 export const ButtonTitleMaxLen = 20;
-export const ButtonUrlMaxLen = 100;
+export const ButtonUrlMaxLen = 1000;
 export const ButtonDefaultColor = '#009CF0';
