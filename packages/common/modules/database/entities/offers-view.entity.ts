@@ -35,11 +35,9 @@ import { PropertiesEntity } from './properties.entity';
       (selectQueryBuilder: SelectQueryBuilder<OfferEntity>) => {
         const propsQueryBuilder = selectQueryBuilder.subQuery();
         propsQueryBuilder.select([
-          'offer_id',
           'collection_id',
           'network',
           'token_id',
-          'contract_address',
           'is_trait',
           'locale',
           'unnest(prop.items) AS traits',
