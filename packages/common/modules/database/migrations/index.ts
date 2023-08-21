@@ -14,4 +14,5 @@ export * from './1684739540151-MarketTradeToOffers';
 export * from './1684739540519-MarketTradeToOfferEvents';
 export * from './1686310569001-VerifyMessageContract';
 export * from './1688973356000-NormalizeAddress';
-export * from './1688973356000-NormalizeAddress';
+export * from './1689929097000-BannersEntity';
+export * from './1690877576943-DeployContractV1';
