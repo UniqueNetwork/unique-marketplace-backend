@@ -1,10 +1,11 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { ContractEntity } from '../entities';
 
 export class ContractsTable1677511684518 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.createTable(
       new Table({
-        name: 'contracts',
+        name: queryRunner.manager.getRepository(ContractEntity).metadata.tableName,
         columns: [
           {
             name: 'address',
@@ -13,14 +14,16 @@ export class ContractsTable1677511684518 implements MigrationInterface {
             primaryKeyConstraintName: 'MARKET_CONTRACT_ADDRESS',
           },
           { name: 'version', type: 'integer', isUnique: true },
+          { name: 'commission', type: 'integer' },
           { name: 'created_at', type: 'integer' },
           { name: 'processed_at', type: 'integer' },
         ],
-      })
+      }),
+      true,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.dropTable('contracts');
+    await queryRunner.dropTable(queryRunner.manager.getRepository(ContractEntity).metadata.tableName);
   }
 }

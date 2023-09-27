@@ -1,13 +1,13 @@
 import { Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Sdk } from '@unique-nft/sdk';
-import { Config } from '../config';
+import { Sdk } from '@unique-nft/sdk/full';
+import { Config, SignerConfig } from '../config';
 import { KeyringProvider } from '@unique-nft/accounts/keyring';
 
 export const sdkProvider: Provider = {
   provide: Sdk,
   useFactory: async (configService: ConfigService<Config>): Promise<Sdk> => {
-    const seed = configService.get('signer')?.seed;
+    const seed = configService.get<SignerConfig>('signer')?.substrateSeed;
 
     let signer = null;
 
@@ -16,7 +16,7 @@ export const sdkProvider: Provider = {
         type: 'sr25519',
       });
       await provider.init();
-      signer = provider.addSeed(configService.get('signer').seed);
+      signer = provider.addSeed(seed);
     }
 
     return new Sdk({

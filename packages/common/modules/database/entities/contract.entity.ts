@@ -9,6 +9,9 @@ export class ContractEntity {
   @Column({ unique: true })
   version: number;
 
+  @Column()
+  commission: number;
+
   @Column({ name: 'created_at' })
   createdAt: number;
 

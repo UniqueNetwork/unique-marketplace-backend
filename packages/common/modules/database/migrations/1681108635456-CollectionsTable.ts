@@ -1,11 +1,13 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { CollectionEntity } from '../entities';
 
 export class CollectionsTable1681108635456 implements MigrationInterface {
   name: 'CollectionsTable1681108635456';
+
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.createTable(
       new Table({
-        name: 'collections',
+        name: queryRunner.manager.getRepository(CollectionEntity).metadata.tableName,
         columns: [
           {
             name: 'id',
@@ -14,10 +16,34 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
             default: 'uuid_generate_v4()',
           },
           {
-            name: 'collections_id',
+            name: 'collection_id',
             type: 'int',
             default: 0,
           },
+          {
+            name: 'tokens_total',
+            type: 'int',
+            default: 0,
+          },
+          {
+            name: 'tokens_count',
+            type: 'int',
+            default: 0,
+          },
+          {
+            name: 'tokens_on_market',
+            type: 'int',
+            default: 0,
+          },
+          { name: 'min_price', type: 'numeric', precision: 38, scale: 18, isNullable: true },
+          { name: 'max_price', type: 'numeric', precision: 38, scale: 18, isNullable: true },
+          { name: 'total_price', type: 'numeric', precision: 38, scale: 18, isNullable: true },
+          {
+            name: 'holders',
+            type: 'int',
+            default: 0,
+          },
+          { name: 'unique_holders', type: 'numeric', precision: 38, scale: 18, isNullable: true },
           {
             name: 'owner',
             type: 'varchar',
@@ -33,6 +59,7 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
           {
             name: 'decimal_points',
             type: 'int',
+            isNullable: true,
           },
           {
             name: 'name',
@@ -56,17 +83,31 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
             name: 'mint_mode',
             type: 'boolean',
             default: false,
+            isNullable: true,
+          },
+          {
+            name: 'cover_url',
+            type: 'varchar',
+            length: '255',
+            isNullable: true,
           },
           {
             name: 'allowed_tokens',
             type: 'varchar',
             default: "''",
+            isNullable: true,
           },
           {
             name: 'status',
             type: 'enum',
             enum: ['Enabled', 'Disabled'],
             default: "'Enabled'",
+          },
+          {
+            name: 'active',
+            type: 'boolean',
+            enum: ['true', 'false'],
+            default: 'false',
           },
           {
             name: 'created_at',
@@ -82,21 +123,29 @@ export class CollectionsTable1681108635456 implements MigrationInterface {
           {
             name: 'network',
             type: 'varchar',
+            isNullable: true,
+          },
+          {
+            name: 'metadata',
+            type: 'jsonb',
           },
           {
             name: 'data',
             type: 'jsonb',
           },
         ],
+        indices: [
+          {
+            name: 'collections_idx',
+            columnNames: ['collection_id'],
+          },
+        ],
       }),
-      true
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "collections_idx" ON "collections" ("collections_id") `
+      true,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.dropTable('collections');
+    await queryRunner.dropTable(queryRunner.manager.getRepository(CollectionEntity).metadata.tableName);
   }
 }

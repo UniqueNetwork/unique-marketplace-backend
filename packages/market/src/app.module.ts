@@ -8,6 +8,12 @@ import { OffersModule } from './offers/offers.module';
 import { SettingsModule } from './settings/settings.module';
 import { CollectionsModule } from './collections/collections.module';
 import { TokensModule } from './tokens/tokens.module';
+import { AdminModule } from './admin/admin.module';
+import { sdkProvider } from '@app/common/modules/sdk/sdk.provider';
+import { SdkMarketService } from './sdk/sdk.service';
+import { TradesModule } from './trades/trades.module';
+import { ContractModule } from './contracts/contract.module';
+import { BannersModule } from './banners/banners.module';
 
 @Module({
   imports: [
@@ -16,10 +22,16 @@ import { TokensModule } from './tokens/tokens.module';
     CacheProviderModule,
     DatabaseModule.forFeature(),
     PgNotifyClientModule,
+    AdminModule,
     OffersModule,
     CollectionsModule,
     TokensModule,
+    TradesModule,
     SettingsModule,
+    ContractModule,
+    BannersModule.register(),
   ],
+  providers: [sdkProvider, SdkMarketService],
+  exports: [SdkMarketService],
 })
 export class AppModule {}

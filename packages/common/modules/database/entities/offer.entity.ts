@@ -1,11 +1,11 @@
 import {
-  Entity,
   Column,
-  Index,
-  ManyToOne,
-  JoinColumn,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { OfferStatus } from '../../types';
@@ -17,28 +17,30 @@ import { ContractEntity } from './contract.entity';
 @Index(['collectionId', 'tokenId'])
 export class OfferEntity {
   @PrimaryGeneratedColumn('uuid')
-  //@Column('uuid', { primary: true, name: 'id' })
   id: string;
 
-  @Column({ name: 'order_id' })
+  @Column({ name: 'order_id', type: 'integer' })
   orderId: number;
 
-  @Column({ name: 'collection_id' })
+  @Column({ name: 'collection_id', type: 'integer' })
   collectionId: number;
 
-  @Column({ name: 'token_id' })
+  @Column({ name: 'token_id', type: 'integer' })
   tokenId: number;
 
-  @Column({ name: 'amount' })
+  @Column({ name: 'amount', type: 'integer' })
   amount: number;
 
-  @Column({ name: 'price', type: 'bigint' })
-  price: bigint;
+  @Column({ name: 'price_parsed', type: 'numeric', precision: 38, scale: 18 })
+  priceParsed: number;
+
+  @Column({ name: 'price_raw', type: 'varchar', length: '128' })
+  priceRaw: string;
 
   @JoinColumn({
     name: 'contract_address',
   })
-  @ManyToOne(() => ContractEntity)
+  @ManyToOne(() => ContractEntity, (contract) => contract.address)
   contract: ContractEntity;
 
   @Column({ type: 'varchar' })

@@ -8,23 +8,30 @@ import { OfferEventType } from '../../types';
 export class OfferEventService {
   constructor(
     @InjectRepository(OfferEventEntity)
-    private offerEventEntityRepository: Repository<OfferEventEntity>
+    private offerEventEntityRepository: Repository<OfferEventEntity>,
   ) {}
 
-  public async create(
+  public find(
     offer: OfferEntity,
     eventType: OfferEventType,
     blockNumber: number,
     address: string,
-    amount: number | bigint
-  ): Promise<OfferEventEntity> {
-    const event = this.offerEventEntityRepository.create();
+  ): Promise<OfferEventEntity | null> {
+    return this.offerEventEntityRepository.findOne({
+      where: {
+        offer,
+        eventType,
+        blockNumber,
+        address,
+      },
+    });
+  }
 
-    event.offer = offer;
-    event.eventType = eventType;
-    event.blockNumber = blockNumber;
-    event.address = address;
-
+  public async create(offerEvent: Omit<OfferEventEntity, 'id' | 'createdAt' | 'updatedAt'>): Promise<OfferEventEntity> {
+    const event = this.offerEventEntityRepository.create({
+      ...offerEvent,
+      meta: '{}',
+    });
     await this.offerEventEntityRepository.save(event);
 
     return event;

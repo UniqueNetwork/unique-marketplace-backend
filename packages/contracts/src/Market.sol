@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import { UniqueNFT, CrossAddress } from "@unique-nft/solidity-interfaces/contracts/UniqueNFT.sol";
+import { UniqueFungible, CrossAddress as CrossAddressF } from "@unique-nft/solidity-interfaces/contracts/UniqueFungible.sol";
 import "@unique-nft/solidity-interfaces/contracts/CollectionHelpers.sol";
-import "./utils.sol";
+import "./royalty/UniqueRoyaltyHelper.sol";
 
-contract Market {
+contract Market is Ownable, ReentrancyGuard {
     using ERC165Checker for address;
 
     struct Order {
@@ -15,28 +19,35 @@ contract Market {
       uint32 tokenId;
       uint32 amount;
       uint256 price;
-      address payable seller;
+      CrossAddress seller;
     }
 
-    uint32 public constant version = 1;
+    uint32 public constant version = 0;
+    uint32 public constant buildVersion = 4;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     CollectionHelpers private constant collectionHelpers =
         CollectionHelpers(0x6C4E9fE1AE37a41E93CEE429e8E1881aBdcbb54F);
-    Utils private utils = new Utils();
 
+    mapping(uint32 => bool) blacklist;
     mapping(uint32 => mapping(uint32 => Order)) orders;
     uint32 private idCount = 1;
     uint32 public marketFee;
-    address selfAddress;
-    address ownerAddress;
-    bool marketPause;
+    uint64 public ctime;
+    address public ownerAddress;
+    mapping(address => bool) public admins;
 
     event TokenIsUpForSale(uint32 version, Order item);
-    event TokenRevoke(uint32 version, Order item, uint256 amount);
+    event TokenPriceChanged(uint32 version, Order item);
+    event TokenRevoke(uint32 version, Order item, uint32 amount);
     event TokenIsApproved(uint32 version, Order item);
-    event TokenIsPurchased(uint32 version, Order item, uint256 salesAmount);
-    event Log(string message);
+    event TokenIsPurchased(
+      uint32 version,
+      Order item,
+      uint32 salesAmount,
+      CrossAddress buyer,
+      RoyaltyAmount[] royalties
+    );
 
     error InvalidArgument(string info);
     error InvalidMarketFee();
@@ -48,27 +59,62 @@ contract Market {
     error OrderNotFound();
     error TooManyAmountRequested();
     error NotEnoughMoneyError();
+    error InvalidRoyaltiesError(uint256 totalRoyalty);
     error FailTransferToken(string reason);
+    error CollectionInBlacklist();
 
-    modifier onlyOwner() {
-      require(msg.sender == ownerAddress, "Only owner can");
+    modifier onlyAdmin() {
+      require(msg.sender == this.owner() || admins[msg.sender], "Only admin can");
       _;
     }
 
-    modifier onlyNonPause() {
-      require(!marketPause, "Market on hold");
+    modifier validCrossAddress(address eth, uint256 sub) {
+      if (eth == address(0) && sub == 0) {
+        revert InvalidArgument("Ethereum and Substrate addresses cannot be null at the same time");
+      }
+
+      if (eth != address(0) && sub != 0) {
+        revert InvalidArgument("Ethereum and Substrate addresses cannot be not null at the same time");
+      }
+
       _;
     }
 
-    constructor(uint32 fee) {
+    function validOwner(uint32 collectionId, uint32 tokenId, CrossAddress memory seller) private view {
+      IERC721 erc721 = getErc721(collectionId);
+
+      address ethAddress;
+      if (seller.eth != address(0)) {
+        ethAddress = seller.eth;
+      } else {
+        ethAddress = payable(address(uint160(seller.sub >> 96)));
+      }
+
+      if (erc721.ownerOf(tokenId) != ethAddress || ethAddress != msg.sender) {
+        revert SellerIsNotOwner();
+      }
+    }
+
+    constructor(uint32 fee, uint64 timestamp) {
         marketFee = fee;
-        if (marketFee == 0 || marketFee >= 100) {
+        ctime = timestamp;
+
+        if (marketFee >= 100) {
             revert InvalidMarketFee();
         }
-
-        ownerAddress = msg.sender;
-        selfAddress = address(this);
     }
+
+    /**
+     * Fallback that allows this contract to receive native token.
+     * We need this for self-sponsoring
+     */
+    fallback() external payable {}
+
+    /**
+     * Receive also allows this contract to receive native token.
+     * We need this for self-sponsoring
+     */
+    receive() external payable {}
 
     function getErc721(uint32 collectionId) private view returns (IERC721) {
         address collectionAddress = collectionHelpers.collectionAddress(
@@ -91,76 +137,84 @@ contract Market {
         return IERC721(collectionAddress);
     }
 
-    function onlyTokenOwner(
-        IERC721 erc721,
-        uint32 tokenId,
-        address seller
-    ) private view {
-        address realOwner = erc721.ownerOf(tokenId);
-
-        if (realOwner != seller) {
-            revert SellerIsNotOwner();
-        }
+    /**
+     * Add new admin. Only owner or an existing admin can add admins.
+     *
+     * @param admin: Address of a new admin to add
+     */
+    function addAdmin(address admin) public onlyAdmin {
+      admins[admin] = true;
     }
 
-    function isApproved(IERC721 erc721, Order memory item) private {
-        // todo not implementable in chain
-        try erc721.getApproved(item.tokenId) returns (address approved) {
-            emit Log(
-                string.concat(
-                    "getApproved approved: ",
-                    utils.toString(approved)
-                )
-            );
-            if (approved != selfAddress) {
-                revert TokenIsNotApproved();
-            }
-        } catch Error(string memory reason) {
-            emit Log(string.concat("getApproved error: ", reason));
-        } catch {
-            emit Log(string.concat("getApproved error without reason"));
-        }
+    /**
+     * Remove an admin. Only owner or an existing admin can remove admins.
+     *
+     * @param admin: Address of a new admin to add
+     */
+    function removeAdmin(address admin) public onlyAdmin {
+      delete admins[admin];
     }
 
-    // ################################################################
-    // Set new contract owner                                         #
-    // ################################################################
-
-    function setOwner() public onlyOwner {
-        ownerAddress = msg.sender;
+    /**
+     * Add collection to blacklist. Only owner or an existing admin can this.
+     *
+     * @param collectionId: ID of collection
+     */
+    function addToBlacklist(uint32 collectionId) public onlyAdmin {
+      blacklist[collectionId] = true;
     }
 
-    // ################################################################
-    // Set market pause                                               #
-    // ################################################################
-
-    function setPause(bool pause) public onlyOwner {
-        marketPause = pause;
+    /**
+     * Remove collection from blacklist. Only owner or an existing admin can this.
+     *
+     * @param collectionId: ID of collection
+     */
+    function removeFromBlacklist(uint32 collectionId) public onlyAdmin {
+        delete blacklist[collectionId];
     }
 
-    // ################################################################
-    // Place a token for sale                                         #
-    // ################################################################
-
+    /**
+     * Place an NFT or RFT token for sale. It must be pre-approved for transfers by this contract address.
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenId: ID of the token
+     * @param price: Price (with proper network currency decimals)
+     * @param amount: Number of token fractions to list (must always be 1 for NFT)
+     * @param seller: The seller cross-address (the beneficiary account to receive payment, may be different from transaction sender)
+     */
     function put(
         uint32 collectionId,
         uint32 tokenId,
         uint256 price,
-        uint32 amount
-    ) public onlyNonPause {
+        uint32 amount,
+        CrossAddress memory seller
+    ) public validCrossAddress(seller.eth, seller.sub) {
+        validOwner(collectionId, tokenId, seller);
+
         if (price == 0) {
           revert InvalidArgument("price must not be zero");
         }
         if (amount == 0) {
           revert InvalidArgument("amount must not be zero");
         }
+
+        if (blacklist[collectionId]) {
+          revert CollectionInBlacklist();
+        }
+
         if (orders[collectionId][tokenId].price > 0) {
             revert TokenIsAlreadyOnSale();
         }
 
         IERC721 erc721 = getErc721(collectionId);
 
-        onlyTokenOwner(erc721, tokenId, msg.sender);
+        if (erc721.ownerOf(tokenId) != msg.sender) {
+          revert SellerIsNotOwner();
+        }
+
+        if (erc721.getApproved(tokenId) != address(this)) {
+          revert TokenIsNotApproved();
+        }
 
         Order memory order = Order(
             0,
@@ -168,10 +222,8 @@ contract Market {
             tokenId,
             amount,
             price,
-            payable(msg.sender)
+            seller
         );
-
-        isApproved(erc721, order);
 
         order.id = idCount++;
         orders[collectionId][tokenId] = order;
@@ -179,25 +231,52 @@ contract Market {
         emit TokenIsUpForSale(version, order);
     }
 
-    // ################################################################
-    // Get order                                                      #
-    // ################################################################
+    /**
+     * Change NFT price
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenId: ID of the token
+     * @param price: New Price (with proper network currency decimals)
+     */
+    function changePrice(
+      uint32 collectionId,
+      uint32 tokenId,
+      uint256 price
+    ) external {
+      Order memory order = orders[collectionId][tokenId];
 
+      if (order.price == 0) {
+        revert OrderNotFound();
+      }
+
+      validOwner(collectionId, tokenId, order.seller);
+
+      order.price = price;
+
+      emit TokenPriceChanged(version, order);
+    }
+
+    /**
+     * Get information about the listed token order
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenId: ID of the token
+     * @return The order information
+     */
     function getOrder(
         uint32 collectionId,
         uint32 tokenId
     ) external view returns (Order memory) {
-        if (orders[collectionId][tokenId].price == 0) {
-            revert OrderNotFound();
-        }
-
         return orders[collectionId][tokenId];
     }
 
-    // ################################################################
-    // Revoke the token from the sale                                 #
-    // ################################################################
-
+    /**
+     * Revoke the token from the sale. Only the original lister can use this method.
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenId: ID of the token
+     * @param amount: Number of token fractions to de-list (must always be 1 for NFT)
+     */
     function revoke(
         uint32 collectionId,
         uint32 tokenId,
@@ -207,18 +286,17 @@ contract Market {
           revert InvalidArgument("amount must not be zero");
         }
 
-        IERC721 erc721 = getErc721(collectionId);
-        onlyTokenOwner(erc721, tokenId, msg.sender);
-
         Order memory order = orders[collectionId][tokenId];
 
         if (order.price == 0) {
-            revert OrderNotFound();
+          revert OrderNotFound();
         }
 
         if (amount > order.amount) {
-            revert TooManyAmountRequested();
+          revert TooManyAmountRequested();
         }
+
+        validOwner(collectionId, tokenId, order.seller);
 
         order.amount -= amount;
         if (order.amount == 0) {
@@ -230,11 +308,13 @@ contract Market {
         emit TokenRevoke(version, order, amount);
     }
 
-    // ################################################################
-    // Check approved                                                 #
-    // ################################################################
-
-    function checkApproved(uint32 collectionId, uint32 tokenId) public {
+    /**
+     * Test if the token is still approved to be transferred by this contract and delete the order if not.
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenId: ID of the token
+     */
+    function checkApproved(uint32 collectionId, uint32 tokenId) public onlyAdmin {
         Order memory order = orders[collectionId][tokenId];
         if (order.price == 0) {
             revert OrderNotFound();
@@ -242,24 +322,79 @@ contract Market {
 
         IERC721 erc721 = getErc721(collectionId);
 
-        onlyTokenOwner(erc721, tokenId, order.seller);
+        if (erc721.getApproved(tokenId) != address(this) || erc721.ownerOf(tokenId) != getAddressFromCrossAccount(order.seller)) {
+          uint32 amount = order.amount;
+          order.amount = 0;
+          emit TokenRevoke(version, order, amount);
 
-        isApproved(erc721, order);
-
-        emit TokenIsApproved(version, order);
+          delete orders[collectionId][tokenId];
+        } else {
+          emit TokenIsApproved(version, order);
+        }
     }
 
-    // ################################################################
-    // Buy a token                                                    #
-    // ################################################################
+    function getAddressFromCrossAccount(CrossAddress memory account) private pure returns (address) {
+        if (account.eth != address(0)) {
+            return account.eth;
+        } else {
+            return address(uint160(account.sub >> 96));
+        }
+    }
 
+    /**
+     * Revoke the token from the sale. Only the contract admin can use this method.
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenId: ID of the token
+     */
+    function revokeAdmin(uint32 collectionId, uint32 tokenId) public onlyAdmin {
+        Order memory order = orders[collectionId][tokenId];
+        if (order.price == 0) {
+          revert OrderNotFound();
+        }
+
+        uint32 amount = order.amount;
+        order.amount = 0;
+        emit TokenRevoke(version, order, amount);
+
+        delete orders[collectionId][tokenId];
+    }
+
+    /**
+     * Revoke the token from the sale. Only the contract admin can use this method.
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenIdList: List ID of the token
+     */
+    function revokeListAdmin(uint32 collectionId, uint32[] calldata tokenIdList) public onlyAdmin {
+      for (uint256 i=0; i<tokenIdList.length; i += 1) {
+        revokeAdmin(collectionId, tokenIdList[i]);
+      }
+    }
+
+    /**
+     * Buy a token (partially for an RFT).
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenId: ID of the token
+     * @param amount: Number of token fractions to buy (must always be 1 for NFT)
+     * @param buyer: Cross-address of the buyer, eth part must be equal to the transaction signer address
+     */
     function buy(
         uint32 collectionId,
         uint32 tokenId,
-        uint32 amount
-    ) public payable onlyNonPause {
+        uint32 amount,
+        CrossAddress memory buyer
+    ) public payable validCrossAddress(buyer.eth, buyer.sub) nonReentrant {
+        if (msg.value == 0) {
+          revert InvalidArgument("msg.value must not be zero");
+        }
         if (amount == 0) {
           revert InvalidArgument("amount must not be zero");
+        }
+
+        if (blacklist[collectionId]) {
+          revert CollectionInBlacklist();
         }
 
         Order memory order = orders[collectionId][tokenId];
@@ -273,14 +408,15 @@ contract Market {
 
         uint256 totalValue = order.price * amount;
         uint256 feeValue = (totalValue * marketFee) / 100;
-        uint256 totalValueWithFee = totalValue + feeValue;
-        if (msg.value < totalValueWithFee) {
+
+        if (msg.value < totalValue) {
             revert NotEnoughMoneyError();
         }
 
         IERC721 erc721 = getErc721(order.collectionId);
-
-        isApproved(erc721, order);
+        if (erc721.getApproved(tokenId) != address(this)) {
+          revert TokenIsNotApproved();
+        }
 
         order.amount -= amount;
         if (order.amount == 0) {
@@ -289,25 +425,59 @@ contract Market {
             orders[collectionId][tokenId] = order;
         }
 
-        try
-            erc721.transferFrom(order.seller, msg.sender, order.tokenId)
-        {} catch Error(string memory reason) {
-            revert FailTransferToken(reason);
-        } catch {
-            revert FailTransferToken("without reason");
+        address collectionAddress = collectionHelpers.collectionAddress(collectionId);
+        UniqueNFT nft = UniqueNFT(collectionAddress);
+
+        nft.transferFromCross(
+          order.seller,
+          buyer,
+          order.tokenId
+        );
+
+        (uint256 totalRoyalty, RoyaltyAmount[] memory royalties) = sendRoyalties(collectionAddress, tokenId, totalValue - feeValue);
+
+        if (totalRoyalty >= totalValue - feeValue) {
+          revert InvalidRoyaltiesError(totalRoyalty);
         }
 
-        order.seller.transfer(totalValue);
+        sendMoney(order.seller, totalValue - feeValue - totalRoyalty);
 
-        if (msg.value > totalValueWithFee) {
-            payable(msg.sender).transfer(msg.value - totalValueWithFee);
+        if (msg.value > totalValue) {
+            sendMoney(buyer, msg.value - totalValue);
         }
 
-        emit TokenIsPurchased(version, order, amount);
+        emit TokenIsPurchased(version, order, amount, buyer, royalties);
+    }
+
+    function sendMoney(CrossAddress memory to, uint256 money) private {
+      address collectionAddress = collectionHelpers.collectionAddress(0);
+
+      UniqueFungible fungible = UniqueFungible(collectionAddress);
+
+      CrossAddressF memory fromF = CrossAddressF(address(this), 0);
+      CrossAddressF memory toF = CrossAddressF(to.eth, to.sub);
+
+      fungible.transferFromCross(fromF, toF, money);
+    }
+
+    function sendRoyalties(address collection, uint tokenId, uint sellPrice) private returns (uint256, RoyaltyAmount[] memory) {
+      RoyaltyAmount[] memory royalties = UniqueRoyaltyHelper.calculate(collection, tokenId, sellPrice);
+
+      uint256 totalRoyalty = 0;
+
+      for (uint256 i=0; i<royalties.length; i++) {
+        RoyaltyAmount memory royalty = royalties[i];
+
+        totalRoyalty += royalty.amount;
+
+        sendMoney(royalty.crossAddress, royalty.amount);
+      }
+
+      return (totalRoyalty, royalties);
     }
 
     function withdraw(address transferTo) public onlyOwner {
-        uint256 balance = selfAddress.balance;
+        uint256 balance = address(this).balance;
 
         if (balance > 0) {
             payable(transferTo).transfer(balance);

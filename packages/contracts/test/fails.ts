@@ -1,22 +1,17 @@
 import { expect } from 'chai';
-import { Sdk } from '@unique-nft/sdk';
-import {
-  createSdk,
-  deploy,
-  getAccounts,
-  getCollectionContract,
-  getCollectionData,
-  TokenData,
-} from './utils';
+import { Sdk } from '@unique-nft/sdk/full';
+import '@nomicfoundation/hardhat-chai-matchers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { createSdk, deploy, getAccounts, getCollectionContract, getCollectionData, TokenData } from './utils';
+import { Address } from '@unique-nft/utils';
 
 describe('fails', function () {
   let sdk: Sdk;
   let nftToken: TokenData;
   let rftToken: TokenData;
   let fungibleCollectionId: number;
-  let ownerAccount: SignerWithAddress;
-  let otherAccount: SignerWithAddress;
+  let sellAccount: SignerWithAddress;
+  let buyAccount: SignerWithAddress;
 
   it('prepare', async () => {
     sdk = await createSdk();
@@ -26,217 +21,184 @@ describe('fails', function () {
     fungibleCollectionId = data.fungibleId;
     rftToken = data.rft;
 
-    const accounts = await getAccounts(
-      sdk,
-      nftToken.collectionId,
-      nftToken.tokenId
-    );
-    ownerAccount = accounts.ownerAccount;
-    otherAccount = accounts.otherAccount;
+    const accounts = await getAccounts(sdk, nftToken.collectionId, nftToken.tokenId);
+    sellAccount = accounts.sellAccount;
+    buyAccount = accounts.buyAccount;
   });
 
   it('put fail; collection not found', async () => {
-    const market = await deploy();
+    const [market] = await deploy();
 
-    await expect(market.put(1000000, 1, 3, 1)).to.be.revertedWithCustomError(
-      market,
-      'CollectionNotFound'
-    );
+    await expect(
+      market.put(1000000, 1, 3, 1, Address.extract.ethCrossAccountId(sellAccount.address)),
+    ).to.be.revertedWithCustomError(market, 'CollectionNotFound');
   });
 
   it('put fail; collection not supported 721', async () => {
-    const market = await deploy();
+    const [market] = await deploy();
 
     await expect(
-      market.put(fungibleCollectionId, 1, 3, 1)
+      market.put(fungibleCollectionId, 1, 3, 1, Address.extract.ethCrossAccountId(sellAccount.address)),
     ).to.be.revertedWithCustomError(market, 'CollectionNotSupportedERC721');
   });
 
   it('put fail; token not found', async () => {
-    const market = await deploy();
+    const [market] = await deploy();
 
     await expect(
-      market.put(nftToken.collectionId, 1000, 3, 1)
+      market.put(nftToken.collectionId, 1000, 3, 1, Address.extract.ethCrossAccountId(sellAccount.address)),
     ).to.be.revertedWith('token not found');
   });
 
   it('put fail; user not owner of token', async () => {
-    const market = await deploy();
+    const [market] = await deploy();
 
     await expect(
       market
-        .connect(otherAccount)
-        .put(nftToken.collectionId, nftToken.tokenId, 3, 1)
+        .connect(buyAccount)
+        .put(nftToken.collectionId, nftToken.tokenId, 3, 1, Address.extract.ethCrossAccountId(buyAccount.address)),
     ).to.be.revertedWithCustomError(market, 'SellerIsNotOwner');
   });
 
   it('approved fail; order not found', async () => {
-    const market = await deploy();
+    const [market] = await deploy();
 
-    await expect(
-      market.checkApproved(nftToken.collectionId, nftToken.tokenId)
-    ).to.revertedWithCustomError(market, 'OrderNotFound');
+    await expect(market.checkApproved(nftToken.collectionId, nftToken.tokenId)).to.revertedWithCustomError(
+      market,
+      'OrderNotFound',
+    );
   });
 
   it('approved fail; seller not owner of token', async () => {
-    const { ownerAccount, otherAccount } = await getAccounts(
-      sdk,
-      nftToken.collectionId,
-      nftToken.tokenId
-    );
-    const market = await deploy();
-    const collection = await getCollectionContract(
-      ownerAccount,
-      nftToken.collectionId
-    );
-
-    await (
-      await collection.approve(otherAccount.address, nftToken.tokenId)
-    ).wait();
-
+    console.log(1);
+    const { sellAccount, buyAccount } = await getAccounts(sdk, nftToken.collectionId, nftToken.tokenId);
+    const [market] = await deploy();
+    const collection = await getCollectionContract(sellAccount, nftToken.collectionId);
+    console.log(2);
+    await (await collection.approve(buyAccount.address, nftToken.tokenId)).wait();
+    console.log(3);
     await (
       await market
-        .connect(ownerAccount)
-        .put(nftToken.collectionId, nftToken.tokenId, 3, 1)
+        .connect(sellAccount)
+        .put(nftToken.collectionId, nftToken.tokenId, 3, 1, Address.extract.ethCrossAccountId(sellAccount.address), {
+          gasLimit: 10_000_000,
+        })
     ).wait();
-
-    await (
-      await collection
-        .connect(ownerAccount)
-        .transferFrom(
-          ownerAccount.address,
-          otherAccount.address,
-          nftToken.tokenId
-        )
-    ).wait();
-
+    console.log(4);
+    await (await collection.connect(sellAccount).transferFrom(sellAccount.address, buyAccount.address, nftToken.tokenId)).wait();
+    console.log(5);
     await expect(
-      market.checkApproved(nftToken.collectionId, nftToken.tokenId)
-    ).to.revertedWithCustomError(market, 'SellerIsNotOwner');
+      market.checkApproved(nftToken.collectionId, nftToken.tokenId, {
+        gasLimit: 10_000_000,
+      }),
+    ).to.emit(market, 'TokenRevoke');
+    console.log(6);
+    const order = await market.getOrder(nftToken.collectionId, nftToken.tokenId);
+    console.log('order', order);
   });
 
-  it.skip('put fail; token is not approved', async () => {
-    const { ownerAccount } = await getAccounts(
-      sdk,
-      nftToken.collectionId,
-      nftToken.tokenId
-    );
-    const market = await deploy();
+  it('put fail; token is not approved', async () => {
+    const { sellAccount } = await getAccounts(sdk, nftToken.collectionId, nftToken.tokenId);
+    const [market] = await deploy();
 
     await expect(
       market
-        .connect(ownerAccount)
-        .put(nftToken.collectionId, nftToken.tokenId, 3, 1, {
+        .connect(sellAccount)
+        .put(nftToken.collectionId, nftToken.tokenId, 3, 1, Address.extract.ethCrossAccountId(sellAccount.address), {
           gasLimit: 10_000_000,
-        })
+        }),
     ).to.be.revertedWithCustomError(market, 'TokenIsNotApproved');
   });
 
   it('buy fail; token is not approved', async () => {
-    const { ownerAccount, otherAccount } = await getAccounts(
-      sdk,
-      nftToken.collectionId,
-      nftToken.tokenId
-    );
-    const market = await deploy();
+    const { sellAccount, buyAccount } = await getAccounts(sdk, nftToken.collectionId, nftToken.tokenId);
+    const [market] = await deploy();
 
     await (
       await market
-        .connect(ownerAccount)
-        .put(nftToken.collectionId, nftToken.tokenId, 10, 1, {
+        .connect(sellAccount)
+        .put(nftToken.collectionId, nftToken.tokenId, 10, 1, Address.extract.ethCrossAccountId(sellAccount.address), {
           gasLimit: 10_000_000,
         })
     ).wait();
 
     await expect(
       market
-        .connect(otherAccount)
-        .buy(nftToken.collectionId, nftToken.tokenId, 1, {
+        .connect(buyAccount)
+        .buy(nftToken.collectionId, nftToken.tokenId, 1, Address.extract.ethCrossAccountId(buyAccount.address), {
           value: 20,
-        })
+        }),
     )
       .to.be.revertedWithCustomError(market, 'FailTransferToken')
       .withArgs('ApprovedValueTooLow');
   });
 
   it('buy fail; too many amount requested', async () => {
-    const { ownerAccount, otherAccount } = await getAccounts(
-      sdk,
-      nftToken.collectionId,
-      nftToken.tokenId
-    );
-    const market = await deploy();
+    const { sellAccount, buyAccount } = await getAccounts(sdk, nftToken.collectionId, nftToken.tokenId);
+    const [market] = await deploy();
 
     const buyPrice = 10;
 
     await (
       await market
-        .connect(ownerAccount)
-        .put(nftToken.collectionId, nftToken.tokenId, buyPrice, 1, {
+        .connect(sellAccount)
+        .put(nftToken.collectionId, nftToken.tokenId, buyPrice, 1, Address.extract.ethCrossAccountId(sellAccount.address), {
           gasLimit: 10_000_000,
         })
     ).wait();
 
     await expect(
       market
-        .connect(otherAccount)
-        .buy(nftToken.collectionId, nftToken.tokenId, 2, {
+        .connect(buyAccount)
+        .buy(nftToken.collectionId, nftToken.tokenId, 2, Address.extract.ethCrossAccountId(buyAccount.address), {
           value: buyPrice * 2,
-        })
+        }),
     ).to.be.revertedWithCustomError(market, 'TooManyAmountRequested');
   });
 
   it('buy fail; not enough money', async () => {
-    const { ownerAccount, otherAccount } = await getAccounts(
-      sdk,
-      nftToken.collectionId,
-      nftToken.tokenId
-    );
-    const market = await deploy();
+    const { sellAccount, buyAccount } = await getAccounts(sdk, nftToken.collectionId, nftToken.tokenId);
+    const [market] = await deploy();
 
     const buyPrice = 10;
 
     await (
       await market
-        .connect(ownerAccount)
-        .put(nftToken.collectionId, nftToken.tokenId, buyPrice, 1, {
+        .connect(sellAccount)
+        .put(nftToken.collectionId, nftToken.tokenId, buyPrice, 1, Address.extract.ethCrossAccountId(sellAccount.address), {
           gasLimit: 10_000_000,
         })
     ).wait();
 
     await expect(
       market
-        .connect(otherAccount)
-        .buy(nftToken.collectionId, nftToken.tokenId, 1, {
+        .connect(buyAccount)
+        .buy(nftToken.collectionId, nftToken.tokenId, 1, Address.extract.ethCrossAccountId(buyAccount.address), {
           value: buyPrice - 1,
-        })
+        }),
     ).to.be.revertedWithCustomError(market, 'NotEnoughMoneyError');
   });
 
   it('buy fail; not enough money for fee', async () => {
-    const { ownerAccount, otherAccount } = await getAccounts(
-      sdk,
-      nftToken.collectionId,
-      nftToken.tokenId
-    );
-    const market = await deploy();
+    const { sellAccount, buyAccount } = await getAccounts(sdk, nftToken.collectionId, nftToken.tokenId);
+    const [market] = await deploy();
 
     const buyPrice = 10;
 
     await (
       await market
-        .connect(ownerAccount)
-        .put(nftToken.collectionId, nftToken.tokenId, buyPrice, 1, {
+        .connect(sellAccount)
+        .put(nftToken.collectionId, nftToken.tokenId, buyPrice, 1, Address.extract.ethCrossAccountId(sellAccount.address), {
           gasLimit: 10_000_000,
         })
     ).wait();
 
     await expect(
       market
-        .connect(otherAccount)
-        .buy(nftToken.collectionId, nftToken.tokenId, 1, {
+        .connect(buyAccount)
+        .buy(nftToken.collectionId, nftToken.tokenId, 1, Address.extract.ethCrossAccountId(buyAccount.address), {
           value: buyPrice,
-        })
+        }),
     ).to.be.revertedWithCustomError(market, 'NotEnoughMoneyError');
   });
 });

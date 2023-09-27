@@ -2,10 +2,14 @@ import { ethers } from 'hardhat';
 import { Address } from '@unique-nft/utils';
 import { KeyringAccount, KeyringProvider } from '@unique-nft/accounts/keyring';
 import { UniqueNFTFactory } from '@unique-nft/solidity-interfaces';
-import { Sdk } from '@unique-nft/sdk';
+import { Sdk } from '@unique-nft/sdk/full';
+import * as fs from 'fs';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { loadConfig } from '../scripts';
-import * as fs from 'fs';
+import { Market } from '../../../typechain-types';
+import { ContractReceipt } from '@ethersproject/contracts/src.ts';
+import { expect } from 'chai';
+import { BigNumber } from 'ethers';
 
 export async function createSdk() {
   const appConfig = loadConfig();
@@ -50,22 +54,25 @@ export async function getCollectionData(sdk: Sdk): Promise<TestData> {
     return JSON.parse(dataStr);
   } else {
     const [account1] = await ethers.getSigners();
+    console.log('account1', !!account1);
 
-    const data = {
-      nft: await createNft(sdk, address, account1.address),
-      rft: await createRft(sdk, address, account1.address),
-      fungibleId: await createFungible(sdk, address),
-    };
-    fs.writeFileSync(filename, JSON.stringify(data, null, 2));
-    return data;
+    try {
+      const data = {
+        nft: await createNft(sdk, address, account1.address),
+        rft: await createRft(sdk, address, account1.address),
+        fungibleId: await createFungible(sdk, address),
+      };
+      fs.writeFileSync(filename, JSON.stringify(data, null, 2));
+      console.log('data', data);
+      return data;
+    } catch (err) {
+      console.log('err', err);
+      throw err;
+    }
   }
 }
 
-async function createNft(
-  sdk: Sdk,
-  address: string,
-  owner: string
-): Promise<TokenData> {
+async function createNft(sdk: Sdk, address: string, owner: string): Promise<TokenData> {
   const collectionRes = await sdk.collections.create.submitWaitResult({
     address,
     name: 'test',
@@ -93,11 +100,7 @@ async function createNft(
   };
 }
 
-async function createRft(
-  sdk: Sdk,
-  address: string,
-  owner: string
-): Promise<TokenData> {
+async function createRft(sdk: Sdk, address: string, owner: string): Promise<TokenData> {
   const collectionRes = await sdk.refungible.createCollection.submitWaitResult({
     address,
     name: 'test',
@@ -141,11 +144,11 @@ async function createFungible(sdk: Sdk, address: string): Promise<number> {
   return collectionId;
 }
 
-export async function deploy(fee: number = 10) {
+export async function deploy(fee: number = 10): Promise<[Market, number]> {
   const Market = await ethers.getContractFactory('Market');
-  const market = await Market.deploy(fee);
-
-  return market;
+  const market = (await Market.deploy(fee, Date.now())) as Market;
+  const version = await market.version();
+  return [market, version];
 }
 
 export async function getCollectionContract(owner: any, collectionId: number) {
@@ -161,11 +164,7 @@ export function getKeyringAccount(): Promise<KeyringAccount> {
   return KeyringProvider.fromMnemonic(seed);
 }
 
-export async function getAccounts(
-  sdk: Sdk,
-  collectionId: number,
-  tokenId: number
-) {
+export async function getAccounts(sdk: Sdk, collectionId: number, tokenId: number) {
   const [account1, account2] = await ethers.getSigners();
 
   const tokenOwner = await sdk.tokens.owner({
@@ -173,12 +172,31 @@ export async function getAccounts(
     tokenId,
   });
 
-  const isOwner1 =
-    tokenOwner?.owner.toLowerCase() === account1.address.toLowerCase();
+  const isOwner1 = tokenOwner?.owner.toLowerCase() === account1.address.toLowerCase();
 
-  const ownerAccount: SignerWithAddress = isOwner1 ? account1 : account2;
+  const ownerAccount = account1;
 
-  const otherAccount: SignerWithAddress = isOwner1 ? account2 : account1;
+  const sellAccount: SignerWithAddress = isOwner1 ? account1 : account2;
 
-  return { ownerAccount, otherAccount };
+  const buyAccount: SignerWithAddress = isOwner1 ? account2 : account1;
+
+  return { ownerAccount, sellAccount, buyAccount };
+}
+
+export function findEventObject<T>(result: ContractReceipt, name: string): T {
+  const event = (result.events || []).find((event) => event.event === name);
+  if (!event) {
+    throw new Error(`Event ${name} not found`);
+  }
+  return event.args as T;
+}
+
+export function expectOrderStruct(receivedOrder: Market.OrderStruct, order: Market.OrderStruct) {
+  expect(receivedOrder.id).eq(order.id);
+  expect(receivedOrder.collectionId).eq(order.collectionId);
+  expect(receivedOrder.tokenId).eq(order.tokenId);
+  expect(receivedOrder.amount).eq(order.amount);
+  expect(receivedOrder.price).eq(BigNumber.from(order.price));
+  expect(receivedOrder.seller.eth).eq(order.seller.eth);
+  expect(receivedOrder.seller.sub).eq(BigNumber.from(order.seller.sub));
 }

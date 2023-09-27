@@ -1,10 +1,11 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { ContractEntity, OfferEntity } from '../entities';
 
 export class OffersTable1679578453871 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.createTable(
       new Table({
-        name: 'offers',
+        name: queryRunner.manager.getRepository(OfferEntity).metadata.tableName,
         columns: [
           {
             name: 'id',
@@ -15,7 +16,8 @@ export class OffersTable1679578453871 implements MigrationInterface {
           { name: 'order_id', type: 'integer' },
           { name: 'collection_id', type: 'integer' },
           { name: 'token_id', type: 'integer' },
-          { name: 'price', type: 'bigint' },
+          { name: 'price_parsed', type: 'numeric', precision: 38, scale: 18 },
+          { name: 'price_raw', type: 'varchar' },
           { name: 'amount', type: 'integer' },
           { name: 'contract_address', type: 'varchar' },
           {
@@ -37,7 +39,7 @@ export class OffersTable1679578453871 implements MigrationInterface {
         ],
         foreignKeys: [
           {
-            referencedTableName: 'contracts',
+            referencedTableName: queryRunner.manager.getRepository(ContractEntity).metadata.tableName,
             columnNames: ['contract_address'],
             referencedColumnNames: ['address'],
             deferrable: 'INITIALLY DEFERRED',
@@ -59,11 +61,12 @@ export class OffersTable1679578453871 implements MigrationInterface {
             columnNames: ['collection_id', 'token_id'],
           },
         ],
-      })
+      }),
+      true,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.dropTable('contracts');
+    await queryRunner.dropTable(queryRunner.manager.getRepository(OfferEntity).metadata.tableName);
   }
 }

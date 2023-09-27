@@ -11,9 +11,4 @@ export class AppController {
   getData() {
     return this.appService.getData();
   }
-
-  @EventPattern('new-collection-added')
-  async onAddCollection(data: { collectionId: number }) {
-    console.log('onAddCollection', data);
-  }
 }

@@ -1,7 +1,6 @@
-import { Sdk, SocketClient } from '@unique-nft/sdk';
+import { HasNextData, Sdk, SocketClient } from '@unique-nft/sdk/full';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getContractAbi } from '@app/contracts/scripts';
-import { ContractEntity, ContractService } from '@app/common/modules/database';
 import { CollectionEventsHandler, ContractEventsHandler } from './handlers';
 
 @Injectable()
@@ -10,63 +9,91 @@ export class ContractEventsService implements OnModuleInit {
 
   private readonly client: SocketClient;
 
+  private isModuleInit: boolean;
+  private isClientConnected: boolean;
+
   constructor(
     private readonly sdk: Sdk,
-    @Inject(ContractService)
-    private readonly contractService: ContractService,
     @Inject(CollectionEventsHandler)
     private readonly collectionEventsHandler: CollectionEventsHandler,
     @Inject(ContractEventsHandler)
-    private readonly contractEventsHandler: ContractEventsHandler
+    private readonly contractEventsHandler: ContractEventsHandler,
   ) {
-    this.client = this.sdk.subscriptions.connect({
+    this.client = this.sdk.subscription.connect({
       reconnection: true,
       autoConnect: true,
+      transports: ['websocket'],
     });
 
-    this.client.on(
-      'collections',
-      this.collectionEventsHandler.onEvent.bind(this.collectionEventsHandler)
-    );
-    this.client.subscribeCollection();
+    this.client.on('collections', this.collectionEventsHandler.onEvent.bind(this.collectionEventsHandler));
+    this.client.on('contract-logs', this.contractEventsHandler.onEvent.bind(this.contractEventsHandler));
+    this.client.socket.on('connect_error', async (err) => {
+      this.logger.error(`connect error`, err);
+    });
+    this.client.on('has-next', this.onHasNext.bind(this));
+    // todo type it after update sdk
+    this.client.socket.on('subscribe-state', this.onSubscribeState.bind(this));
+
+    this.client.socket.on('connect', async () => {
+      this.isClientConnected = true;
+      if (this.isModuleInit) {
+        await this.initContracts();
+      }
+    });
   }
 
   async onModuleInit() {
-    const contracts = await this.contractService.getAll();
-
-    const abiByAddress: Record<string, any> = {};
-
-    contracts.forEach((contract) => {
-      abiByAddress[contract.address] = getContractAbi(contract.version);
-
-      this.subscribe(contract);
-    });
-
-    this.collectionEventsHandler.init(abiByAddress);
-    this.contractEventsHandler.init(abiByAddress);
+    this.isModuleInit = true;
+    if (this.isClientConnected) {
+      await this.initContracts();
+    }
   }
 
-  private async subscribe(contract: ContractEntity) {
-    this.logger.log(`subscribe v${contract.version}:${contract.address}`);
+  async initContracts() {
+    const contracts = await this.contractEventsHandler.getAllContract();
 
-    const loadBlocks = (fromBlock: number) =>
-      this.client.subscribeContract({
-        address: contract.address,
-        fromBlock,
-      });
+    const abiByAddress: Record<string, any> = contracts.reduce((data, contract) => {
+      return {
+        ...data,
+        [contract.address]: getContractAbi(contract.version),
+      };
+    }, {});
 
-    this.client.socket.on('connect', async () => {
-      this.logger.log(`reconnect v${contract.version}:${contract.address}`);
-      const processedAt = await this.contractService.getProcessedBlock(
-        contract.address
-      );
-      loadBlocks(processedAt);
-    });
+    this.collectionEventsHandler.init(this.client, abiByAddress);
+    this.contractEventsHandler.init(this.client, abiByAddress);
 
-    this.client.on(
-      'contract-logs',
-      this.contractEventsHandler.onEvent.bind(this)
-    );
-    this.client.on('has-next', (room, data) => loadBlocks(data.nextId));
+    contracts.forEach((contract) => this.contractEventsHandler.subscribe(contract));
+    this.collectionEventsHandler.subscribe().then();
+  }
+
+  private onHasNext(room, data: HasNextData) {
+    // todo type it after update sdk
+    if (room.name === 'contract') {
+      this.contractEventsHandler.loadBlocks(room.data.address, data.nextId);
+    }
+
+    // todo type it after update sdk
+    if (room.name === 'collection') {
+      this.collectionEventsHandler.loadBlocks(data.nextId);
+    }
+  }
+
+  private async onSubscribeState(room, data) {
+    if (!data.switchToHead) {
+      return;
+    }
+
+    this.logger.log('subscribe to head', room.name);
+
+    // todo type it after update sdk
+    if (room.name === 'contract') {
+      const { address } = room.data;
+      await this.contractEventsHandler.saveBlockId(address, data.toBlock);
+    }
+
+    // todo type it after update sdk
+    if (room.name === 'collection') {
+      await this.collectionEventsHandler.saveBlockId(data.toBlock);
+    }
   }
 }

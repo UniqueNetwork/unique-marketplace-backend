@@ -9,6 +9,9 @@ import { sdkProvider } from '@app/common/modules/sdk/sdk.provider';
 import { AppController } from './app.controller';
 import { PgNotifyClientModule } from '@app/common/pg-transport/pg-notify-client.module';
 import { ContractEventsModule } from './contract-events/contract-events.module';
+import { CollectionsModule } from '../collections/collections.module';
+import { TasksWorkerModule } from '@app/common/modules/config/worker.module';
+import { SdkService } from './sdk.service';
 
 @Module({
   imports: [
@@ -18,8 +21,11 @@ import { ContractEventsModule } from './contract-events/contract-events.module';
     DatabaseModule.forRoot(),
     PgNotifyClientModule,
     ContractEventsModule,
+    CollectionsModule,
+    TasksWorkerModule,
   ],
   controllers: [AppController],
-  providers: [sdkProvider, AppService],
+  providers: [sdkProvider, SdkService, AppService],
+  exports: [SdkService],
 })
 export class AppModule {}
