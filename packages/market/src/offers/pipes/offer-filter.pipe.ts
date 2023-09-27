@@ -2,13 +2,12 @@ import { ArgumentMetadata, BadRequestException, HttpStatus, Injectable, Optional
 import { OffersFilter } from '../dto/offers.dto';
 import { ErrorHttpStatusCode, HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
 import { UntypedRequest } from '@app/common/modules/types';
+import { QueryParamArray } from '@app/common/src'
 
 export interface ParseOffersFilterPipeOptions {
   errorHttpStatusCode?: ErrorHttpStatusCode;
   exceptionFactory?: (error: string) => any;
 }
-
-export type QueryParamArray = string | string[] | undefined;
 
 const regex = /\S/;
 
