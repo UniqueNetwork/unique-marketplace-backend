@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { nullOrWhitespace, QueryParamArray } from '../../../market/src/offers/pipes/offer-filter.pipe';
-import { ValueTransformer } from 'typeorm';
+import { QueryParamArray } from '../types';
 
 @Injectable()
 export class HelperService {
