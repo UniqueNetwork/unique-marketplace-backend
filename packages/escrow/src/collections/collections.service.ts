@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CollectionInfoWithSchemaResponse } from '@unique-nft/sdk/';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CollectionEntity, OfferEntity } from '@app/common/modules/database';
 import { Repository } from 'typeorm';
@@ -54,13 +53,13 @@ export class CollectionsService {
         this.sdkService.getChainProperties(),
       ]);
       if (collection) {
-        if (!collection.schema) {
+        if (!collection.info) {
           this.logger.error(`Collection ID: ${collectionId} not found schema! Invalid collection schema!`);
           return;
         }
         await this.addTaskForAddCollection({ collection, chain, tokensCount: tokens.list.length });
-        await this.addTaskForAddTokensList(tokens.list, collection.id, chain.token);
-        this.logger.log(`Added a collection to work on schema: ${collection.id} and tokens: ${tokens.list.length}`);
+        await this.addTaskForAddTokensList(tokens.list, collection.collectionId, chain.token);
+        this.logger.log(`Added a collection to work on schema: ${collection.collectionId} and tokens: ${tokens.list.length}`);
         this.logger.verbose(`Collection ID: ${collectionId} saved in database!`);
       } else {
         this.logger.warn('No found collection or destroyed');

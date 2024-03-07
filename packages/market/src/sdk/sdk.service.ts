@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Sdk } from '@unique-nft/sdk/full';
+import { CollectionWithInfoV2Dto, Sdk } from '@unique-nft/sdk/full';
 import { abiVerifyMessage } from '@app/contracts/scripts';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SettingEntity } from '@app/common/modules/database';
@@ -13,10 +13,10 @@ export class SdkMarketService {
   constructor(private readonly sdk: Sdk, @InjectRepository(SettingEntity) private settingRepository: Repository<SettingEntity>) {}
 
   async checkCollectionOwner(owner: string, collectionId: number): Promise<boolean> {
-    let collection;
+    let collection: CollectionWithInfoV2Dto;
 
     try {
-      collection = await this.sdk.collections.get({ collectionId });
+      collection = await this.sdk.collection.getV2({ collectionId });
     } catch (err) {
       throw new NotFoundException(`You are trying to add a collection ${collection} which does not exist!`);
     }
