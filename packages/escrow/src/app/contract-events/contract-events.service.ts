@@ -1,4 +1,4 @@
-import { HasNextData, Sdk, SocketClient } from '@unique-nft/sdk/full';
+import { HasNextData, Sdk, SocketClient, SubscriptionEvents } from '@unique-nft/sdk/full';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getContractAbi } from '@app/contracts/scripts';
 import { CollectionEventsHandler, ContractEventsHandler } from './handlers';
@@ -25,17 +25,19 @@ export class ContractEventsService implements OnModuleInit {
       transports: ['websocket'],
     });
 
-    this.client.on('collections', this.collectionEventsHandler.onEvent.bind(this.collectionEventsHandler));
-    this.client.on('contract-logs', this.contractEventsHandler.onEvent.bind(this.contractEventsHandler));
+    this.client.on(SubscriptionEvents.COLLECTIONS, this.collectionEventsHandler.onEvent.bind(this.collectionEventsHandler));
+    this.client.on(SubscriptionEvents.CONTRACT_LOGS, this.contractEventsHandler.onEvent.bind(this.contractEventsHandler));
     this.client.socket.on('connect_error', async (err) => {
       this.logger.error(`connect error`, err);
     });
-    this.client.on('has-next', this.onHasNext.bind(this));
+    this.client.on(SubscriptionEvents.HAS_NEXT, this.onHasNext.bind(this));
     // todo type it after update sdk
     this.client.socket.on('subscribe-state', this.onSubscribeState.bind(this));
 
     this.client.socket.on('connect', async () => {
       this.isClientConnected = true;
+      this.logger.log('connect');
+
       if (this.isModuleInit) {
         await this.initContracts();
       }

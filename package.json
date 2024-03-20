@@ -1,6 +1,6 @@
 {
   "name": "unique-marketplace-backend",
-  "version": "3.0.233",
+  "version": "3.0.243",
   "description": "Backend project for unique marketplace",
   "author": "Unique Network",
   "private": true,
@@ -52,7 +52,7 @@
     "@sentry/node": "^7.38.0",
     "@types/multer": "^1.4.7",
     "@unique-nft/accounts": "^0.3.5",
-    "@unique-nft/sdk": "^0.2.11",
+    "@unique-nft/sdk": "^0.2.23",
     "@unique-nft/solidity-interfaces": "^0.55.1",
     "@willsoto/nestjs-prometheus": "^5.1.0",
     "axios": "^1.0.0",
