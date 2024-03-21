@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get metamask token for market</title>
+</head>
+<body>
+<h2>Get metamask token for market</h2>
+<button id="signBtn">Create token</button>
+<script>
+  const signButton = document.getElementById('signBtn');
+
+  signButton.addEventListener('click', async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        const account = accounts[0];
+        const message = 'test message';
+        const signature = await ethereum.request({
+          method: 'personal_sign',
+          params: [message, account],
+        });
+        const token = btoa(JSON.stringify({
+          message,
+          signature,
+          metamask: account
+        }))
+        console.log('account', account);
+        console.log('token', token);
+      } catch (error) {
+        console.error(error);
+      }
+    } else {
+      console.log('MetaMask is not installed!');
+    }
+  });
+</script>
+</body>
+</html>
