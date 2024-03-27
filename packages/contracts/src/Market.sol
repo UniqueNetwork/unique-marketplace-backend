@@ -23,7 +23,7 @@ contract Market is Ownable, ReentrancyGuard {
     }
 
     uint32 public constant version = 0;
-    uint32 public constant buildVersion = 4;
+    uint32 public constant buildVersion = 5;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     CollectionHelpers private constant collectionHelpers =
@@ -243,7 +243,7 @@ contract Market is Ownable, ReentrancyGuard {
       uint32 tokenId,
       uint256 price
     ) external {
-      Order memory order = orders[collectionId][tokenId];
+      Order storage order = orders[collectionId][tokenId];
 
       if (order.price == 0) {
         revert OrderNotFound();
