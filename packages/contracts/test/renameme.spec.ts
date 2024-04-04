@@ -1,31 +1,44 @@
-import { ContractHelpers } from '@unique-nft/solidity-interfaces';
 import hre from 'hardhat';
-import { Market } from '../../../typechain-types';
-import contractHelperAbi from './abi/ContractHelpers.json';
-import SdkHelper from './utils/SdkHelper';
+import { getTestData } from './utils/testData';
+import { expect } from 'chai';
 
 describe('Deploy contract', () => {
   it('deploy market', async () => {
-    const sdk = await SdkHelper.init();
-    const collectionId = await sdk.createCollection();
-    const nft = await sdk.createNft(collectionId);
+    const { sdk, marketplace, collection, accounts: [_, seller] } = await getTestData();
+    const PRICE = hre.ethers.utils.parseEther('10');
 
-    const [owner, seller, buyer] = await hre.ethers.getSigners();
-    const nonce = await owner.getTransactionCount();
+    const nft = await sdk.createNft(
+      collection.collectionId,
+      {owner: seller.address}
+    );
 
-    const MarketFactory = await hre.ethers.getContractFactory('Market');
-    const contractHelpers = await hre.ethers.getContractAt(contractHelperAbi, '0x842899ecf380553e8a4de75bf534cdf6fbf64049') as ContractHelpers;
-    const marketContract = await MarketFactory.deploy(0, 2) as Market;
-    await marketContract.deployed();
+    (await collection.contract.connect(seller)
+      .approve(marketplace.address, nft.tokenId)).wait();
 
-    const result = await Promise.all([
-      (await contractHelpers.selfSponsoredEnable(marketContract.address, {gasLimit: 300000})).wait(),
-      (await owner.sendTransaction({
-        to: marketContract.address,
-        value: hre.ethers.utils.parseEther('1'),
-      })).wait()
-    ]);
+    const puttingOnSale = await marketplace.connect(seller).put(
+      collection.collectionId,
+      nft.tokenId,
+      PRICE,
+      1,
+      {eth: seller.address, sub: 0},
+      {
+        gasLimit: 1_000_000
+      }
+    );
+    await puttingOnSale.wait();
 
-
+    const order = await marketplace.getOrder(collection.collectionId, nft.tokenId);
+    expect(order.id).to.eq(1);
+    expect(order.collectionId).to.eq(collection.collectionId);
+    expect(order.tokenId).to.eq(nft.tokenId);
+    expect(order.price).to.eq(PRICE);
+    expect(order.seller).to.eq([seller.address, 0n]);
   });
+
+  it('another test', async () => {
+    const {marketplace, collection} = await getTestData();
+
+    const order = await marketplace.getOrder(collection.collectionId, 1);
+    console.log('done')
+  })
 });

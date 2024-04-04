@@ -1,29 +1,32 @@
-import { KeyringAccount, KeyringProvider } from "@unique-nft/accounts/keyring";
-import Sdk, { CreateCollectionV2ArgsDto, CreateTokenV2ArgsDto } from '@unique-nft/sdk';
-import {collectionMetadata} from "../data/collectionMetadata";
+import hre from 'hardhat';
+import Sdk, { Account, CreateCollectionV2ArgsDto, CreateTokenV2ArgsDto } from '@unique-nft/sdk';
+import { Sr25519Account } from '@unique-nft/sr25519';
+import {Address} from '@unique-nft/utils'
+import { collectionMetadata } from "../data/collectionMetadata";
 import testConfig from "./testConfig";
+import { UniqueNFTFactory, UniqueNFT } from '@unique-nft/solidity-interfaces';
+import { getNftContract } from './helpers';
 
 
 export default class SdkHelper {
   readonly sdk: Sdk;
-  readonly accounts: KeyringAccount[];
+  readonly accounts: Account[];
 
-  private constructor(sdk: Sdk, accounts: KeyringAccount[]) {
+  private constructor(sdk: Sdk, accounts: Account[]) {
     this.sdk = sdk;
     this.accounts = accounts;
   }
 
   static async init() {
     const accounts = await Promise.all(
-      testConfig.subPrivateKeys.map(async key => await KeyringProvider.fromUri(key))
+      testConfig.subPrivateKeys.map(key => Sr25519Account.fromUri(key))
     );
-
-    const alice = accounts[0];
 
     const sdk = new Sdk({
       baseUrl: testConfig.sdkUrl,
-      signer: alice
+      account: accounts[0],
     });
+
     return new SdkHelper(sdk, accounts);
   }
 
@@ -31,12 +34,17 @@ export default class SdkHelper {
     const payload = {...collectionMetadata, ...body};
     const response = await this.sdk.collection.createV2(payload);
 
-    const parsed = await handleSdkResponse(response);
-    return parsed.collectionId;
+    const {collectionId} = await handleSdkResponse(response);
+
+    return {
+      collectionId,
+      contract: await getNftContract(collectionId),
+    }
   }
 
-  createNft = (collectionId: number, token?: CreateTokenV2ArgsDto) => {
-    return this.sdk.token.createV2({collectionId, ...token});
+  async createNft(collectionId: number, token?: Partial<CreateTokenV2ArgsDto>) {
+    const result = await this.sdk.token.createV2({collectionId, ...token});
+    return handleSdkResponse(result);
   }
 
   async createMultipleNfts(collectionId: number, tokens: Omit<CreateTokenV2ArgsDto, 'address'>[]) {

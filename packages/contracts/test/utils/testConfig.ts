@@ -13,6 +13,8 @@ const getConfig = () => {
     subPrivateKeys,
     ethRpcUrl: TEST_ETH_RPC,
     sdkUrl: TEST_SDK_URL,
+    contractHelperAddress: '0x842899ecf380553e8a4de75bf534cdf6fbf64049',
+    collectionHelperAddress: '0x6c4e9fe1ae37a41e93cee429e8e1881abdcbb54f',
   }
 
   return config;
