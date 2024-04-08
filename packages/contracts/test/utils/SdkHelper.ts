@@ -1,10 +1,8 @@
 import hre from 'hardhat';
-import Sdk, { Account, CreateCollectionV2ArgsDto, CreateTokenV2ArgsDto } from '@unique-nft/sdk';
+import Sdk, { Account, CreateCollectionV2ArgsDto, CreateTokenV2ArgsDto, TokenIdQuery } from '@unique-nft/sdk';
 import { Sr25519Account } from '@unique-nft/sr25519';
-import {Address} from '@unique-nft/utils'
 import { collectionMetadata } from "../data/collectionMetadata";
 import testConfig from "./testConfig";
-import { UniqueNFTFactory, UniqueNFT } from '@unique-nft/solidity-interfaces';
 import { getNftContract } from './helpers';
 
 
@@ -53,9 +51,20 @@ export default class SdkHelper {
       tokens,
     });
   }
+
+  async getBalanceOf(address: string) {
+    const result = await this.sdk.balance.get({address});
+
+    return hre.ethers.BigNumber.from(result.availableBalance.raw);
+  }
+
+  async getOwnerOf(token: TokenIdQuery) {
+    const {owner} = await this.sdk.token.owner(token);
+    return owner;
+  }
 }
 
-const handleSdkResponse = async <T>(response: {parsed?: T, error: object}): Promise<T> => {
+const handleSdkResponse = async <T>(response: {parsed?: T, error?: object}): Promise<T> => {
   if (response.error) throw Error('Error handling response');
   if (!response.parsed) throw Error('Cannot extract parsed result');
 
