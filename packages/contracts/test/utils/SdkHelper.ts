@@ -46,7 +46,8 @@ export default class SdkHelper {
   }
 
   async createMultipleNfts(collectionId: number, tokens: Omit<CreateTokenV2ArgsDto, 'address'>[]) {
-    await this.sdk.token.createMultipleV2({
+    // TODO use V2
+    await this.sdk.token.createMultiple({
       collectionId,
       tokens,
     });
