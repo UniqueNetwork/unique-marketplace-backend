@@ -1,6 +1,6 @@
 {
   "name": "unique-marketplace-backend",
-  "version": "3.0.238",
+  "version": "3.0.242",
   "description": "Backend project for unique marketplace",
   "author": "Unique Network",
   "private": true,
@@ -17,6 +17,7 @@
     "test": "nx run-many --target=test --all --parallel=1",
     "test:market": "nx test market",
     "test:escrow": "nx test escrow",
+    "testhh": "yarn hardhat test --no-compile --network test",
     "lint": "nx run-many --target=lint --all",
     "lint:fix": "nx run-many --target=lint --all --fix --skip-nx-cache",
     "start": "node -r source-map-support/register ./dist/packages/market/main.js",
