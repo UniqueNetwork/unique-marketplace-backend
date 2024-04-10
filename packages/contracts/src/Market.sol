@@ -19,11 +19,18 @@ contract Market is Ownable, ReentrancyGuard {
       uint32 tokenId;
       uint32 amount;
       uint256 price;
+      uint32 currency;
       CrossAddress seller;
     }
 
+    struct Currency {
+      bool isAvailable;
+      uint32 collectionId;
+      uint32 fee;
+    }
+
     uint32 public constant version = 0;
-    uint32 public constant buildVersion = 4;
+    uint32 public constant buildVersion = 7;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     CollectionHelpers private constant collectionHelpers =
@@ -36,6 +43,7 @@ contract Market is Ownable, ReentrancyGuard {
     uint64 public ctime;
     address public ownerAddress;
     mapping(address => bool) public admins;
+    mapping(uint256 => Currency) public availableCurrencies;
 
     event TokenIsUpForSale(uint32 version, Order item);
     event TokenPriceChanged(uint32 version, Order item);
@@ -102,6 +110,8 @@ contract Market is Ownable, ReentrancyGuard {
         if (marketFee >= 100) {
             revert InvalidMarketFee();
         }
+
+        availableCurrencies[0] = Currency(true, 0, 0);
     }
 
     /**
@@ -136,6 +146,35 @@ contract Market is Ownable, ReentrancyGuard {
 
         return IERC721(collectionAddress);
     }
+
+    /**
+       * Add new currency. Only owner or an existing admin can add currency.
+       *
+       * @param collectionId: Fungible collection id
+       * @param fee: Fee value for this collection
+       */
+    function addCurrency(uint32 collectionId, uint32 fee) public onlyAdmin {
+      availableCurrencies[collectionId] = Currency(true, collectionId, fee);
+    }
+
+    /**
+     * Remove currency. Only owner or an existing admin can remove currency.
+     *
+     * @param collectionId: Fungible collection id
+     */
+    function removeCurrency(uint32 collectionId) public onlyAdmin {
+      delete availableCurrencies[collectionId];
+    }
+
+    /**
+     * Get currency
+     *
+     * @param collectionId: Fungible collection id
+     */
+    function getCurrency(uint32 collectionId) external view returns (Currency memory) {
+      return availableCurrencies[collectionId];
+    }
+
 
     /**
      * Add new admin. Only owner or an existing admin can add admins.
@@ -186,6 +225,7 @@ contract Market is Ownable, ReentrancyGuard {
         uint32 collectionId,
         uint32 tokenId,
         uint256 price,
+        uint32 currency,
         uint32 amount,
         CrossAddress memory seller
     ) public validCrossAddress(seller.eth, seller.sub) {
@@ -194,6 +234,10 @@ contract Market is Ownable, ReentrancyGuard {
         if (price == 0) {
           revert InvalidArgument("price must not be zero");
         }
+        if (!availableCurrencies[currency].isAvailable) {
+          revert InvalidArgument("currency in not available");
+        }
+
         if (amount == 0) {
           revert InvalidArgument("amount must not be zero");
         }
@@ -217,15 +261,15 @@ contract Market is Ownable, ReentrancyGuard {
         }
 
         Order memory order = Order(
-            0,
+            idCount++,
             collectionId,
             tokenId,
             amount,
             price,
+            currency,
             seller
         );
 
-        order.id = idCount++;
         orders[collectionId][tokenId] = order;
 
         emit TokenIsUpForSale(version, order);
@@ -241,17 +285,23 @@ contract Market is Ownable, ReentrancyGuard {
     function changePrice(
       uint32 collectionId,
       uint32 tokenId,
-      uint256 price
+      uint256 price,
+      uint32 currency
     ) external {
-      Order memory order = orders[collectionId][tokenId];
+      Order storage order = orders[collectionId][tokenId];
 
       if (order.price == 0) {
         revert OrderNotFound();
       }
 
+      if (!availableCurrencies[currency].isAvailable) {
+        revert InvalidArgument("currency in not available");
+      }
+
       validOwner(collectionId, tokenId, order.seller);
 
       order.price = price;
+      order.currency = currency;
 
       emit TokenPriceChanged(version, order);
     }
