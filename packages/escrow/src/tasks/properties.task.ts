@@ -244,16 +244,6 @@ export class PropertiesTask {
       });
     }
 
-    for (const [key, val] of Object.entries(tokenData.token?.attributes) as [string, any]) {
-      source.add({
-        locale: this.getLocation(val),
-        items: this.getValueToken(val),
-        key: val.name?._,
-        type: val.isEnum ? TypeAttributToken.Enum : TypeAttributToken.String,
-        is_trait: val.isEnum,
-      });
-    }
-
     return {
       items: [...source],
       token: tokenData.token,
