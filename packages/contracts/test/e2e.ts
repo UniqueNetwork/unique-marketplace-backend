@@ -16,7 +16,7 @@ import {
 } from './utils';
 import { Address } from '@unique-nft/utils';
 import { TokenIsUpForSaleEventObject } from '../../../typechain-types/packages/contracts/src/Market';
-import { TokenIsApprovedEventObject, TokenIsPurchasedEventObject } from '../assemblies/0/market';
+import { TokenIsApprovedEventObject, TokenIsPurchasedEventObject } from '../assemblies/2/market';
 
 describe.only('e2e', function () {
   let sdk: Sdk;
@@ -39,6 +39,7 @@ describe.only('e2e', function () {
       tokenId,
       amount,
       price: tokenPrice,
+      currency: 0,
       seller: Address.extract.ethCrossAccountId(sellAccount.address),
     });
   }
@@ -73,7 +74,7 @@ describe.only('e2e', function () {
     const seller = Address.extract.ethCrossAccountId(sellAccount.address);
 
     const result = await (
-      await market.connect(sellAccount).put(collectionId, tokenId, tokenPrice, putAmount, seller, {
+      await market.connect(sellAccount).put(collectionId, tokenId, tokenPrice, 0, putAmount, seller, {
         gasLimit: 10_000_000,
       })
     ).wait();
@@ -87,6 +88,7 @@ describe.only('e2e', function () {
       tokenId,
       amount: putAmount,
       price: tokenPrice,
+      currency: 0,
       seller: seller,
     });
   });
@@ -107,6 +109,7 @@ describe.only('e2e', function () {
       tokenId,
       amount: putAmount,
       price: tokenPrice,
+      currency: 0,
       seller: Address.extract.ethCrossAccountId(sellAccount.address),
     });
   });
@@ -147,6 +150,7 @@ describe.only('e2e', function () {
       tokenId,
       amount: putAmount - buyAmount,
       price: tokenPrice,
+      currency: 0,
       seller: Address.extract.ethCrossAccountId(sellAccount.address),
     });
 
@@ -186,6 +190,9 @@ describe.only('e2e', function () {
   });
 
   it('withdraw', async () => {
-    await expect(market.withdraw(buyAccount.address)).to.changeEtherBalances([buyAccount, market], [feeValue, -feeValue]);
+    await expect(market.withdraw({ sub: 0, eth: buyAccount.address }, 0, feeValue)).to.changeEtherBalances(
+      [buyAccount, market],
+      [feeValue, -feeValue],
+    );
   });
 });

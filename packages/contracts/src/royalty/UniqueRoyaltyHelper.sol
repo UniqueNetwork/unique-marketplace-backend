@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.19;
+pragma solidity >=0.8.20;
 
 import "./UniqueRoyalty.sol";
 import "./LibPart.sol";
@@ -17,7 +17,9 @@ struct RoyaltyAmount {
     uint amount;
 }
 
-library UniqueRoyaltyHelper {
+contract UniqueRoyaltyHelper {
+    uint32 public constant version = 1;
+
     function encodePart(UniqueRoyaltyPart memory part) internal pure returns (bytes memory) {
         (uint256 encodedMeta, uint256 encodedAddress) = UniqueRoyalty.encodePart(part);
 
@@ -99,7 +101,7 @@ library UniqueRoyaltyHelper {
         return calculateRoyalties(royalties, true, sellPrice);
     }
 
-    function calculate(address collection, uint tokenId, uint sellPrice) internal view returns (RoyaltyAmount[] memory) {
+    function calculate(address collection, uint tokenId, uint sellPrice) external view returns (RoyaltyAmount[] memory) {
         UniqueRoyaltyPart[] memory royalties = getRoyalty(collection, tokenId);
 
         return calculateRoyalties(royalties, false, sellPrice);

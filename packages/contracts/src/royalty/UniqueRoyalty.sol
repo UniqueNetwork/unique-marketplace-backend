@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.19;
+pragma solidity >=0.8.20;
 
-import { CrossAddress } from "@unique-nft/solidity-interfaces/contracts/UniqueNFT.sol";
+import "../interfaces.sol";
 
 struct UniqueRoyaltyPart {
     uint8 version;
