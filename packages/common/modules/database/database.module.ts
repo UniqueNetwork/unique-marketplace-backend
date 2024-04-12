@@ -38,6 +38,7 @@ import {
 } from './migrations';
 import { BannersService, ContractService, OfferService, SettingsService } from './services';
 import { OfferEventService } from './services/offer-event.service';
+import { DeployContractV2_1712848767753 } from './migrations/1712848767753-DeployContractV2';
 
 const entities = [
   SettingEntity,
@@ -72,6 +73,7 @@ const migrations = [
   NormalizeAddress1688973356000,
   BannersEntity1689929097000,
   DeployContractV1_1690877576943,
+  DeployContractV2_1712848767753,
 ];
 
 function typeOrmModulesFactory(

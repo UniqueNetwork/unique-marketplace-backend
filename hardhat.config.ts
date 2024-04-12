@@ -7,7 +7,7 @@ import testConfig from './packages/contracts/test/utils/testConfig';
 const appConfig = loadConfig();
 
 const config: HardhatUserConfig = {
-  solidity: '0.8.20',
+  solidity: '0.8.19',
   paths: {
     sources: './packages/contracts/src',
     tests: './packages/contracts/test',
@@ -24,6 +24,10 @@ const config: HardhatUserConfig = {
     opal: {
       url: appConfig.opal.rpcUrl,
       accounts: appConfig.accounts,
+    },
+    test: {
+      url: testConfig.ethRpcUrl,
+      accounts: testConfig.ethPrivateKeys,
     },
   },
   mocha: {

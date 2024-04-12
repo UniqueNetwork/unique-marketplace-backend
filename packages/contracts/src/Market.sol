@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.20;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
@@ -40,7 +40,6 @@ contract Market is Ownable, ReentrancyGuard {
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     ICollectionHelpers private constant collectionHelpers = ICollectionHelpers(0x6C4E9fE1AE37a41E93CEE429e8E1881aBdcbb54F);
-    IUniqueRoyaltyHelper private constant royaltyHelpers = IUniqueRoyaltyHelper(0xD486440aBd9B17DceB161E660Ec3010EDCe24013);
 
     mapping(uint32 => bool) blacklist;
     mapping(uint32 => mapping(uint32 => Order)) orders;
@@ -50,6 +49,7 @@ contract Market is Ownable, ReentrancyGuard {
     address public ownerAddress;
     mapping(address => bool) public admins;
     mapping(uint256 => Currency) public availableCurrencies;
+    IUniqueRoyaltyHelper private royaltyHelpers = IUniqueRoyaltyHelper(0x69470426d9618a23EA1cf91ffD6A115E4D8dC8be);
 
     event TokenIsUpForSale(uint32 version, Order item);
     event TokenPriceChanged(uint32 version, Order item);
@@ -150,6 +150,15 @@ contract Market is Ownable, ReentrancyGuard {
         }
 
         return IERC721(collectionAddress);
+    }
+
+    /**
+     * Set new royalty helper contract address
+     *
+     * @param royaltyHelpersAddress: royalty helper contract address
+     */
+    function setRoyaltyHelpers(address royaltyHelpersAddress) public onlyAdmin {
+      royaltyHelpers = IUniqueRoyaltyHelper(royaltyHelpersAddress);
     }
 
     /**
