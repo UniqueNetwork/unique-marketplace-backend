@@ -1,4 +1,5 @@
 import '@nomicfoundation/hardhat-toolbox';
+import '@openzeppelin/hardhat-upgrades';
 import { HardhatUserConfig, task } from 'hardhat/config';
 import { loadConfig } from './packages/contracts/scripts';
 import { buildVersion } from './packages/contracts/tasks';
@@ -7,7 +8,7 @@ import testConfig from './packages/contracts/test/utils/testConfig';
 const appConfig = loadConfig();
 
 const config: HardhatUserConfig = {
-  solidity: '0.8.19',
+  solidity: '0.8.20',
   paths: {
     sources: './packages/contracts/src',
     tests: './packages/contracts/test',

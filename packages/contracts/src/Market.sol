@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "./interfaces.sol";
 
 struct RoyaltyAmount {
@@ -16,7 +16,7 @@ interface IUniqueRoyaltyHelper {
 }
 
 
-contract Market is Ownable, ReentrancyGuard {
+contract Market is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using ERC165Checker for address;
 
     struct Order {
@@ -36,20 +36,20 @@ contract Market is Ownable, ReentrancyGuard {
     }
 
     uint32 public constant version = 0;
-    uint32 public constant buildVersion = 7;
+    uint32 public constant buildVersion = 8;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     ICollectionHelpers private constant collectionHelpers = ICollectionHelpers(0x6C4E9fE1AE37a41E93CEE429e8E1881aBdcbb54F);
 
     mapping(uint32 => bool) blacklist;
     mapping(uint32 => mapping(uint32 => Order)) orders;
-    uint32 private idCount = 1;
+    uint32 private idCount;
     uint32 public marketFee;
     uint64 public ctime;
     address public ownerAddress;
     mapping(address => bool) public admins;
     mapping(uint256 => Currency) public availableCurrencies;
-    IUniqueRoyaltyHelper private royaltyHelpers = IUniqueRoyaltyHelper(0x69470426d9618a23EA1cf91ffD6A115E4D8dC8be);
+    IUniqueRoyaltyHelper private royaltyHelpers;
 
     event TokenIsUpForSale(uint32 version, Order item);
     event TokenPriceChanged(uint32 version, Order item);
@@ -108,15 +108,21 @@ contract Market is Ownable, ReentrancyGuard {
       }
     }
 
-    constructor(uint32 fee, uint64 timestamp) Ownable() {
-        marketFee = fee;
-        ctime = timestamp;
+    constructor() {}
 
-        if (marketFee >= 100) {
-            revert InvalidMarketFee();
-        }
+    function initialize(uint32 fee) public {
+      marketFee = fee;
+      royaltyHelpers = IUniqueRoyaltyHelper(0x69470426d9618a23EA1cf91ffD6A115E4D8dC8be);
 
-        availableCurrencies[0] = Currency(true, 0, 0);
+      if (marketFee >= 100) {
+        revert InvalidMarketFee();
+      }
+
+      idCount = 1;
+      availableCurrencies[0] = Currency(true, 0, 0);
+
+      __Ownable_init(msg.sender);
+      __ReentrancyGuard_init();
     }
 
     /**
