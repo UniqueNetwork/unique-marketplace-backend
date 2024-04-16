@@ -96,7 +96,9 @@ export class CollectionsService {
    */
   private async addTaskForAddTokensList(tokens: number[], collectionId: number, network: string) {
     if (tokens.length > 0) {
-      tokens.map(async (tokenId) => this.graphileService.addToken(collectionId, tokenId, network, true));
+      for (let i = 0; i < tokens.length; i++) {
+        await this.graphileService.addToken(collectionId, tokens[i], network, true);
+      }
     }
   }
 }
