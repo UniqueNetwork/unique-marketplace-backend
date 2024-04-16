@@ -1,6 +1,6 @@
 {
   "name": "unique-marketplace-backend",
-  "version": "3.0.245",
+  "version": "3.0.249",
   "description": "Backend project for unique marketplace",
   "author": "Unique Network",
   "private": true,
@@ -17,6 +17,7 @@
     "test": "nx run-many --target=test --all --parallel=1",
     "test:market": "nx test market",
     "test:escrow": "nx test escrow",
+    "testhh": "yarn hardhat test --no-compile --network test",
     "lint": "nx run-many --target=lint --all",
     "lint:fix": "nx run-many --target=lint --all --fix --skip-nx-cache",
     "start": "node -r source-map-support/register ./dist/packages/market/main.js",
@@ -35,8 +36,8 @@
     "migration:create": "node --require ts-node/register ./node_modules/typeorm/cli.js migration:create"
   },
   "dependencies": {
-    "@commitlint/cli": "^17.6.1",
-    "@commitlint/config-conventional": "^17.6.1",
+    "@commitlint/cli": "^19.2.2",
+    "@commitlint/config-conventional": "^19.2.2",
     "@nestjs/axios": "^2.0.0",
     "@nestjs/common": "^9.3.9",
     "@nestjs/config": "^2.3.1",
@@ -52,7 +53,7 @@
     "@sentry/node": "^7.38.0",
     "@types/multer": "^1.4.7",
     "@unique-nft/accounts": "^0.3.5",
-    "@unique-nft/sdk": "^0.2.23",
+    "@unique-nft/sdk": "^0.7.1",
     "@unique-nft/solidity-interfaces": "^0.55.1",
     "@willsoto/nestjs-prometheus": "^5.1.0",
     "axios": "^1.0.0",

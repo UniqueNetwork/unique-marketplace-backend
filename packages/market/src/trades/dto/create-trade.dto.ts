@@ -111,14 +111,14 @@ export class TradeOfferDto {
       contract: { address: trade.contract_address, commission: trade.contract_commission },
       creationDate: trade.created_date,
       tradeDate: trade.trade_date,
-      owners: data?.owners,
+      owners: data?.owner,
       tokenDescription: {
         collectionName: data?.collection?.name,
-        coverPicture: data?.collection?.schema.coverPicture.url,
+        coverPicture: data?.collection?.info.cover_image.url,
         mode: data?.collection?.mode,
         prefix: data?.collection?.tokenPrefix,
         description: data?.collection?.description,
-        image: data?.image.fullUrl || data?.image.url,
+        image: data?.image,
         attributes: data?.attributes,
       },
     };

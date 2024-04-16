@@ -1,3 +1,5 @@
+import { TypeAttributToken } from '@app/common/modules/types';
+
 export declare namespace Market {
   export interface Payload {
     collectionId: number;
@@ -45,15 +47,6 @@ export type TokenInfo = {
   key: string;
   items: Array<string>;
 };
-
-export enum TypeAttributToken {
-  ImageURL = 'ImageURL',
-  Enum = 'Enum',
-  String = 'String',
-  Prefix = 'Prefix',
-  Number = 'Number',
-  VideoURL = 'VideoURL',
-}
 
 export type TypeConstSchema = {
   tokenPrefix: string;

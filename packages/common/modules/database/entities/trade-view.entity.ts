@@ -1,9 +1,9 @@
-import { DataSource, OneToOne, SelectQueryBuilder, ViewColumn, ViewEntity } from 'typeorm';
+import { DataSource, SelectQueryBuilder, ViewColumn, ViewEntity } from 'typeorm';
 import { OfferEntity } from './offer.entity';
 import { OfferEventEntity } from './offer-event.entity';
 import { ContractEntity } from './contract.entity';
-import { PropertiesEntity } from './properties.entity';
 import { TokensEntity } from './tokens.entity';
+import { TokenV2WithCollectionV2 } from '../../../src';
 
 export class PriceOriginType {
   raw: string;
@@ -96,7 +96,7 @@ export class TradeViewEntity {
 
   @ViewColumn()
   price_commission: number;
-  
+
   @ViewColumn()
   contract_address: string;
 
@@ -113,7 +113,7 @@ export class TradeViewEntity {
   contract_block_processed: Date;
 
   @ViewColumn()
-  data: any;
+  data: TokenV2WithCollectionV2;
 
   @ViewColumn()
   other_owners: any;

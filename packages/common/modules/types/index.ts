@@ -1,8 +1,7 @@
-import { CollectionInfoWithSchemaResponse } from '@unique-nft/sdk';
-import { string } from 'hardhat/internal/core/params/argumentTypes';
+import { CollectionWithInfoV2Dto } from '@unique-nft/sdk/full';
 
 export type CustomObject = {
-  [key: string]: any | Object | Array<string> | boolean | number | string | undefined;
+  [key: string]: any | object | Array<string> | boolean | number | string | undefined;
 };
 
 export type UntypedRequest<T> = {
@@ -54,7 +53,7 @@ export type DecodedCollection = {
   tokenPrefix: string;
   name: string;
   description: string;
-  data: any;
+  data: CollectionWithInfoV2Dto;
   active?: CollectionActive;
   decimalPoints?: number;
   network: string;
@@ -67,6 +66,7 @@ export enum TypeAttributToken {
   Prefix = 'Prefix',
   Number = 'Number',
   VideoURL = 'VideoURL',
+  MediaURL = 'MediaURL',
 }
 
 export type PayLoadCollection = {
@@ -83,7 +83,7 @@ export type ChainDataResponse = {
 };
 
 export type CollectionSchemaAndChain = {
-  collection: CollectionInfoWithSchemaResponse;
+  collection: CollectionWithInfoV2Dto;
   chain: ChainDataResponse;
   tokensCount: number;
 };
