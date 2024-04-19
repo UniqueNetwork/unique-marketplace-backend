@@ -145,12 +145,7 @@ export class SdkService {
    * @param at
    */
   async getSchemaToken(tokenId: number, collectionId: number): Promise<TokenV2WithCollectionV2 | null> {
-    let token: TokenWithInfoV2Dto;
-    try {
-      token = await this.sdk.token.getV2({ collectionId, tokenId });
-    } catch (e) {
-      this.logger.error(e);
-    }
+    const token: TokenWithInfoV2Dto = await this.sdk.token.getV2({ collectionId, tokenId });
     if (!token) {
       return null;
     }

@@ -33,7 +33,7 @@ export class PropertiesTask {
    */
   @TaskHandler()
   async handler(payload: Market.Payload, helpers: Helpers): Promise<void> {
-    this.addSearchIndexIfNotExists(payload);
+    await this.addSearchIndexIfNotExists(payload);
   }
 
   async getTokenInfoItems({ collectionId, tokenId }: CollectionToken): Promise<SerializeTokenType> {
