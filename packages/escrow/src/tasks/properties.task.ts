@@ -36,9 +36,8 @@ export class PropertiesTask {
     await this.addSearchIndexIfNotExists(payload);
   }
 
-  async getTokenInfoItems({ collectionId, tokenId }: CollectionToken): Promise<SerializeTokenType> {
-    const source = await this.preparePropertiesData(tokenId, collectionId);
-    return source;
+  async getTokenInfoItems({ collectionId, tokenId }: CollectionToken): Promise<SerializeTokenType | null> {
+    return this.preparePropertiesData(tokenId, collectionId);
   }
 
   private findNestedToken(bundle: NestedToken, tokenId: number): NestedToken | undefined {
@@ -61,7 +60,7 @@ export class PropertiesTask {
     collection: CollectionWithInfoV2Dto;
     isBundle: boolean;
     serializeBundle: Array<BundleType>;
-  }> {
+  } | null> {
     const { isBundle } = await this.sdkService.isBundle(tokenId, collectionId);
     let token = null;
     let serializeBundle = [];
@@ -70,6 +69,8 @@ export class PropertiesTask {
         this.sdkService.getBundle(tokenId, collectionId),
         this.sdkService.getTokenSchema(collectionId, tokenId),
       ]);
+      if (!tokenData) return null;
+
       token = tokenData;
 
       if (bundle.tokenId === tokenId) {
@@ -86,7 +87,9 @@ export class PropertiesTask {
       serializeBundle = this.sdkService.serializeBunlde(token);
     } else {
       token = await this.sdkService.getTokenSchema(collectionId, tokenId);
+      if (!token) return null;
     }
+
     const collection = await this.sdkService.getSchemaCollection(collectionId);
     return {
       token,
@@ -96,7 +99,7 @@ export class PropertiesTask {
     };
   }
 
-  async addSearchIndexIfNotExists(collectionToken: CollectionToken): Promise<any> {
+  async addSearchIndexIfNotExists(collectionToken: CollectionToken): Promise<void> {
     const { collectionId, tokenId, network } = collectionToken;
 
     const dbIndexList = await this.propertiesRepository.find({
@@ -116,7 +119,9 @@ export class PropertiesTask {
     }
 
     const searchIndexItems = await this.getTokenInfoItems(collectionToken);
-    return this.saveProperties(collectionToken, searchIndexItems);
+    if (searchIndexItems) {
+      await this.saveProperties(collectionToken, searchIndexItems);
+    }
   }
 
   async saveProperties(collectionToken: CollectionToken, source: SerializeTokenType): Promise<PropertiesEntity[]> {
@@ -158,10 +163,13 @@ export class PropertiesTask {
     return this.propertiesRepository.save(propertiesDataItems);
   }
 
-  async preparePropertiesData(tokenId: number, collectionId: number): Promise<any> {
+  async preparePropertiesData(tokenId: number, collectionId: number): Promise<SerializeTokenType | null> {
     const tokenData = await this.tokenWithCollection(tokenId, collectionId);
+    if (!tokenData) {
+      return null;
+    }
 
-    const source = new Set();
+    const source: Set<TokenInfo> = new Set();
     // Collection
     source
       .add({
@@ -236,7 +244,7 @@ export class PropertiesTask {
       tokenData.token?.attributes.forEach((attribute) => {
         source.add({
           locale: null,
-          items: [attribute.value],
+          items: [`${attribute.value}`],
           key: attribute.trait_type,
           type: typeof attribute.value === 'number' ? TypeAttributToken.Number : TypeAttributToken.String,
           is_trait: false,
