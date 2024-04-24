@@ -48,9 +48,8 @@ export class TokensService {
     if (collection) {
       const chain = await this.sdk.getChainProperties();
       //Check token lives in the chain
-      try {
-        await this.sdk.getTokenSchema(collectionId, tokenId);
-      } catch (e) {
+      const token = await this.sdk.getTokenSchema(collectionId, tokenId);
+      if (token == null) {
         await this.cleanTokenAndProperties(collectionId, tokenId, chain.token);
         this.logger.error('Token not found or burned!');
         return;

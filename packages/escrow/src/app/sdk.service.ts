@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from '@nestjs/common';
 
 import {
   ChainPropertiesResponse,
@@ -26,7 +26,6 @@ export type TokenBalance = {
 
 @Injectable()
 export class SdkService {
-
   private logger = new Logger('SDK');
   constructor(private readonly sdk: Sdk) {}
 
@@ -82,8 +81,19 @@ export class SdkService {
     return [...new Set(recurseBundle(bundle))];
   }
 
-  async getTokenSchema(collectionId: number, tokenId: number): Promise<TokenByIdResponse> {
-    return await this.sdk.tokens.get({ collectionId: collectionId, tokenId: tokenId });
+  async getTokenSchema(collectionId: number, tokenId: number): Promise<TokenByIdResponse | null> {
+    let token: TokenByIdResponse;
+    try {
+      token = await this.sdk.token.get({ collectionId: collectionId, tokenId: tokenId });
+    } catch (error) {
+      if (error.message === 'Token not found') {
+        return null;
+      }
+
+      throw error;
+    }
+
+    return token;
   }
 
   /**
@@ -150,12 +160,16 @@ export class SdkService {
    * @param collectionId
    * @param at
    */
-  async getSchemaToken(tokenId: number, collectionId: number): Promise<TokenByIdResponse> {
+  async getSchemaToken(tokenId: number, collectionId: number): Promise<TokenByIdResponse | null> {
     let getSchema;
     try {
       getSchema = await this.sdk.token.get({ collectionId, tokenId });
     } catch (e) {
-      this.logger.error(e);
+      if (e.message === 'Token not found') {
+        return null;
+      }
+
+      throw e;
     }
     if (!getSchema) {
       return null;
