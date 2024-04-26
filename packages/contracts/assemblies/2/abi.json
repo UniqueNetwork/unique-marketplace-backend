@@ -154,11 +154,6 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint32",
-            "name": "currency",
-            "type": "uint32"
-          },
-          {
             "components": [
               {
                 "internalType": "address",
@@ -220,11 +215,6 @@
             "internalType": "uint256",
             "name": "price",
             "type": "uint256"
-          },
-          {
-            "internalType": "uint32",
-            "name": "currency",
-            "type": "uint32"
           },
           {
             "components": [
@@ -344,11 +334,6 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint32",
-            "name": "currency",
-            "type": "uint32"
-          },
-          {
             "components": [
               {
                 "internalType": "address",
@@ -410,11 +395,6 @@
             "internalType": "uint256",
             "name": "price",
             "type": "uint256"
-          },
-          {
-            "internalType": "uint32",
-            "name": "currency",
-            "type": "uint32"
           },
           {
             "components": [
@@ -480,11 +460,6 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint32",
-            "name": "currency",
-            "type": "uint32"
-          },
-          {
             "components": [
               {
                 "internalType": "address",
@@ -540,24 +515,6 @@
         "internalType": "uint32",
         "name": "collectionId",
         "type": "uint32"
-      },
-      {
-        "internalType": "uint32",
-        "name": "fee",
-        "type": "uint32"
-      }
-    ],
-    "name": "addCurrency",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "collectionId",
-        "type": "uint32"
       }
     ],
     "name": "addToBlacklist",
@@ -579,35 +536,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "availableCurrencies",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "isAvailable",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint32",
-        "name": "collectionId",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint32",
-        "name": "fee",
-        "type": "uint32"
       }
     ],
     "stateMutability": "view",
@@ -682,11 +610,6 @@
         "internalType": "uint256",
         "name": "price",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint32",
-        "name": "currency",
-        "type": "uint32"
       }
     ],
     "name": "changePrice",
@@ -720,42 +643,6 @@
         "internalType": "uint64",
         "name": "",
         "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "collectionId",
-        "type": "uint32"
-      }
-    ],
-    "name": "getCurrency",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "bool",
-            "name": "isAvailable",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint32",
-            "name": "collectionId",
-            "type": "uint32"
-          },
-          {
-            "internalType": "uint32",
-            "name": "fee",
-            "type": "uint32"
-          }
-        ],
-        "internalType": "struct Market.Currency",
-        "name": "",
-        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -802,11 +689,6 @@
             "internalType": "uint256",
             "name": "price",
             "type": "uint256"
-          },
-          {
-            "internalType": "uint32",
-            "name": "currency",
-            "type": "uint32"
           },
           {
             "components": [
@@ -892,11 +774,6 @@
       },
       {
         "internalType": "uint32",
-        "name": "currency",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint32",
         "name": "amount",
         "type": "uint32"
       },
@@ -932,19 +809,6 @@
       }
     ],
     "name": "removeAdmin",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "collectionId",
-        "type": "uint32"
-      }
-    ],
-    "name": "removeCurrency",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1032,19 +896,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "royaltyHelpersAddress",
-        "type": "address"
-      }
-    ],
-    "name": "setRoyaltyHelpers",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "newOwner",
         "type": "address"
       }
@@ -1070,31 +921,9 @@
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "eth",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "sub",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct CrossAddress",
-        "name": "to",
-        "type": "tuple"
-      },
-      {
-        "internalType": "uint32",
-        "name": "currency",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "balance",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "transferTo",
+        "type": "address"
       }
     ],
     "name": "withdraw",

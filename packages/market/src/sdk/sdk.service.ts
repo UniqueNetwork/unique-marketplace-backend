@@ -77,7 +77,7 @@ export class SdkMarketService {
         return true;
       }
     } catch (err) {
-      this.logger.error(`verify message error: ${err.message}`, err);
+      this.logger.error(`verify message error: ${err.code} - ${err.message}`, err, err.details);
       throw new BadRequestException(err);
     }
   }
