@@ -1,0 +1,32 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - release/**
+      - hotfix/**
+  workflow_dispatch:
+    inputs:
+      tag:
+        type: string
+        description: tag
+        default: unique-marketplace-frontend
+
+jobs:
+  build:
+    name: Build and push Docker Image
+    uses: UniqueNetwork/web-deploy/.github/workflows/build-docker-image.yml@master
+    secrets: inherit
+    with:
+      tag: unique-marketplace-backend
+      dockerfile: Dockerfile
+      target: static
+
+# todo: implement, just a placeholder for now
+  deploy:
+    needs: [build]
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo
+        run: echo "Deploying"
