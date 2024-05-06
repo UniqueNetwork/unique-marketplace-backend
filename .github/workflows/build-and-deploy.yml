@@ -20,7 +20,6 @@ jobs:
     with:
       tag: unique-marketplace-backend
       dockerfile: ./Dockerfile
-      target: static
       is_latest: false
 
   # todo: implement, just a placeholder for now
