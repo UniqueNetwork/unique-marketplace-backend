@@ -11,6 +11,10 @@ on:
         type: string
         description: tag
         default: unique-marketplace-backend
+      is_latest:
+        type: boolean
+        description: also push latest tag
+        default: false
 
 jobs:
   build:
@@ -20,7 +24,7 @@ jobs:
     with:
       tag: unique-marketplace-backend
       dockerfile: ./Dockerfile
-      is_latest: false
+      is_latest: ${{ github.event.inputs.is_latest }}
 
   # todo: implement, just a placeholder for now
   deploy:
