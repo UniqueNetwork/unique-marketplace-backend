@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     name: Build and push Docker Image
-    uses: UniqueNetwork/web-deploy/.github/workflows/build-docker-image.yml@master
+    uses: UniqueNetwork/unique-marketplace-backend/.github/workflows/build-docker-image.yml@master
     secrets: inherit
     with:
       tag: unique-marketplace-backend
@@ -23,7 +23,7 @@ jobs:
       target: static
       is_latest: false
 
-# todo: implement, just a placeholder for now
+  # todo: implement, just a placeholder for now
   deploy:
     needs: [build]
     name: Deploy
