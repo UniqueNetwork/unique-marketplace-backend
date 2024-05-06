@@ -19,8 +19,9 @@ jobs:
     secrets: inherit
     with:
       tag: unique-marketplace-backend
-      dockerfile: Dockerfile
+      dockerfile: ./Dockerfile
       target: static
+      is_latest: false
 
 # todo: implement, just a placeholder for now
   deploy:
