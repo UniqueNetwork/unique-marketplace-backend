@@ -10,7 +10,7 @@ on:
       tag:
         type: string
         description: tag
-        default: unique-marketplace-frontend
+        default: unique-marketplace-backend
 
 jobs:
   build:
