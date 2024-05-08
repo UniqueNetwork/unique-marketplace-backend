@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "./interfaces.sol";
 
 struct RoyaltyAmount {
@@ -16,7 +15,7 @@ interface IUniqueRoyaltyHelper {
 }
 
 
-contract Market is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract Market is OwnableUpgradeable {
     using ERC165Checker for address;
 
     struct Order {
@@ -110,7 +109,7 @@ contract Market is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     constructor() {}
 
-    function initialize(uint32 fee) public {
+    function initialize(uint32 fee) public initializer {
       marketFee = fee;
       royaltyHelpers = IUniqueRoyaltyHelper(0x69470426d9618a23EA1cf91ffD6A115E4D8dC8be);
 
@@ -122,7 +121,6 @@ contract Market is OwnableUpgradeable, ReentrancyGuardUpgradeable {
       availableCurrencies[0] = Currency(true, 0, 0);
 
       __Ownable_init(msg.sender);
-      __ReentrancyGuard_init();
     }
 
     /**
@@ -471,7 +469,7 @@ contract Market is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint32 tokenId,
         uint32 amount,
         CrossAddress memory buyer
-    ) public payable validCrossAddress(buyer.eth, buyer.sub) nonReentrant {
+    ) public payable validCrossAddress(buyer.eth, buyer.sub) {
         if (msg.value == 0) {
           revert InvalidArgument("msg.value must not be zero");
         }

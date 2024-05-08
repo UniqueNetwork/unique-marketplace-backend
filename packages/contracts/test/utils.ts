@@ -4,12 +4,10 @@ import { KeyringAccount, KeyringProvider } from '@unique-nft/accounts/keyring';
 import { UniqueNFTFactory } from '@unique-nft/solidity-interfaces';
 import { Sdk } from '@unique-nft/sdk/full';
 import * as fs from 'fs';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { loadConfig } from '../scripts';
 import { Market } from '../../../typechain-types';
 import { ContractReceipt } from '@ethersproject/contracts/src.ts';
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
 
 export async function createSdk() {
   const appConfig = loadConfig();
@@ -146,9 +144,9 @@ async function createFungible(sdk: Sdk, address: string): Promise<number> {
 
 export async function deploy(fee: number = 10): Promise<[Market, number]> {
   const Market = await ethers.getContractFactory('Market');
-  const market = (await Market.deploy(fee, Date.now())) as Market;
+  const market = await Market.deploy(fee, Date.now());
   const version = await market.version();
-  return [market, version];
+  return [market as unknown as Market, Number(version)];
 }
 
 export async function getCollectionContract(owner: any, collectionId: number) {
@@ -176,9 +174,9 @@ export async function getAccounts(sdk: Sdk, collectionId: number, tokenId: numbe
 
   const ownerAccount = account1;
 
-  const sellAccount: SignerWithAddress = isOwner1 ? account1 : account2;
+  const sellAccount = isOwner1 ? account1 : account2;
 
-  const buyAccount: SignerWithAddress = isOwner1 ? account2 : account1;
+  const buyAccount = isOwner1 ? account2 : account1;
 
   return { ownerAccount, sellAccount, buyAccount };
 }
@@ -196,7 +194,7 @@ export function expectOrderStruct(receivedOrder: Market.OrderStruct, order: Mark
   expect(receivedOrder.collectionId).eq(order.collectionId);
   expect(receivedOrder.tokenId).eq(order.tokenId);
   expect(receivedOrder.amount).eq(order.amount);
-  expect(receivedOrder.price).eq(BigNumber.from(order.price));
+  expect(receivedOrder.price).eq(BigInt(order.price));
   expect(receivedOrder.seller.eth).eq(order.seller.eth);
-  expect(receivedOrder.seller.sub).eq(BigNumber.from(order.seller.sub));
+  expect(receivedOrder.seller.sub).eq(BigInt(order.seller.sub));
 }

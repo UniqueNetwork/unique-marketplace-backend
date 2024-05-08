@@ -6,7 +6,7 @@ import { Sdk } from '@unique-nft/sdk/full';
 import { Address } from '@unique-nft/utils';
 import { CheckApprovedDto } from './dto/check-approved.dto';
 import { getContractAbi } from '@app/contracts/scripts';
-import { Market } from '@app/contracts/assemblies/0/market';
+import { Market } from '@app/contracts/assemblies/3/market';
 import { OfferStatus } from '@app/common/modules/types';
 
 interface ContractEventValue {

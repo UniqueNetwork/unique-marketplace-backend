@@ -4,10 +4,9 @@ import { Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 import { Address } from '@unique-nft/utils';
 import { ContractEntity, OfferEntity } from '../entities';
-import { Market } from '@app/contracts/assemblies/0/market';
 import { OfferStatus } from '../../types';
 import { ChainPropertiesResponse } from '@unique-nft/sdk/full';
-import { BigNumber } from 'ethers';
+import { Market } from '../../../../contracts/assemblies/3/market';
 
 interface FindOptions {
   contract?: ContractEntity;
@@ -37,26 +36,26 @@ export class OfferService {
       contract: {
         address: contract.address,
       },
-      orderId: order.id,
+      orderId: Number(order.id),
     });
 
     if (!offer) {
-      if (order.amount === 0) {
+      if (order.amount === 0n) {
         return null;
       }
 
       offer = this.offerEntityRepository.create();
       offer.id = uuid();
-      offer.orderId = order.id;
-      offer.collectionId = order.collectionId;
-      offer.tokenId = order.tokenId;
+      offer.orderId = Number(order.id);
+      offer.collectionId = Number(order.collectionId);
+      offer.tokenId = Number(order.tokenId);
       offer.seller = Address.extract.addressNormalized(order.seller);
     }
-    const priceOrder: BigNumber = BigNumber.from(order.price);
+    const priceOrder = BigInt(order.price);
     const priceDir = parseFloat(priceOrder.toString()) / 10 ** 18;
     offer.priceParsed = parseFloat(priceDir.toFixed(18));
     offer.priceRaw = order.price.toString();
-    offer.amount = order.amount;
+    offer.amount = Number(order.amount);
     offer.contract = contract;
     offer.status = status;
 
@@ -89,8 +88,8 @@ export class OfferService {
   }
 
   getAmount(strNum: string) {
-    const result = BigNumber.from(strNum);
-    const dividedBy = result.div(BigNumber.from('1000000000000000000'));
+    const result = BigInt(strNum);
+    const dividedBy = result / BigInt('1000000000000000000');
     const dividedByFloat = parseFloat(dividedBy.toString());
     const dividedByFixed = dividedByFloat.toFixed(5);
 

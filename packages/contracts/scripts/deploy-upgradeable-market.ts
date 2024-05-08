@@ -14,7 +14,7 @@ async function main() {
   });
 
   await box.waitForDeployment();
-  console.log('Market deployed to:', box.address);
+  console.log('Market deployed to:', await box.getAddress());
 }
 
 main();

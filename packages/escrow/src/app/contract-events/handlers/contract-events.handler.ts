@@ -1,15 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ContractLogData, Extrinsic } from '@unique-nft/sdk';
 import { ethers } from 'ethers';
-import { LogDescription } from '@ethersproject/abi/src.ts/interface';
 import {
   CrossAddressStructOutput,
   MarketEventNames,
-  TokenIsApprovedEventObject,
-  TokenIsPurchasedEventObject,
-  TokenIsUpForSaleEventObject,
-  TokenRevokeEventObject,
-} from '@app/contracts/assemblies/0/market';
+  TokenIsApprovedEvent,
+  TokenIsPurchasedEvent,
+  TokenRevokeEvent,
+  TokenIsUpForSaleEvent,
+  TokenPriceChangedEvent,
+} from '@app/contracts/assemblies/3/market';
 import { OfferEventType, OfferStatus } from '@app/common/modules/types';
 import { ContractEntity, ContractService, OfferEntity, OfferEventEntity, OfferService } from '@app/common/modules/database';
 import { OfferEventService } from '@app/common/modules/database/services/offer-event.service';
@@ -17,12 +17,15 @@ import { Sdk, SocketClient } from '@unique-nft/sdk/full';
 import { Address } from '@unique-nft/utils';
 import { CollectionsService } from '../../../collections/collections.service';
 import { TokensService } from '../../../collections/tokens.service';
-import { TokenPriceChangedEventObject } from '@app/contracts/assemblies/1/market';
 
 type LogEventHandler = (
   extrinsic: Extrinsic,
   contractEntity: ContractEntity,
-  args: TokenIsUpForSaleEventObject | TokenIsApprovedEventObject | TokenRevokeEventObject | TokenIsPurchasedEventObject,
+  args:
+    | TokenIsUpForSaleEvent.OutputObject
+    | TokenIsApprovedEvent.OutputObject
+    | TokenRevokeEvent.OutputObject
+    | TokenIsPurchasedEvent.OutputObject,
 ) => Promise<void>;
 
 @Injectable()
@@ -111,9 +114,9 @@ export class ContractEventsHandler {
 
     const abi = this.abiByAddress[addressNormal];
 
-    const contract = new ethers.utils.Interface(abi);
+    const contract = new ethers.Interface(abi);
 
-    const decoded: LogDescription = contract.parseLog(log);
+    const decoded = contract.parseLog(log);
     this.logger.log('decoded', {
       name: decoded.name,
       topic: decoded.topic,
@@ -168,7 +171,11 @@ export class ContractEventsHandler {
     };
   }
 
-  private async tokenIsUpForSale(extrinsic: Extrinsic, contractEntity: ContractEntity, tokenUpArgs: TokenIsUpForSaleEventObject) {
+  private async tokenIsUpForSale(
+    extrinsic: Extrinsic,
+    contractEntity: ContractEntity,
+    tokenUpArgs: TokenIsUpForSaleEvent.OutputObject,
+  ) {
     const offer = await this.offerService.update(contractEntity, tokenUpArgs.item, OfferStatus.Opened, this.chain);
 
     this.logger.log(`tokenIsUpForSale, offer: ${offer?.id || undefined}`);
@@ -177,12 +184,12 @@ export class ContractEventsHandler {
         offer,
         OfferEventType.Open,
         extrinsic,
-        tokenUpArgs.item.amount,
+        Number(tokenUpArgs.item.amount),
         tokenUpArgs.item.seller,
       );
       if (eventData) {
         await this.offerEventService.create(eventData);
-        await this.tokensService.observer(tokenUpArgs.item.collectionId, tokenUpArgs.item.tokenId);
+        await this.tokensService.observer(Number(tokenUpArgs.item.collectionId), Number(tokenUpArgs.item.tokenId));
       }
     }
   }
@@ -190,7 +197,7 @@ export class ContractEventsHandler {
   private async tokenPriceChanged(
     extrinsic: Extrinsic,
     contractEntity: ContractEntity,
-    tokenPriceChangedArgs: TokenPriceChangedEventObject,
+    tokenPriceChangedArgs: TokenPriceChangedEvent.OutputObject,
   ) {
     const offer = await this.offerService.update(contractEntity, tokenPriceChangedArgs.item, OfferStatus.Opened, this.chain);
 
@@ -200,25 +207,29 @@ export class ContractEventsHandler {
   private async tokenIsApproved(
     extrinsic: Extrinsic,
     contractEntity: ContractEntity,
-    tokenRevokeArgs: TokenIsApprovedEventObject,
+    tokenRevokeArgs: TokenIsApprovedEvent.OutputObject,
   ) {
     // todo
   }
 
-  private async tokenRevoke(extrinsic: Extrinsic, contractEntity: ContractEntity, tokenRevokeArgs: TokenRevokeEventObject) {
-    const offerStatus = tokenRevokeArgs.item.amount === 0 ? OfferStatus.Canceled : OfferStatus.Opened;
+  private async tokenRevoke(
+    extrinsic: Extrinsic,
+    contractEntity: ContractEntity,
+    tokenRevokeArgs: TokenRevokeEvent.OutputObject,
+  ) {
+    const offerStatus = tokenRevokeArgs.item.amount === 0n ? OfferStatus.Canceled : OfferStatus.Opened;
 
     const offer = await this.offerService.update(contractEntity, tokenRevokeArgs.item, offerStatus);
     this.logger.log(`tokenRevoke, offer: ${offer?.id || undefined}`);
 
     if (offer) {
-      const eventType = tokenRevokeArgs.item.amount === 0 ? OfferEventType.Cancel : OfferEventType.Revoke;
+      const eventType = tokenRevokeArgs.item.amount === 0n ? OfferEventType.Cancel : OfferEventType.Revoke;
 
       const eventData = await this.createEventData(
         offer,
         eventType,
         extrinsic,
-        tokenRevokeArgs.amount,
+        Number(tokenRevokeArgs.amount),
         tokenRevokeArgs.item.seller,
       );
       if (eventData) {
@@ -230,9 +241,9 @@ export class ContractEventsHandler {
   private async tokenIsPurchased(
     extrinsic: Extrinsic,
     contractEntity: ContractEntity,
-    tokenIsPurchasedArgs: TokenIsPurchasedEventObject,
+    tokenIsPurchasedArgs: TokenIsPurchasedEvent.OutputObject,
   ) {
-    const offerStatus = tokenIsPurchasedArgs.item.amount === 0 ? OfferStatus.Completed : OfferStatus.Opened;
+    const offerStatus = tokenIsPurchasedArgs.item.amount === 0n ? OfferStatus.Completed : OfferStatus.Opened;
 
     const offer = await this.offerService.update(contractEntity, tokenIsPurchasedArgs.item, offerStatus);
 
@@ -242,12 +253,15 @@ export class ContractEventsHandler {
         offer,
         OfferEventType.Buy,
         extrinsic,
-        tokenIsPurchasedArgs.salesAmount,
+        Number(tokenIsPurchasedArgs.salesAmount),
         tokenIsPurchasedArgs.buyer,
       );
       if (eventData) {
         await this.offerEventService.create(eventData);
-        await this.tokensService.observer(tokenIsPurchasedArgs.item.collectionId, tokenIsPurchasedArgs.item.tokenId);
+        await this.tokensService.observer(
+          Number(tokenIsPurchasedArgs.item.collectionId),
+          Number(tokenIsPurchasedArgs.item.tokenId),
+        );
       }
     }
   }
