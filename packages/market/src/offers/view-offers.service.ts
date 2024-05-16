@@ -166,39 +166,50 @@ export class ViewOffersService {
     return this.bundleService.bundle(collectionId, tokenId);
   }
 
+  public async getAttributes(): Promise<any> {
+    const queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
+    const counts = await this.byAttributesCount(queryFilter);
+    const attributes = await this.byAttributes(queryFilter).getRawMany();
+    const attributesParsed = this.parseAttributes(attributes);
+    return {
+      counts,
+      attributes: attributesParsed,
+    };
+  }
+
   public async filter(offersFilter: OffersFilter, pagination: PaginationRouting, sort: SortingOfferRequest): Promise<any> {
     let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
+
     // Filert by collection id
     queryFilter = this.byCollectionId(queryFilter, offersFilter.collectionId);
+
     // Filter by max price
     queryFilter = this.byMaxPrice(queryFilter, offersFilter.maxPrice);
+
     // Filter by min price
     queryFilter = this.byMinPrice(queryFilter, offersFilter.minPrice);
+
     // Filter by seller address
     queryFilter = this.bySeller(queryFilter, offersFilter.seller);
+
     // Filter by search
     queryFilter = this.bySearch(queryFilter, offersFilter.searchText, offersFilter.searchLocale);
 
     // Filter by traits
     queryFilter = this.byFindAttributes(queryFilter, offersFilter.collectionId, offersFilter.attributes);
-    // Does not contain a search by the number of attributes
-    const attributesCount = await this.byAttributesCount(queryFilter);
+
     // Exceptions to the influence of the search by the number of attributes
     queryFilter = this.byNumberOfAttributes(queryFilter, offersFilter.numberOfAttributes);
 
-    const attributes = await this.byAttributes(queryFilter).getRawMany();
-
     queryFilter = this.prepareQuery(queryFilter);
+
     queryFilter = this.sortBy(queryFilter, sort);
-    //
+
     const itemQuery = await paginateRaw(queryFilter, pagination);
-    //
 
     return {
       meta: itemQuery.meta,
       items: itemQuery.items,
-      attributes: this.parseAttributes(attributes),
-      attributesCount,
     };
   }
 

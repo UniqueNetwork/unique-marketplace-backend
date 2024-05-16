@@ -48,6 +48,7 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
 
       items = this.parseItems(offers.items, propertiesFilter, collections) as any as Array<ViewOffers>;
     } catch (e) {
+      console.log(e);
       this.logger.error(e.message);
 
       throw new BadRequestException({
@@ -60,9 +61,24 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     return {
       ...offers.meta,
       items: items.map(OfferEntityDto.fromOffersEntity),
-      attributes: offers.attributes as Array<TraitDto>,
-      attributesCount: offers.attributesCount,
     };
+  }
+
+  async getOfferAttributes(): Promise<any> {
+    let attributes;
+    try {
+      attributes = await this.viewOffersService.getAttributes();
+    } catch (e) {
+      this.logger.error(e.message);
+
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Something went wrong!',
+        error: e.message,
+      });
+    }
+
+    return attributes;
   }
 
   /**

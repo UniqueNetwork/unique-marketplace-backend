@@ -140,10 +140,13 @@ export class OffersResultDto {
   itemsCount: number;
   @ApiProperty({ required: false })
   items: OfferEntityDto[];
+}
+
+export class OffersAttributesResultDto {
   @ApiProperty({ required: false, type: 'array' })
   attributes?: Array<any>;
   @ApiProperty({ required: false, type: 'array' })
-  attributesCount?: Array<any>;
+  counts?: Array<any>;
 }
 
 export class OfferAttributes {
