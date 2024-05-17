@@ -11,6 +11,12 @@ export function loadFileStorageConfig(): FileStorageConfig {
   };
 }
 
+const createAppCacheConfig = () => {
+  return {
+    offersAttributesTtlMs: +process.env.OFFERS_ATTRIBUTES_TTL_MS || 3_600_000,
+  };
+};
+
 export const loadConfig = (): Config => ({
   environment: process.env.ENVIRONMENT || 'development',
   port: parseInt(process.env.PORT, 10) || 3000,
@@ -30,6 +36,7 @@ export const loadConfig = (): Config => ({
   signatureKey: process.env.SIGNATURE_KEY || '', // Sign and Verify key (sign the following data)
 
   cache: createCacheConfig(process.env),
+  appCache: createAppCacheConfig(),
 
   releaseVersion: process.env.npm_package_version,
 

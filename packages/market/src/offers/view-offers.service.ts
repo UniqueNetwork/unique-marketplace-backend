@@ -1,4 +1,4 @@
-import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, CACHE_MANAGER, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OfferEntity, ViewOffers } from '@app/common/modules/database';
 import { DataSource, Repository, SelectQueryBuilder, ValueTransformer } from 'typeorm';
@@ -11,6 +11,9 @@ import { GetOneFilter, SortingOrder, SortingParameter } from './interfaces/offer
 import { HelperService } from '@app/common/src/lib/helper.service';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 import { SortingOfferRequest } from '@app/common/modules/types/requests';
+import { Cache } from 'cache-manager';
+import { ConfigService } from '@nestjs/config';
+import { AppCacheConfig } from '@app/common/modules/config/types';
 
 const offersMapping = {
   priceRaw: 'price_raw',
@@ -36,13 +39,18 @@ const priceTransformer: ValueTransformer = {
 export class ViewOffersService {
   private logger = new Logger(ViewOffersService.name);
   private readonly offersSorts: Record<string, string>;
+  private appCache: AppCacheConfig;
 
   constructor(
+    configService: ConfigService,
     private connection: DataSource,
     @InjectRepository(ViewOffers) private viewOffersRepository: Repository<ViewOffers>,
     private readonly bundleService: BundleService,
+    @Inject(CACHE_MANAGER)
+    private readonly cache: Cache,
   ) {
     this.offersSorts = this.prepareMapping(offersMapping, connection.getMetadata(OfferEntity).columns);
+    this.appCache = configService.getOrThrow<AppCacheConfig>('appCache');
   }
 
   prepareMapping = (input: Record<string, string>, columnMetadata: ColumnMetadata[]): Record<string, string> => {
@@ -167,14 +175,25 @@ export class ViewOffersService {
   }
 
   public async getAttributes(): Promise<any> {
-    const queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
-    const counts = await this.byAttributesCount(queryFilter);
-    const attributes = await this.byAttributes(queryFilter).getRawMany();
-    const attributesParsed = this.parseAttributes(attributes);
-    return {
-      counts,
-      attributes: attributesParsed,
-    };
+    let response = await this.cache.get('offers-attributes');
+
+    if (response) {
+      return response;
+    } else {
+      const queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
+      const counts = await this.byAttributesCount(queryFilter);
+      const attributes = await this.byAttributes(queryFilter).getRawMany();
+      const attributesParsed = this.parseAttributes(attributes);
+
+      response = {
+        counts,
+        attributes: attributesParsed,
+      };
+
+      await this.cache.set('offers-attributes', response, this.appCache.offersAttributesTtlMs);
+
+      return response;
+    }
   }
 
   public async filter(offersFilter: OffersFilter, pagination: PaginationRouting, sort: SortingOfferRequest): Promise<any> {

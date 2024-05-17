@@ -8,6 +8,10 @@ export interface FileStorageConfig {
   secretKey: string;
 }
 
+export type AppCacheConfig = {
+  offersAttributesTtlMs: number;
+};
+
 export type Config = {
   environment: string;
   port: number;
@@ -16,6 +20,7 @@ export type Config = {
 
   market: MarketSwaggerOptions;
   cache: CacheConfig;
+  appCache: AppCacheConfig;
 
   signer?: SignerConfig;
   signatureKey?: string;
