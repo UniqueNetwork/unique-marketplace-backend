@@ -12,6 +12,7 @@ export abstract class DeployContractBase implements MigrationInterface {
     if (this.ignore) {
       return;
     }
+    console.log(`deploy contract, version: ${this.version}, feeValue: ${this.feeValue}`);
 
     const config = loadConfig();
 
