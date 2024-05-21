@@ -6,8 +6,13 @@ import { ContractEntity } from '../../entities';
 export abstract class DeployContractBase implements MigrationInterface {
   public abstract readonly version: number;
   public abstract readonly feeValue: number;
+  public abstract readonly ignore: boolean;
 
   public async up(queryRunner: QueryRunner): Promise<any> {
+    if (this.ignore) {
+      return;
+    }
+
     const config = loadConfig();
 
     const { contractAddress, blockNumber } = await deploy(
