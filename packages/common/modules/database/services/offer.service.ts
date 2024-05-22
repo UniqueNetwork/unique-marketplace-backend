@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 import { Address } from '@unique-nft/utils';
 import { ContractEntity, OfferEntity } from '../entities';
-import { Market } from '@app/contracts/assemblies/0/market';
+import { Market } from '@app/contracts/assemblies/3/market';
 import { OfferStatus } from '../../types';
 import { ChainPropertiesResponse } from '@unique-nft/sdk/full';
 import { BigNumber } from 'ethers';
@@ -56,6 +56,7 @@ export class OfferService {
     const priceDir = parseFloat(priceOrder.toString()) / 10 ** 18;
     offer.priceParsed = parseFloat(priceDir.toFixed(18));
     offer.priceRaw = order.price.toString();
+    offer.currency = order.currency;
     offer.amount = order.amount;
     offer.contract = contract;
     offer.status = status;

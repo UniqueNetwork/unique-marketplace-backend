@@ -37,6 +37,7 @@ import {
   DeployContractV1_1690877576943,
   DeployContractV2_1711532661239,
   DeployContractV3_1714106695524,
+  AddCurrencyToOffer1716368384726,
 } from './migrations';
 import { BannersService, ContractService, OfferService, SettingsService } from './services';
 import { OfferEventService } from './services/offer-event.service';
@@ -76,6 +77,7 @@ const migrations = [
   DeployContractV1_1690877576943,
   DeployContractV2_1711532661239,
   DeployContractV3_1714106695524,
+  AddCurrencyToOffer1716368384726,
 ];
 
 function typeOrmModulesFactory(

@@ -11,6 +11,11 @@ interface IERC721 {
   function getApproved(uint256 tokenId) external view returns (address operator);
 }
 
+interface IERC20 {
+  function balanceOf(address account) external view returns (uint256 balance);
+  function allowance(address owner, address spender) external view returns (bool result);
+}
+
 interface ICollectionHelpers {
   function collectionAddress(uint32 collectionId) external view returns (address);
 }

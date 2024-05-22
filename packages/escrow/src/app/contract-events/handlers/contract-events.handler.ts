@@ -9,7 +9,7 @@ import {
   TokenIsPurchasedEventObject,
   TokenIsUpForSaleEventObject,
   TokenRevokeEventObject,
-} from '@app/contracts/assemblies/0/market';
+} from '@app/contracts/assemblies/3/market';
 import { OfferEventType, OfferStatus } from '@app/common/modules/types';
 import { ContractEntity, ContractService, OfferEntity, OfferEventEntity, OfferService } from '@app/common/modules/database';
 import { OfferEventService } from '@app/common/modules/database/services/offer-event.service';
@@ -17,7 +17,7 @@ import { Sdk, SocketClient } from '@unique-nft/sdk/full';
 import { Address } from '@unique-nft/utils';
 import { CollectionsService } from '../../../collections/collections.service';
 import { TokensService } from '../../../collections/tokens.service';
-import { TokenPriceChangedEventObject } from '@app/contracts/assemblies/1/market';
+import { TokenPriceChangedEventObject } from '@app/contracts/assemblies/3/market';
 
 type LogEventHandler = (
   extrinsic: Extrinsic,

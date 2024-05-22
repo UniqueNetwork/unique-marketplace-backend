@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -37,6 +38,7 @@ contract Market is Ownable, ReentrancyGuard {
 
     uint32 public constant version = 0;
     uint32 public constant buildVersion = 7;
+    bytes4 private constant InterfaceId_ERC20 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     ICollectionHelpers private constant collectionHelpers = ICollectionHelpers(0x6C4E9fE1AE37a41E93CEE429e8E1881aBdcbb54F);
@@ -70,6 +72,7 @@ contract Market is Ownable, ReentrancyGuard {
     error TokenIsNotApproved();
     error CollectionNotFound();
     error CollectionNotSupportedERC721();
+    error CollectionNotSupportedERC20();
     error OrderNotFound();
     error TooManyAmountRequested();
     error NotEnoughMoneyError();
@@ -150,6 +153,27 @@ contract Market is Ownable, ReentrancyGuard {
         }
 
         return IERC721(collectionAddress);
+    }
+
+    function getErc20(uint32 collectionId) private view returns (ERC20) {
+      address collectionAddress = collectionHelpers.collectionAddress(
+        collectionId
+      );
+
+      uint size;
+      assembly {
+        size := extcodesize(collectionAddress)
+      }
+
+      if (size == 0) {
+        revert CollectionNotFound();
+      }
+
+      if (!collectionAddress.supportsInterface(InterfaceId_ERC20)) {
+        revert CollectionNotSupportedERC20();
+      }
+
+      return ERC20(collectionAddress);
     }
 
     /**
@@ -466,9 +490,6 @@ contract Market is Ownable, ReentrancyGuard {
         uint32 amount,
         CrossAddress memory buyer
     ) public payable validCrossAddress(buyer.eth, buyer.sub) nonReentrant {
-        if (msg.value == 0) {
-          revert InvalidArgument("msg.value must not be zero");
-        }
         if (amount == 0) {
           revert InvalidArgument("amount must not be zero");
         }
@@ -491,8 +512,17 @@ contract Market is Ownable, ReentrancyGuard {
         lv.totalValue = lv.order.price * amount;
         lv.feeValue = (lv.totalValue * marketFee) / 100;
 
-        if (msg.value < lv.totalValue) {
-            revert NotEnoughMoneyError();
+        if (lv.order.currency == 0) {
+          if (msg.value < lv.totalValue) {
+              revert NotEnoughMoneyError();
+          }
+        } else {
+          Currency currency = availableCurrencies[lv.order.currency];
+          if (!currency.isAvailable) {
+            revert InvalidArgument("currency in not available");
+          }
+          ERC20 erc20 = getErc20(currency.collectionId);
+          erc20.allowance(buyer.eth)
         }
 
         lv.erc721 = getErc721(lv.order.collectionId);
