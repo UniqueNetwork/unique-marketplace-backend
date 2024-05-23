@@ -1,6 +1,6 @@
 {
   "name": "unique-marketplace-backend",
-  "version": "3.0.257",
+  "version": "3.0.258",
   "description": "Backend project for unique marketplace",
   "author": "Unique Network",
   "private": true,
@@ -125,7 +125,7 @@
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
     "git-cliff": "^1.1.2",
-    "hardhat": "^2.13.0",
+    "hardhat": "^2.22.4",
     "jest": "^29.4.3",
     "jest-environment-jsdom": "28.1.1",
     "jest-expect-message": "^1.1.3",

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -38,7 +37,6 @@ contract Market is Ownable, ReentrancyGuard {
 
     uint32 public constant version = 0;
     uint32 public constant buildVersion = 7;
-    bytes4 private constant InterfaceId_ERC20 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
     ICollectionHelpers private constant collectionHelpers = ICollectionHelpers(0x6C4E9fE1AE37a41E93CEE429e8E1881aBdcbb54F);
@@ -72,7 +70,6 @@ contract Market is Ownable, ReentrancyGuard {
     error TokenIsNotApproved();
     error CollectionNotFound();
     error CollectionNotSupportedERC721();
-    error CollectionNotSupportedERC20();
     error OrderNotFound();
     error TooManyAmountRequested();
     error NotEnoughMoneyError();
@@ -153,27 +150,6 @@ contract Market is Ownable, ReentrancyGuard {
         }
 
         return IERC721(collectionAddress);
-    }
-
-    function getErc20(uint32 collectionId) private view returns (ERC20) {
-      address collectionAddress = collectionHelpers.collectionAddress(
-        collectionId
-      );
-
-      uint size;
-      assembly {
-        size := extcodesize(collectionAddress)
-      }
-
-      if (size == 0) {
-        revert CollectionNotFound();
-      }
-
-      if (!collectionAddress.supportsInterface(InterfaceId_ERC20)) {
-        revert CollectionNotSupportedERC20();
-      }
-
-      return ERC20(collectionAddress);
     }
 
     /**
@@ -474,6 +450,7 @@ contract Market is Ownable, ReentrancyGuard {
       address collectionAddress;
       IUniqueNFT nft;
       CrossAddress from;
+      IUniqueFungible fungible;
     }
 
     /**
@@ -505,6 +482,12 @@ contract Market is Ownable, ReentrancyGuard {
             revert OrderNotFound();
         }
 
+        if (!availableCurrencies[lv.order.currency].isAvailable) {
+          revert InvalidArgument("currency in not available");
+        }
+
+        lv.fungible = IUniqueFungible(collectionHelpers.collectionAddress(lv.order.currency));
+
         if (amount > lv.order.amount) {
             revert TooManyAmountRequested();
         }
@@ -517,12 +500,7 @@ contract Market is Ownable, ReentrancyGuard {
               revert NotEnoughMoneyError();
           }
         } else {
-          Currency currency = availableCurrencies[lv.order.currency];
-          if (!currency.isAvailable) {
-            revert InvalidArgument("currency in not available");
-          }
-          ERC20 erc20 = getErc20(currency.collectionId);
-          erc20.allowance(buyer.eth)
+          // todo check balance and approve?
         }
 
         lv.erc721 = getErc721(lv.order.collectionId);
@@ -558,21 +536,13 @@ contract Market is Ownable, ReentrancyGuard {
           revert InvalidRoyaltiesError(totalRoyalty);
         }
 
-        sendMoney(lv.from, lv.order.seller, lv.totalValue - lv.feeValue - totalRoyalty, lv.order.currency);
-
-        if (msg.value > lv.totalValue) {
-            sendMoney(CrossAddress(address(this), 0), buyer, msg.value - lv.totalValue, lv.order.currency);
-        }
+        sendMoney(lv, lv.order.seller, lv.totalValue - lv.feeValue - totalRoyalty);
 
         emit TokenIsPurchased(version, lv.order, amount, buyer, royalties);
     }
 
-    function sendMoney(CrossAddress memory from, CrossAddress memory to, uint256 money, uint32 currency) private {
-      address collectionAddress = collectionHelpers.collectionAddress(currency);
-
-      IUniqueFungible fungible = IUniqueFungible(collectionAddress);
-
-      fungible.transferFromCross(from, to, money);
+    function sendMoney(BuyLocalVariables memory lv, CrossAddress memory to, uint256 money) private {
+      lv.fungible.transferFromCross(lv.from, to, money);
     }
 
     function sendRoyalties(BuyLocalVariables memory lv, uint tokenId) private returns (uint256, RoyaltyAmount[] memory) {
@@ -585,13 +555,16 @@ contract Market is Ownable, ReentrancyGuard {
 
         totalRoyalty += royalty.amount;
 
-        sendMoney(lv.from, royalty.crossAddress, royalty.amount, lv.order.currency);
+        sendMoney(lv, royalty.crossAddress, royalty.amount);
       }
 
       return (totalRoyalty, royalties);
     }
 
     function withdraw(CrossAddress memory to, uint32 currency, uint256 balance) public onlyOwner {
-      sendMoney(CrossAddress(address(this), 0), to, balance, currency);
+      BuyLocalVariables memory lv;
+      lv.fungible = IUniqueFungible(collectionHelpers.collectionAddress(currency));
+      lv.from = CrossAddress(address(this), 0);
+      sendMoney(lv, to, balance);
     }
 }
