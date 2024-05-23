@@ -82,7 +82,7 @@ export class ContractEventsHandler {
 
     this.client.subscribeContract({
       address,
-      fromBlock,
+      // fromBlock,
     });
   }
 

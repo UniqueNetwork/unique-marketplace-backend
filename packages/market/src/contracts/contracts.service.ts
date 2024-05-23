@@ -1,13 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ContractEntity, OfferService } from '@app/common/modules/database';
+import { ContractEntity, OfferService, SettingsService } from '@app/common/modules/database';
 import { Sdk } from '@unique-nft/sdk/full';
 import { Address } from '@unique-nft/utils';
 import { CheckApprovedDto } from './dto/check-approved.dto';
 import { getContractAbi } from '@app/contracts/scripts';
 import { Market } from '@app/contracts/assemblies/3/market';
 import { OfferStatus } from '@app/common/modules/types';
+import { SetCurrenciesDto } from './dto/set-currencies.dto';
 
 interface ContractEventValue {
   item: Market.OrderStructOutput;
@@ -22,6 +23,7 @@ export class ContractsService {
     @InjectRepository(ContractEntity)
     private contractService: Repository<ContractEntity>,
     private offerService: OfferService,
+    private settingsService: SettingsService,
   ) {}
 
   public async checkApproved(params: CheckApprovedDto) {
@@ -111,5 +113,52 @@ export class ContractsService {
         [contract.address]: getContractAbi(contract.version),
       };
     }, {});
+  }
+
+  public async setCurrencies(dto: SetCurrenciesDto): Promise<any> {
+    const { contractAddress, currencies } = dto;
+
+    await this.settingsService.setContractCurrencies(currencies);
+
+    const contractEntity = await this.contractService.findOne({
+      where: {
+        address: contractAddress,
+      },
+    });
+    if (!contractEntity) {
+      this.logger.log(`Contract ${contractAddress} not found`);
+      return {
+        errorMessage: 'Contract not found',
+      };
+    }
+
+    const abi = getContractAbi(contractEntity.version);
+
+    const contract = await this.sdk.evm.contractConnect(contractAddress, abi);
+
+    const callArgs = {
+      address: this.sdk.options.signer.address,
+      funcName: 'setCurrencies',
+      args: {
+        currencies,
+      },
+    };
+    try {
+      await contract.call(callArgs);
+    } catch (err) {
+      this.logger.log(`Contract call error: [${err.name}] ${err.message}`, err.details);
+      return {
+        errorMessage: err.message,
+      };
+    }
+
+    const result = await contract.send.submitWaitResult(callArgs);
+
+    if (!result.parsed && !result.parsed.parsedEvents.length) {
+      this.logger.log(`execute failed`, result);
+      return {
+        errorMessage: 'execute failed',
+      };
+    }
   }
 }

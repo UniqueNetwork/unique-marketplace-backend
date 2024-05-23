@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SettingEntity } from '../entities';
+import { CurrencyDto } from '../../../../market/src/contracts/dto/set-currencies.dto';
 
 @Injectable()
 export class SettingsService {
@@ -50,5 +51,14 @@ export class SettingsService {
 
   public async setSubscribeCollectionBlock(block: number): Promise<void> {
     return this.setValue('subscribe_collection_block', `${block}`);
+  }
+
+  public async setContractCurrencies(currencies: CurrencyDto[]): Promise<void> {
+    return this.setValue('contract_currencies', JSON.stringify(currencies));
+  }
+
+  public async getContractCurrencies(): Promise<CurrencyDto[]> {
+    const value = await this.getValue('contract_currencies');
+    return value ? JSON.parse(value) : [];
   }
 }

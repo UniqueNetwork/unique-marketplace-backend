@@ -5,6 +5,7 @@ import { readApiDocs } from '../utils/utils';
 import { ContractsService } from './contracts.service';
 import { CheckApprovedDto } from './dto/check-approved.dto';
 import { ApiBearerAuthMetamaskAndSubstrate } from '../admin/decorators/login.decorator';
+import { SetCurrenciesDto } from './dto/set-currencies.dto';
 
 @ApiTags('Contracts')
 @Controller('contracts')
@@ -31,5 +32,14 @@ export class ContractsController extends BaseController<ContractsService> {
   })
   getAllAbi() {
     return this.contractsService.getAllAbi();
+  }
+
+  @Post('/currencies')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Set available currencies',
+  })
+  setCurrencies(@Body() dto: SetCurrenciesDto) {
+    return this.contractsService.setCurrencies(dto);
   }
 }
