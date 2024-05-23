@@ -1,11 +1,13 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import * as fs from 'fs';
 
-const baseBuildPath = './packages/contracts/assemblies';
+const contractsSrcPath = './packages/contracts';
 
-const marketArtifactPath = 'packages/contracts/src/Market.sol/Market.json';
+const baseBuildPath = `${contractsSrcPath}/assemblies`;
 
-const marketTypesPath = 'typechain-types/packages/contracts/src/Market.sol/Market.ts';
+const marketArtifactPath = 'src/Market.sol/Market.json';
+
+const marketTypesPath = `${contractsSrcPath}/typechain-types/src/Market.sol/Market.ts`;
 
 export async function buildVersion(taskArguments: Record<string, string>, hre: HardhatRuntimeEnvironment) {
   const { build } = taskArguments;
@@ -31,9 +33,9 @@ export async function buildVersion(taskArguments: Record<string, string>, hre: H
   let marketTypes = fs
     .readFileSync(marketTypesPath)
     .toString()
-    .replace('from "../../../../common"', `from '../../scripts/common-types'`);
+    .replace('from "../../common"', `from '../../scripts/common-types'`);
 
-  const eventReg = /getEvent\(\w+: "(?<name>\w+)"\)/g;
+  const eventReg = /getEvent\([^)]+key: "(?<name>\w+)"[^)]*\)/g;
   const eventsRes = marketTypes.matchAll(eventReg);
   const events = [];
   for (const event of eventsRes) {
@@ -44,7 +46,7 @@ export async function buildVersion(taskArguments: Record<string, string>, hre: H
   }
   marketTypes = `${marketTypes}
 
-export type MarketEventNames = ${events.join(' | ')};
+export type MarketEventNames = ${events.length ? events.join(' | ') : '"none"'};
 `;
 
   fs.writeFileSync(`${targetDir}/market.ts`, marketTypes);

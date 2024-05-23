@@ -1,34 +1,43 @@
-import hre from 'hardhat';
-import Sdk, { Account, CreateCollectionV2ArgsDto, CreateTokenV2ArgsDto, TokenIdQuery } from '@unique-nft/sdk';
+import { Sdk, Account, CreateCollectionV2ArgsDto, CreateTokenV2ArgsDto, TokenIdQuery } from '@unique-nft/sdk/full';
 import { Sr25519Account } from '@unique-nft/sr25519';
 import { collectionMetadata } from "../data/collectionMetadata";
 import testConfig from "./testConfig";
 import { getNftContract } from './helpers';
-
+import { TestCollection } from './types';
+import { ethers } from 'hardhat';
+import { TKN } from './currency';
 
 export default class SdkHelper {
   readonly sdk: Sdk;
-  readonly accounts: Account[];
+  readonly donor: Account;
 
-  private constructor(sdk: Sdk, accounts: Account[]) {
+  private constructor(sdk: Sdk, donor: Account) {
     this.sdk = sdk;
-    this.accounts = accounts;
+    this.donor = donor;
   }
 
   static async init() {
-    const accounts = await Promise.all(
-      testConfig.subPrivateKeys.map(key => Sr25519Account.fromUri(key))
-    );
+    const account = Sr25519Account.fromUri(testConfig.substrateDonorSeed);
 
     const sdk = new Sdk({
       baseUrl: testConfig.sdkUrl,
-      account: accounts[0],
+      account,
     });
 
-    return new SdkHelper(sdk, accounts);
+    const donorBalance = await sdk.balance.get({address: account.address})
+    if (BigInt(donorBalance.availableBalance.raw) < TKN(1000)) {
+      throw Error("substrate donor: balance low");
+    }
+
+    return new SdkHelper(sdk, account);
   }
 
-  async createCollection(body?: Partial<CreateCollectionV2ArgsDto>) {
+  async transfer(amount: bigint, address: string) {
+    const formated = parseInt(ethers.formatEther(amount));
+    await this.sdk.balance.transfer.submitWaitResult({amount: formated, destination: address, });
+  }
+
+  async createCollection(body?: Partial<CreateCollectionV2ArgsDto>): Promise<TestCollection> {
     const payload = {...collectionMetadata, ...body};
     const response = await this.sdk.collection.createV2(payload);
 
@@ -53,10 +62,10 @@ export default class SdkHelper {
     });
   }
 
-  async getBalanceOf(address: string) {
+  async getBalanceOf(address: string): Promise<bigint> {
     const result = await this.sdk.balance.get({address});
 
-    return hre.ethers.BigNumber.from(result.availableBalance.raw);
+    return BigInt(result.availableBalance.raw);
   }
 
   async getOwnerOf(token: TokenIdQuery) {

@@ -3,126 +3,88 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PayableOverrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
-  PromiseOrValue,
+  TypedContractMethod,
 } from '../../scripts/common-types';
 
-export type CrossAddressStruct = {
-  eth: PromiseOrValue<string>;
-  sub: PromiseOrValue<BigNumberish>;
-};
+export type CrossAddressStruct = { eth: AddressLike; sub: BigNumberish };
 
-export type CrossAddressStructOutput = [string, BigNumber] & {
+export type CrossAddressStructOutput = [eth: string, sub: bigint] & {
   eth: string;
-  sub: BigNumber;
+  sub: bigint;
 };
 
 export type RoyaltyAmountStruct = {
   crossAddress: CrossAddressStruct;
-  amount: PromiseOrValue<BigNumberish>;
+  amount: BigNumberish;
 };
 
 export type RoyaltyAmountStructOutput = [
-  CrossAddressStructOutput,
-  BigNumber
-] & { crossAddress: CrossAddressStructOutput; amount: BigNumber };
+  crossAddress: CrossAddressStructOutput,
+  amount: bigint
+] & { crossAddress: CrossAddressStructOutput; amount: bigint };
 
 export declare namespace Market {
   export type OrderStruct = {
-    id: PromiseOrValue<BigNumberish>;
-    collectionId: PromiseOrValue<BigNumberish>;
-    tokenId: PromiseOrValue<BigNumberish>;
-    amount: PromiseOrValue<BigNumberish>;
-    price: PromiseOrValue<BigNumberish>;
-    currency: PromiseOrValue<BigNumberish>;
+    id: BigNumberish;
+    collectionId: BigNumberish;
+    tokenId: BigNumberish;
+    amount: BigNumberish;
+    price: BigNumberish;
+    currency: BigNumberish;
     seller: CrossAddressStruct;
   };
 
   export type OrderStructOutput = [
-    number,
-    number,
-    number,
-    number,
-    BigNumber,
-    number,
-    CrossAddressStructOutput
+    id: bigint,
+    collectionId: bigint,
+    tokenId: bigint,
+    amount: bigint,
+    price: bigint,
+    currency: bigint,
+    seller: CrossAddressStructOutput
   ] & {
-    id: number;
-    collectionId: number;
-    tokenId: number;
-    amount: number;
-    price: BigNumber;
-    currency: number;
+    id: bigint;
+    collectionId: bigint;
+    tokenId: bigint;
+    amount: bigint;
+    price: bigint;
+    currency: bigint;
     seller: CrossAddressStructOutput;
   };
 
   export type CurrencyStruct = {
-    isAvailable: PromiseOrValue<boolean>;
-    collectionId: PromiseOrValue<BigNumberish>;
-    fee: PromiseOrValue<BigNumberish>;
+    isAvailable: boolean;
+    collectionId: BigNumberish;
+    fee: BigNumberish;
   };
 
-  export type CurrencyStructOutput = [boolean, number, number] & {
-    isAvailable: boolean;
-    collectionId: number;
-    fee: number;
-  };
+  export type CurrencyStructOutput = [
+    isAvailable: boolean,
+    collectionId: bigint,
+    fee: bigint
+  ] & { isAvailable: boolean; collectionId: bigint; fee: bigint };
 }
 
-export interface MarketInterface extends utils.Interface {
-  functions: {
-    "addAdmin(address)": FunctionFragment;
-    "addCurrency(uint32,uint32)": FunctionFragment;
-    "addToBlacklist(uint32)": FunctionFragment;
-    "admins(address)": FunctionFragment;
-    "availableCurrencies(uint256)": FunctionFragment;
-    "buildVersion()": FunctionFragment;
-    "buy(uint32,uint32,uint32,(address,uint256))": FunctionFragment;
-    "changePrice(uint32,uint32,uint256,uint32)": FunctionFragment;
-    "checkApproved(uint32,uint32)": FunctionFragment;
-    "ctime()": FunctionFragment;
-    "getCurrency(uint32)": FunctionFragment;
-    "getOrder(uint32,uint32)": FunctionFragment;
-    "marketFee()": FunctionFragment;
-    "owner()": FunctionFragment;
-    "ownerAddress()": FunctionFragment;
-    "put(uint32,uint32,uint256,uint32,uint32,(address,uint256))": FunctionFragment;
-    "removeAdmin(address)": FunctionFragment;
-    "removeCurrency(uint32)": FunctionFragment;
-    "removeFromBlacklist(uint32)": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
-    "revoke(uint32,uint32,uint32)": FunctionFragment;
-    "revokeAdmin(uint32,uint32)": FunctionFragment;
-    "revokeListAdmin(uint32,uint32[])": FunctionFragment;
-    "setRoyaltyHelpers(address)": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
-    "version()": FunctionFragment;
-    "withdraw((address,uint256),uint32,uint256)": FunctionFragment;
-  };
-
+export interface MarketInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "addAdmin"
       | "addCurrency"
       | "addToBlacklist"
@@ -135,6 +97,7 @@ export interface MarketInterface extends utils.Interface {
       | "ctime"
       | "getCurrency"
       | "getOrder"
+      | "initialize"
       | "marketFee"
       | "owner"
       | "ownerAddress"
@@ -152,25 +115,33 @@ export interface MarketInterface extends utils.Interface {
       | "withdraw"
   ): FunctionFragment;
 
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "Initialized"
+      | "OwnershipTransferred"
+      | "TokenIsApproved"
+      | "TokenIsPurchased"
+      | "TokenIsUpForSale"
+      | "TokenPriceChanged"
+      | "TokenRevoke"
+  ): EventFragment;
+
   encodeFunctionData(
     functionFragment: "addAdmin",
-    values: [PromiseOrValue<string>]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "addCurrency",
-    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "addToBlacklist",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "admins",
-    values: [PromiseOrValue<string>]
-  ): string;
+  encodeFunctionData(functionFragment: "admins", values: [AddressLike]): string;
   encodeFunctionData(
     functionFragment: "availableCurrencies",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "buildVersion",
@@ -178,34 +149,28 @@ export interface MarketInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "buy",
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      CrossAddressStruct
-    ]
+    values: [BigNumberish, BigNumberish, BigNumberish, CrossAddressStruct]
   ): string;
   encodeFunctionData(
     functionFragment: "changePrice",
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
-    ]
+    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "checkApproved",
-    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "ctime", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getCurrency",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "getOrder",
-    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "initialize",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "marketFee", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
@@ -216,25 +181,25 @@ export interface MarketInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "put",
     values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
       CrossAddressStruct
     ]
   ): string;
   encodeFunctionData(
     functionFragment: "removeAdmin",
-    values: [PromiseOrValue<string>]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "removeCurrency",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "removeFromBlacklist",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -242,36 +207,28 @@ export interface MarketInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "revoke",
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
-    ]
+    values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "revokeAdmin",
-    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "revokeListAdmin",
-    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>[]]
+    values: [BigNumberish, BigNumberish[]]
   ): string;
   encodeFunctionData(
     functionFragment: "setRoyaltyHelpers",
-    values: [PromiseOrValue<string>]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
-    values: [PromiseOrValue<string>]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "version", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [
-      CrossAddressStruct,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
-    ]
+    values: [CrossAddressStruct, BigNumberish, BigNumberish]
   ): string;
 
   decodeFunctionResult(functionFragment: "addAdmin", data: BytesLike): Result;
@@ -307,6 +264,7 @@ export interface MarketInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getOrder", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "marketFee", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
@@ -349,892 +307,605 @@ export interface MarketInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "version", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
-
-  events: {
-    "OwnershipTransferred(address,address)": EventFragment;
-    "TokenIsApproved(uint32,tuple)": EventFragment;
-    "TokenIsPurchased(uint32,tuple,uint32,tuple,tuple[])": EventFragment;
-    "TokenIsUpForSale(uint32,tuple)": EventFragment;
-    "TokenPriceChanged(uint32,tuple)": EventFragment;
-    "TokenRevoke(uint32,tuple,uint32)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "TokenIsApproved"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "TokenIsPurchased"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "TokenIsUpForSale"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "TokenPriceChanged"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "TokenRevoke"): EventFragment;
 }
 
-export interface OwnershipTransferredEventObject {
-  previousOwner: string;
-  newOwner: string;
+export namespace InitializedEvent {
+  export type InputTuple = [version: BigNumberish];
+  export type OutputTuple = [version: bigint];
+  export interface OutputObject {
+    version: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
 
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
-
-export interface TokenIsApprovedEventObject {
-  version: number;
-  item: Market.OrderStructOutput;
+export namespace OwnershipTransferredEvent {
+  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
+  export type OutputTuple = [previousOwner: string, newOwner: string];
+  export interface OutputObject {
+    previousOwner: string;
+    newOwner: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TokenIsApprovedEvent = TypedEvent<
-  [number, Market.OrderStructOutput],
-  TokenIsApprovedEventObject
->;
 
-export type TokenIsApprovedEventFilter = TypedEventFilter<TokenIsApprovedEvent>;
-
-export interface TokenIsPurchasedEventObject {
-  version: number;
-  item: Market.OrderStructOutput;
-  salesAmount: number;
-  buyer: CrossAddressStructOutput;
-  royalties: RoyaltyAmountStructOutput[];
+export namespace TokenIsApprovedEvent {
+  export type InputTuple = [version: BigNumberish, item: Market.OrderStruct];
+  export type OutputTuple = [version: bigint, item: Market.OrderStructOutput];
+  export interface OutputObject {
+    version: bigint;
+    item: Market.OrderStructOutput;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TokenIsPurchasedEvent = TypedEvent<
-  [
-    number,
-    Market.OrderStructOutput,
-    number,
-    CrossAddressStructOutput,
-    RoyaltyAmountStructOutput[]
-  ],
-  TokenIsPurchasedEventObject
->;
 
-export type TokenIsPurchasedEventFilter =
-  TypedEventFilter<TokenIsPurchasedEvent>;
-
-export interface TokenIsUpForSaleEventObject {
-  version: number;
-  item: Market.OrderStructOutput;
+export namespace TokenIsPurchasedEvent {
+  export type InputTuple = [
+    version: BigNumberish,
+    item: Market.OrderStruct,
+    salesAmount: BigNumberish,
+    buyer: CrossAddressStruct,
+    royalties: RoyaltyAmountStruct[]
+  ];
+  export type OutputTuple = [
+    version: bigint,
+    item: Market.OrderStructOutput,
+    salesAmount: bigint,
+    buyer: CrossAddressStructOutput,
+    royalties: RoyaltyAmountStructOutput[]
+  ];
+  export interface OutputObject {
+    version: bigint;
+    item: Market.OrderStructOutput;
+    salesAmount: bigint;
+    buyer: CrossAddressStructOutput;
+    royalties: RoyaltyAmountStructOutput[];
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TokenIsUpForSaleEvent = TypedEvent<
-  [number, Market.OrderStructOutput],
-  TokenIsUpForSaleEventObject
->;
 
-export type TokenIsUpForSaleEventFilter =
-  TypedEventFilter<TokenIsUpForSaleEvent>;
-
-export interface TokenPriceChangedEventObject {
-  version: number;
-  item: Market.OrderStructOutput;
+export namespace TokenIsUpForSaleEvent {
+  export type InputTuple = [version: BigNumberish, item: Market.OrderStruct];
+  export type OutputTuple = [version: bigint, item: Market.OrderStructOutput];
+  export interface OutputObject {
+    version: bigint;
+    item: Market.OrderStructOutput;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TokenPriceChangedEvent = TypedEvent<
-  [number, Market.OrderStructOutput],
-  TokenPriceChangedEventObject
->;
 
-export type TokenPriceChangedEventFilter =
-  TypedEventFilter<TokenPriceChangedEvent>;
-
-export interface TokenRevokeEventObject {
-  version: number;
-  item: Market.OrderStructOutput;
-  amount: number;
+export namespace TokenPriceChangedEvent {
+  export type InputTuple = [version: BigNumberish, item: Market.OrderStruct];
+  export type OutputTuple = [version: bigint, item: Market.OrderStructOutput];
+  export interface OutputObject {
+    version: bigint;
+    item: Market.OrderStructOutput;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TokenRevokeEvent = TypedEvent<
-  [number, Market.OrderStructOutput, number],
-  TokenRevokeEventObject
->;
 
-export type TokenRevokeEventFilter = TypedEventFilter<TokenRevokeEvent>;
+export namespace TokenRevokeEvent {
+  export type InputTuple = [
+    version: BigNumberish,
+    item: Market.OrderStruct,
+    amount: BigNumberish
+  ];
+  export type OutputTuple = [
+    version: bigint,
+    item: Market.OrderStructOutput,
+    amount: bigint
+  ];
+  export interface OutputObject {
+    version: bigint;
+    item: Market.OrderStructOutput;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
 export interface Market extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): Market;
+  waitForDeployment(): Promise<this>;
 
   interface: MarketInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    addAdmin(
-      admin: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    addCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      fee: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    addToBlacklist(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  addAdmin: TypedContractMethod<[admin: AddressLike], [void], "nonpayable">;
 
-    admins(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    availableCurrencies(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean, number, number] & {
-        isAvailable: boolean;
-        collectionId: number;
-        fee: number;
-      }
-    >;
-
-    buildVersion(overrides?: CallOverrides): Promise<[number]>;
-
-    buy(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      buyer: CrossAddressStruct,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    changePrice(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      currency: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    checkApproved(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    ctime(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    getCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[Market.CurrencyStructOutput]>;
-
-    getOrder(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[Market.OrderStructOutput]>;
-
-    marketFee(overrides?: CallOverrides): Promise<[number]>;
-
-    owner(overrides?: CallOverrides): Promise<[string]>;
-
-    ownerAddress(overrides?: CallOverrides): Promise<[string]>;
-
-    put(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      currency: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      seller: CrossAddressStruct,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    removeAdmin(
-      admin: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    removeCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    removeFromBlacklist(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    revoke(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    revokeAdmin(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    revokeListAdmin(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenIdList: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    setRoyaltyHelpers(
-      royaltyHelpersAddress: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    version(overrides?: CallOverrides): Promise<[number]>;
-
-    withdraw(
-      to: CrossAddressStruct,
-      currency: PromiseOrValue<BigNumberish>,
-      balance: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-  };
-
-  addAdmin(
-    admin: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  addCurrency(
-    collectionId: PromiseOrValue<BigNumberish>,
-    fee: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  addToBlacklist(
-    collectionId: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  admins(
-    arg0: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  availableCurrencies(
-    arg0: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<
-    [boolean, number, number] & {
-      isAvailable: boolean;
-      collectionId: number;
-      fee: number;
-    }
+  addCurrency: TypedContractMethod<
+    [collectionId: BigNumberish, fee: BigNumberish],
+    [void],
+    "nonpayable"
   >;
 
-  buildVersion(overrides?: CallOverrides): Promise<number>;
+  addToBlacklist: TypedContractMethod<
+    [collectionId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-  buy(
-    collectionId: PromiseOrValue<BigNumberish>,
-    tokenId: PromiseOrValue<BigNumberish>,
-    amount: PromiseOrValue<BigNumberish>,
-    buyer: CrossAddressStruct,
-    overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  admins: TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
 
-  changePrice(
-    collectionId: PromiseOrValue<BigNumberish>,
-    tokenId: PromiseOrValue<BigNumberish>,
-    price: PromiseOrValue<BigNumberish>,
-    currency: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  checkApproved(
-    collectionId: PromiseOrValue<BigNumberish>,
-    tokenId: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  ctime(overrides?: CallOverrides): Promise<BigNumber>;
-
-  getCurrency(
-    collectionId: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<Market.CurrencyStructOutput>;
-
-  getOrder(
-    collectionId: PromiseOrValue<BigNumberish>,
-    tokenId: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<Market.OrderStructOutput>;
-
-  marketFee(overrides?: CallOverrides): Promise<number>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
-
-  ownerAddress(overrides?: CallOverrides): Promise<string>;
-
-  put(
-    collectionId: PromiseOrValue<BigNumberish>,
-    tokenId: PromiseOrValue<BigNumberish>,
-    price: PromiseOrValue<BigNumberish>,
-    currency: PromiseOrValue<BigNumberish>,
-    amount: PromiseOrValue<BigNumberish>,
-    seller: CrossAddressStruct,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  removeAdmin(
-    admin: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  removeCurrency(
-    collectionId: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  removeFromBlacklist(
-    collectionId: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  renounceOwnership(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  revoke(
-    collectionId: PromiseOrValue<BigNumberish>,
-    tokenId: PromiseOrValue<BigNumberish>,
-    amount: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  revokeAdmin(
-    collectionId: PromiseOrValue<BigNumberish>,
-    tokenId: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  revokeListAdmin(
-    collectionId: PromiseOrValue<BigNumberish>,
-    tokenIdList: PromiseOrValue<BigNumberish>[],
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  setRoyaltyHelpers(
-    royaltyHelpersAddress: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  transferOwnership(
-    newOwner: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  version(overrides?: CallOverrides): Promise<number>;
-
-  withdraw(
-    to: CrossAddressStruct,
-    currency: PromiseOrValue<BigNumberish>,
-    balance: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  callStatic: {
-    addAdmin(
-      admin: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    addCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      fee: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    addToBlacklist(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    admins(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    availableCurrencies(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean, number, number] & {
+  availableCurrencies: TypedContractMethod<
+    [arg0: BigNumberish],
+    [
+      [boolean, bigint, bigint] & {
         isAvailable: boolean;
-        collectionId: number;
-        fee: number;
+        collectionId: bigint;
+        fee: bigint;
       }
-    >;
+    ],
+    "view"
+  >;
 
-    buildVersion(overrides?: CallOverrides): Promise<number>;
+  buildVersion: TypedContractMethod<[], [bigint], "view">;
 
-    buy(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      buyer: CrossAddressStruct,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  buy: TypedContractMethod<
+    [
+      collectionId: BigNumberish,
+      tokenId: BigNumberish,
+      amount: BigNumberish,
+      buyer: CrossAddressStruct
+    ],
+    [void],
+    "payable"
+  >;
 
-    changePrice(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      currency: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  changePrice: TypedContractMethod<
+    [
+      collectionId: BigNumberish,
+      tokenId: BigNumberish,
+      price: BigNumberish,
+      currency: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    checkApproved(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  checkApproved: TypedContractMethod<
+    [collectionId: BigNumberish, tokenId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    ctime(overrides?: CallOverrides): Promise<BigNumber>;
+  ctime: TypedContractMethod<[], [bigint], "view">;
 
-    getCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<Market.CurrencyStructOutput>;
+  getCurrency: TypedContractMethod<
+    [collectionId: BigNumberish],
+    [Market.CurrencyStructOutput],
+    "view"
+  >;
 
-    getOrder(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<Market.OrderStructOutput>;
+  getOrder: TypedContractMethod<
+    [collectionId: BigNumberish, tokenId: BigNumberish],
+    [Market.OrderStructOutput],
+    "view"
+  >;
 
-    marketFee(overrides?: CallOverrides): Promise<number>;
+  initialize: TypedContractMethod<[fee: BigNumberish], [void], "nonpayable">;
 
-    owner(overrides?: CallOverrides): Promise<string>;
+  marketFee: TypedContractMethod<[], [bigint], "view">;
 
-    ownerAddress(overrides?: CallOverrides): Promise<string>;
+  owner: TypedContractMethod<[], [string], "view">;
 
-    put(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      currency: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      seller: CrossAddressStruct,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  ownerAddress: TypedContractMethod<[], [string], "view">;
 
-    removeAdmin(
-      admin: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  put: TypedContractMethod<
+    [
+      collectionId: BigNumberish,
+      tokenId: BigNumberish,
+      price: BigNumberish,
+      currency: BigNumberish,
+      amount: BigNumberish,
+      seller: CrossAddressStruct
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    removeCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  removeAdmin: TypedContractMethod<[admin: AddressLike], [void], "nonpayable">;
 
-    removeFromBlacklist(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  removeCurrency: TypedContractMethod<
+    [collectionId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
+  removeFromBlacklist: TypedContractMethod<
+    [collectionId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    revoke(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
-    revokeAdmin(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  revoke: TypedContractMethod<
+    [collectionId: BigNumberish, tokenId: BigNumberish, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    revokeListAdmin(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenIdList: PromiseOrValue<BigNumberish>[],
-      overrides?: CallOverrides
-    ): Promise<void>;
+  revokeAdmin: TypedContractMethod<
+    [collectionId: BigNumberish, tokenId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    setRoyaltyHelpers(
-      royaltyHelpersAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  revokeListAdmin: TypedContractMethod<
+    [collectionId: BigNumberish, tokenIdList: BigNumberish[]],
+    [void],
+    "nonpayable"
+  >;
 
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  setRoyaltyHelpers: TypedContractMethod<
+    [royaltyHelpersAddress: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    version(overrides?: CallOverrides): Promise<number>;
+  transferOwnership: TypedContractMethod<
+    [newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    withdraw(
-      to: CrossAddressStruct,
-      currency: PromiseOrValue<BigNumberish>,
-      balance: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-  };
+  version: TypedContractMethod<[], [bigint], "view">;
+
+  withdraw: TypedContractMethod<
+    [to: CrossAddressStruct, currency: BigNumberish, balance: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "addAdmin"
+  ): TypedContractMethod<[admin: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "addCurrency"
+  ): TypedContractMethod<
+    [collectionId: BigNumberish, fee: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "addToBlacklist"
+  ): TypedContractMethod<[collectionId: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "admins"
+  ): TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "availableCurrencies"
+  ): TypedContractMethod<
+    [arg0: BigNumberish],
+    [
+      [boolean, bigint, bigint] & {
+        isAvailable: boolean;
+        collectionId: bigint;
+        fee: bigint;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "buildVersion"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "buy"
+  ): TypedContractMethod<
+    [
+      collectionId: BigNumberish,
+      tokenId: BigNumberish,
+      amount: BigNumberish,
+      buyer: CrossAddressStruct
+    ],
+    [void],
+    "payable"
+  >;
+  getFunction(
+    nameOrSignature: "changePrice"
+  ): TypedContractMethod<
+    [
+      collectionId: BigNumberish,
+      tokenId: BigNumberish,
+      price: BigNumberish,
+      currency: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "checkApproved"
+  ): TypedContractMethod<
+    [collectionId: BigNumberish, tokenId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "ctime"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getCurrency"
+  ): TypedContractMethod<
+    [collectionId: BigNumberish],
+    [Market.CurrencyStructOutput],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getOrder"
+  ): TypedContractMethod<
+    [collectionId: BigNumberish, tokenId: BigNumberish],
+    [Market.OrderStructOutput],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "initialize"
+  ): TypedContractMethod<[fee: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "marketFee"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "ownerAddress"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "put"
+  ): TypedContractMethod<
+    [
+      collectionId: BigNumberish,
+      tokenId: BigNumberish,
+      price: BigNumberish,
+      currency: BigNumberish,
+      amount: BigNumberish,
+      seller: CrossAddressStruct
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "removeAdmin"
+  ): TypedContractMethod<[admin: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "removeCurrency"
+  ): TypedContractMethod<[collectionId: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "removeFromBlacklist"
+  ): TypedContractMethod<[collectionId: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "renounceOwnership"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "revoke"
+  ): TypedContractMethod<
+    [collectionId: BigNumberish, tokenId: BigNumberish, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "revokeAdmin"
+  ): TypedContractMethod<
+    [collectionId: BigNumberish, tokenId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "revokeListAdmin"
+  ): TypedContractMethod<
+    [collectionId: BigNumberish, tokenIdList: BigNumberish[]],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setRoyaltyHelpers"
+  ): TypedContractMethod<
+    [royaltyHelpersAddress: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferOwnership"
+  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "version"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "withdraw"
+  ): TypedContractMethod<
+    [to: CrossAddressStruct, currency: BigNumberish, balance: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  getEvent(
+    key: "Initialized"
+  ): TypedContractEvent<
+    InitializedEvent.InputTuple,
+    InitializedEvent.OutputTuple,
+    InitializedEvent.OutputObject
+  >;
+  getEvent(
+    key: "OwnershipTransferred"
+  ): TypedContractEvent<
+    OwnershipTransferredEvent.InputTuple,
+    OwnershipTransferredEvent.OutputTuple,
+    OwnershipTransferredEvent.OutputObject
+  >;
+  getEvent(
+    key: "TokenIsApproved"
+  ): TypedContractEvent<
+    TokenIsApprovedEvent.InputTuple,
+    TokenIsApprovedEvent.OutputTuple,
+    TokenIsApprovedEvent.OutputObject
+  >;
+  getEvent(
+    key: "TokenIsPurchased"
+  ): TypedContractEvent<
+    TokenIsPurchasedEvent.InputTuple,
+    TokenIsPurchasedEvent.OutputTuple,
+    TokenIsPurchasedEvent.OutputObject
+  >;
+  getEvent(
+    key: "TokenIsUpForSale"
+  ): TypedContractEvent<
+    TokenIsUpForSaleEvent.InputTuple,
+    TokenIsUpForSaleEvent.OutputTuple,
+    TokenIsUpForSaleEvent.OutputObject
+  >;
+  getEvent(
+    key: "TokenPriceChanged"
+  ): TypedContractEvent<
+    TokenPriceChangedEvent.InputTuple,
+    TokenPriceChangedEvent.OutputTuple,
+    TokenPriceChangedEvent.OutputObject
+  >;
+  getEvent(
+    key: "TokenRevoke"
+  ): TypedContractEvent<
+    TokenRevokeEvent.InputTuple,
+    TokenRevokeEvent.OutputTuple,
+    TokenRevokeEvent.OutputObject
+  >;
 
   filters: {
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: PromiseOrValue<string> | null,
-      newOwner?: PromiseOrValue<string> | null
-    ): OwnershipTransferredEventFilter;
-    OwnershipTransferred(
-      previousOwner?: PromiseOrValue<string> | null,
-      newOwner?: PromiseOrValue<string> | null
-    ): OwnershipTransferredEventFilter;
+    "Initialized(uint64)": TypedContractEvent<
+      InitializedEvent.InputTuple,
+      InitializedEvent.OutputTuple,
+      InitializedEvent.OutputObject
+    >;
+    Initialized: TypedContractEvent<
+      InitializedEvent.InputTuple,
+      InitializedEvent.OutputTuple,
+      InitializedEvent.OutputObject
+    >;
 
-    "TokenIsApproved(uint32,tuple)"(
-      version?: null,
-      item?: null
-    ): TokenIsApprovedEventFilter;
-    TokenIsApproved(version?: null, item?: null): TokenIsApprovedEventFilter;
+    "OwnershipTransferred(address,address)": TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+    OwnershipTransferred: TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
 
-    "TokenIsPurchased(uint32,tuple,uint32,tuple,tuple[])"(
-      version?: null,
-      item?: null,
-      salesAmount?: null,
-      buyer?: null,
-      royalties?: null
-    ): TokenIsPurchasedEventFilter;
-    TokenIsPurchased(
-      version?: null,
-      item?: null,
-      salesAmount?: null,
-      buyer?: null,
-      royalties?: null
-    ): TokenIsPurchasedEventFilter;
+    "TokenIsApproved(uint32,tuple)": TypedContractEvent<
+      TokenIsApprovedEvent.InputTuple,
+      TokenIsApprovedEvent.OutputTuple,
+      TokenIsApprovedEvent.OutputObject
+    >;
+    TokenIsApproved: TypedContractEvent<
+      TokenIsApprovedEvent.InputTuple,
+      TokenIsApprovedEvent.OutputTuple,
+      TokenIsApprovedEvent.OutputObject
+    >;
 
-    "TokenIsUpForSale(uint32,tuple)"(
-      version?: null,
-      item?: null
-    ): TokenIsUpForSaleEventFilter;
-    TokenIsUpForSale(version?: null, item?: null): TokenIsUpForSaleEventFilter;
+    "TokenIsPurchased(uint32,tuple,uint32,tuple,tuple[])": TypedContractEvent<
+      TokenIsPurchasedEvent.InputTuple,
+      TokenIsPurchasedEvent.OutputTuple,
+      TokenIsPurchasedEvent.OutputObject
+    >;
+    TokenIsPurchased: TypedContractEvent<
+      TokenIsPurchasedEvent.InputTuple,
+      TokenIsPurchasedEvent.OutputTuple,
+      TokenIsPurchasedEvent.OutputObject
+    >;
 
-    "TokenPriceChanged(uint32,tuple)"(
-      version?: null,
-      item?: null
-    ): TokenPriceChangedEventFilter;
-    TokenPriceChanged(
-      version?: null,
-      item?: null
-    ): TokenPriceChangedEventFilter;
+    "TokenIsUpForSale(uint32,tuple)": TypedContractEvent<
+      TokenIsUpForSaleEvent.InputTuple,
+      TokenIsUpForSaleEvent.OutputTuple,
+      TokenIsUpForSaleEvent.OutputObject
+    >;
+    TokenIsUpForSale: TypedContractEvent<
+      TokenIsUpForSaleEvent.InputTuple,
+      TokenIsUpForSaleEvent.OutputTuple,
+      TokenIsUpForSaleEvent.OutputObject
+    >;
 
-    "TokenRevoke(uint32,tuple,uint32)"(
-      version?: null,
-      item?: null,
-      amount?: null
-    ): TokenRevokeEventFilter;
-    TokenRevoke(
-      version?: null,
-      item?: null,
-      amount?: null
-    ): TokenRevokeEventFilter;
-  };
+    "TokenPriceChanged(uint32,tuple)": TypedContractEvent<
+      TokenPriceChangedEvent.InputTuple,
+      TokenPriceChangedEvent.OutputTuple,
+      TokenPriceChangedEvent.OutputObject
+    >;
+    TokenPriceChanged: TypedContractEvent<
+      TokenPriceChangedEvent.InputTuple,
+      TokenPriceChangedEvent.OutputTuple,
+      TokenPriceChangedEvent.OutputObject
+    >;
 
-  estimateGas: {
-    addAdmin(
-      admin: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    addCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      fee: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    addToBlacklist(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    admins(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    availableCurrencies(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    buildVersion(overrides?: CallOverrides): Promise<BigNumber>;
-
-    buy(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      buyer: CrossAddressStruct,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    changePrice(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      currency: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    checkApproved(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    ctime(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getOrder(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    marketFee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    ownerAddress(overrides?: CallOverrides): Promise<BigNumber>;
-
-    put(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      currency: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      seller: CrossAddressStruct,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    removeAdmin(
-      admin: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    removeCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    removeFromBlacklist(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    revoke(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    revokeAdmin(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    revokeListAdmin(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenIdList: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setRoyaltyHelpers(
-      royaltyHelpersAddress: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    version(overrides?: CallOverrides): Promise<BigNumber>;
-
-    withdraw(
-      to: CrossAddressStruct,
-      currency: PromiseOrValue<BigNumberish>,
-      balance: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    addAdmin(
-      admin: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    addCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      fee: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    addToBlacklist(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    admins(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    availableCurrencies(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    buildVersion(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    buy(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      buyer: CrossAddressStruct,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    changePrice(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      currency: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    checkApproved(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    ctime(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    getCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getOrder(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    marketFee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    ownerAddress(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    put(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      price: PromiseOrValue<BigNumberish>,
-      currency: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      seller: CrossAddressStruct,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    removeAdmin(
-      admin: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    removeCurrency(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    removeFromBlacklist(
-      collectionId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    revoke(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      amount: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    revokeAdmin(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenId: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    revokeListAdmin(
-      collectionId: PromiseOrValue<BigNumberish>,
-      tokenIdList: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setRoyaltyHelpers(
-      royaltyHelpersAddress: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    version(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    withdraw(
-      to: CrossAddressStruct,
-      currency: PromiseOrValue<BigNumberish>,
-      balance: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
+    "TokenRevoke(uint32,tuple,uint32)": TypedContractEvent<
+      TokenRevokeEvent.InputTuple,
+      TokenRevokeEvent.OutputTuple,
+      TokenRevokeEvent.OutputObject
+    >;
+    TokenRevoke: TypedContractEvent<
+      TokenRevokeEvent.InputTuple,
+      TokenRevokeEvent.OutputTuple,
+      TokenRevokeEvent.OutputObject
+    >;
   };
 }
 
 
-export type MarketEventNames = "OwnershipTransferred" | "TokenIsApproved" | "TokenIsPurchased" | "TokenIsUpForSale" | "TokenPriceChanged" | "TokenRevoke";
+export type MarketEventNames = "Initialized" | "OwnershipTransferred" | "TokenIsApproved" | "TokenIsPurchased" | "TokenIsUpForSale" | "TokenPriceChanged" | "TokenRevoke";

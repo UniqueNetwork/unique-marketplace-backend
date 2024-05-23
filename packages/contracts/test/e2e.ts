@@ -1,8 +1,6 @@
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
 import { Sdk } from '@unique-nft/sdk/full';
 import '@nomicfoundation/hardhat-chai-matchers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { UniqueNFT } from '@unique-nft/solidity-interfaces';
 import { Market } from '../../../typechain-types';
 import {
@@ -15,14 +13,15 @@ import {
   getCollectionData,
 } from './utils';
 import { Address } from '@unique-nft/utils';
-import { TokenIsUpForSaleEventObject } from '../../../typechain-types/packages/contracts/src/Market';
-import { TokenIsApprovedEventObject, TokenIsPurchasedEventObject } from '../assemblies/2/market';
+import { TokenIsApprovedEventObject, TokenIsPurchasedEventObject, TokenIsUpForSaleEventObject } from '../assemblies/2/market';
+import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
+import { BigNumber } from 'ethers';
 
 describe.only('e2e', function () {
   let sdk: Sdk;
-  let ownerAccount: SignerWithAddress;
-  let sellAccount: SignerWithAddress;
-  let buyAccount: SignerWithAddress;
+  let ownerAccount: HardhatEthersSigner;
+  let sellAccount: HardhatEthersSigner;
+  let buyAccount: HardhatEthersSigner;
   let uniqueNFT: UniqueNFT;
   let market: Market;
   let marketVersion: number;
@@ -63,8 +62,9 @@ describe.only('e2e', function () {
 
   it('approve', async () => {
     const approved = await uniqueNFT.getApproved(tokenId);
-    if (approved !== market.address) {
-      await expect(uniqueNFT.approve(market.address, tokenId)).to.emit(uniqueNFT, 'Approval');
+    const marketAddress = await market.getAddress();
+    if (approved !== marketAddress) {
+      await expect(uniqueNFT.approve(marketAddress, tokenId)).to.emit(uniqueNFT, 'Approval');
     }
   });
 
@@ -128,7 +128,7 @@ describe.only('e2e', function () {
   const buyAmount = 2;
   const buyTotalValue = tokenPrice * buyAmount;
   const feeValue = Math.floor((buyTotalValue * marketFee) / 100);
-  let buyUsePrice: BigNumber;
+  let buyUsePrice: bigint;
   it('buy', async () => {
     const result = await (
       await market
@@ -164,10 +164,10 @@ describe.only('e2e', function () {
   it('check balances after buy', async function () {
     const ownerBalanceAfter = await sellAccount.getBalance();
     const reward = buyTotalValue - feeValue;
-    expect(ownerBalanceAfter.sub(ownerBalanceBefore)).eq(BigNumber.from(reward));
+    expect(ownerBalanceAfter.sub(ownerBalanceBefore)).eq(BigInt(reward));
 
     const otherBalanceAfter = await buyAccount.getBalance();
-    const newBalance = otherBalanceBefore.sub(buyUsePrice).sub(BigNumber.from(buyTotalValue));
+    const newBalance = otherBalanceBefore.sub(buyUsePrice).sub(BigInt(buyTotalValue));
 
     expect(otherBalanceAfter).eq(newBalance);
   });

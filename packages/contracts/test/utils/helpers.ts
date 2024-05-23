@@ -1,11 +1,9 @@
 import { Address } from '@unique-nft/utils';
-import hre from 'hardhat';
-import uniqueNftAbi from '../abi/UniqueNFT.json';
-import { UniqueNFT } from '@unique-nft/solidity-interfaces';
+import { UniqueNFT__factory } from '../../typechain-types';
 
 export const getNftContract = async (collectionId: number) => {
   const collectionAddress = Address.collection.idToAddress(collectionId);
-  const contract = await hre.ethers.getContractAt(uniqueNftAbi, collectionAddress);
+  const contract = UniqueNFT__factory.connect(collectionAddress);
 
-  return contract as UniqueNFT;
+  return contract;
 }

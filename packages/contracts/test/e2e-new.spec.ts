@@ -1,35 +1,54 @@
+import { TKN } from './utils/currency';
 import hre from 'hardhat';
-import { getTestData } from './utils/testData';
+import TestHelper from './utils/TestHelper';
 import { expect } from 'chai';
+import { Market } from '../typechain-types';
+import { TestCollection } from './utils/types';
 
 describe('Can put for sale and buy', () => {
-  it('using ethereum accounts', async () => {
-    const { sdk, marketplace, collection, accounts: [_, seller, buyer] } = await getTestData();
-    const PRICE = hre.ethers.utils.parseEther('10');
-    const balanceSellerBefore = await sdk.getBalanceOf(seller.address);
-    const balanceBuyerBefore = await sdk.getBalanceOf(buyer.address);
+  let helper: TestHelper;
+  let marketplace: Market;
+  let collection: TestCollection;
 
-    const nft = await sdk.createNft(
+  before(async () => {
+      helper = await TestHelper.init();
+      marketplace = await helper.deployMarket();
+      collection = await helper.createCollectionV2();
+    }
+  )
+
+  it('using ethereum accounts', async () => {
+    const PRICE = hre.ethers.parseEther('10');
+    const INITIAL_BALANCE = TKN(10);
+    const seller = await helper.createAccount(INITIAL_BALANCE);
+    const buyer = await helper.createAccount(INITIAL_BALANCE);
+
+    const nft = await helper.createNft(
       collection.collectionId,
-      {owner: seller.address}
+      seller.address,
     );
 
-    const approveTx = await collection.contract.connect(seller).approve(marketplace.address, nft.tokenId);
+    const approveTx = await collection.contract.connect(seller).approve(marketplace, nft.tokenId);
     const approveReceipt = await approveTx.wait();
-    const approveTxFee = approveReceipt.gasUsed.mul(approveReceipt.effectiveGasPrice);
+    if (!approveReceipt) throw Error('No receipt');
+
+    const approveTxFee = approveReceipt.gasUsed * approveReceipt.gasPrice;
 
     const putTx = await marketplace.connect(seller).put(
       collection.collectionId,
       nft.tokenId,
       PRICE,
       1,
+      0,
       {eth: seller.address, sub: 0},
       {
         gasLimit: 1_000_000
       }
     );
     const putReceipt = await putTx.wait();
-    const putTxFee = putReceipt.gasUsed.mul(putReceipt.effectiveGasPrice);
+    if (!putReceipt) throw Error('No receipt');
+
+    const putTxFee = putReceipt.gasUsed * putReceipt.gasPrice;
 
     // Check the order
     const order = await marketplace.getOrder(collection.collectionId, nft.tokenId);
@@ -37,7 +56,7 @@ describe('Can put for sale and buy', () => {
     expect(order.collectionId).to.eq(collection.collectionId);
     expect(order.tokenId).to.eq(nft.tokenId);
     expect(order.price).to.eq(PRICE);
-    expect(order.seller).to.deep.eq([seller.address, hre.ethers.BigNumber.from(0)]);
+    expect(order.seller).to.deep.eq([seller.address, 0]);
 
     const buyTx = await marketplace.connect(buyer).buy(
         nft.collectionId,
@@ -50,7 +69,8 @@ describe('Can put for sale and buy', () => {
         }
       );
     const buyReceipt = await buyTx.wait();
-    const buyTxFee = buyReceipt.gasUsed.mul(buyReceipt.effectiveGasPrice);
+    if (!buyReceipt) throw Error('No receipt');
+    const buyTxFee = buyReceipt.gasUsed * buyReceipt.gasPrice;
 
     // Order deleted
     const orderAfterBuy = await marketplace.getOrder(collection.collectionId, nft.tokenId);
@@ -61,15 +81,15 @@ describe('Can put for sale and buy', () => {
     expect(orderAfterBuy.seller).to.deep.eq([0, 0]);
 
     // token owner: buyer
-    const owner = await sdk.getOwnerOf(nft);
+    const owner = await helper.sdk.getOwnerOf(nft);
     expect(owner).to.eq(buyer.address.toLowerCase()); // TODO fix case issue
 
     // seller's balance increased
     // buyer's balance decreased
-    const balanceSellerAfter = await sdk.getBalanceOf(seller.address);
-    const balanceBuyerAfter = await sdk.getBalanceOf(buyer.address);
+    const balanceSellerAfter = await helper.sdk.getBalanceOf(seller.address);
+    const balanceBuyerAfter = await helper.sdk.getBalanceOf(buyer.address);
     // TODO enable sponsoring for collection and contract
-    expect(balanceSellerAfter).to.eq(balanceSellerBefore.sub(approveTxFee).sub(putTxFee).add(PRICE));
-    expect(balanceBuyerAfter).to.eq(balanceBuyerBefore.sub(buyTxFee).sub(PRICE));
+    expect(balanceSellerAfter).to.eq(INITIAL_BALANCE - approveTxFee - putTxFee + PRICE);
+    expect(balanceBuyerAfter).to.eq(INITIAL_BALANCE - buyTxFee - PRICE);
   });
 });
