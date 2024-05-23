@@ -18,6 +18,14 @@
       "console": "integratedTerminal",
       "runtimeExecutable": "yarn",
       "runtimeArgs": ["testhh", "${file}"]
+    },
+    {
+      "name": "Hardhat run",
+      "type": "node",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["runhh", "${file}"]
     }
   ]
 }
