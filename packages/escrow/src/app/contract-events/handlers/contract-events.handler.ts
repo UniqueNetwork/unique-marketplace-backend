@@ -17,6 +17,7 @@ import { Sdk, SocketClient } from '@unique-nft/sdk/full';
 import { Address } from '@unique-nft/utils';
 import { CollectionsService } from '../../../collections/collections.service';
 import { TokensService } from '../../../collections/tokens.service';
+import { formatCrossAccount } from '@app/common/src/lib/utils';
 
 type LogEventHandler = (
   extrinsic: Extrinsic,
@@ -148,7 +149,7 @@ export class ContractEventsHandler {
     // @ts-ignore
     const blockId = extrinsic.blockId || extrinsic.block?.id || 0;
 
-    const address = crossAddress ? Address.extract.addressNormalized(crossAddress) : null;
+    const address = crossAddress ? Address.extract.addressNormalized(formatCrossAccount(crossAddress)) : null;
 
     // todo fix double events error
     const foundEvent = await this.offerEventService.find(offer, eventType, blockId, address);

@@ -7,6 +7,7 @@ import { ContractEntity, OfferEntity } from '../entities';
 import { OfferStatus } from '../../types';
 import { ChainPropertiesResponse } from '@unique-nft/sdk/full';
 import { Market } from '../../../../contracts/assemblies/3/market';
+import { formatCrossAccount } from '../../../src/lib/utils';
 
 interface FindOptions {
   contract?: ContractEntity;
@@ -49,7 +50,7 @@ export class OfferService {
       offer.orderId = Number(order.id);
       offer.collectionId = Number(order.collectionId);
       offer.tokenId = Number(order.tokenId);
-      offer.seller = Address.extract.addressNormalized(order.seller);
+      offer.seller = Address.extract.addressNormalized(formatCrossAccount(order.seller));
     }
     const priceOrder = BigInt(order.price);
     const priceDir = parseFloat(priceOrder.toString()) / 10 ** 18;
