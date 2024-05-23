@@ -1,4 +1,3 @@
-import '@openzeppelin/hardhat-upgrades';
 
 import { ethers, upgrades } from 'hardhat';
 

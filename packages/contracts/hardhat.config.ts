@@ -1,19 +1,22 @@
-import '@nomicfoundation/hardhat-toolbox';
+import '@typechain/hardhat';
+import '@nomicfoundation/hardhat-ethers';
 import '@openzeppelin/hardhat-upgrades';
 import { HardhatUserConfig, task } from 'hardhat/config';
-import { loadConfig } from './packages/contracts/scripts';
-import { buildVersion } from './packages/contracts/tasks';
-import testConfig from './packages/contracts/test/utils/testConfig';
+import { loadConfig } from './scripts';
+import { buildVersion } from './tasks';
 
 const appConfig = loadConfig();
 
 const config: HardhatUserConfig = {
   solidity: '0.8.20',
   paths: {
-    sources: './packages/contracts/src',
-    tests: './packages/contracts/test',
-    cache: './dist/packages/contracts/cache',
-    artifacts: './dist/packages/contracts/artifacts',
+    sources: './src',
+    tests: './test',
+    cache: '../../dist/packages/contracts/cache',
+    artifacts: '../../dist/packages/contracts/artifacts',
+  },
+  typechain: {
+    outDir: "./typechain-types"
   },
   defaultNetwork: 'opal',
   networks: {
@@ -25,10 +28,6 @@ const config: HardhatUserConfig = {
     opal: {
       url: appConfig.opal.rpcUrl,
       accounts: appConfig.accounts,
-    },
-    test: {
-      url: testConfig.ethRpcUrl,
-      accounts: testConfig.ethPrivateKeys,
     },
   },
   mocha: {
