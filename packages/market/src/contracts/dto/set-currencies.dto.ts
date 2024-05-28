@@ -1,6 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { IsNumber, IsObject, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+
+export class RemoveCurrencyDto {
+  @ApiProperty()
+  @IsNumber()
+  collectionId: number;
+
+  @ApiProperty()
+  @IsString()
+  contractAddress: string;
+}
 
 export class CurrencyDto {
   @ApiProperty()
@@ -14,14 +24,18 @@ export class CurrencyDto {
   @ApiProperty()
   @IsString()
   iconUrl: string;
+
+  @ApiProperty()
+  @IsNumber()
+  fee: number;
 }
 
 export class SetCurrenciesDto {
-  @ApiProperty({ type: CurrencyDto, isArray: true })
+  @ApiProperty({ type: CurrencyDto })
   @Type(() => CurrencyDto)
-  @IsArray()
-  @ValidateNested({ each: true })
-  currencies: CurrencyDto[];
+  @IsObject()
+  @ValidateNested()
+  currency: CurrencyDto;
 
   @ApiProperty()
   @IsString()

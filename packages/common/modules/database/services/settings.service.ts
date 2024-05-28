@@ -57,6 +57,26 @@ export class SettingsService {
     return this.setValue('contract_currencies', JSON.stringify(currencies));
   }
 
+  public async addContractCurrency(currency: CurrencyDto): Promise<void> {
+    const currencies = await this.getContractCurrencies();
+    const found = currencies.find((c) => c.collectionId === currency.collectionId);
+    if (found) {
+      found.iconUrl = currency.iconUrl;
+      found.decimals = currency.decimals;
+      found.fee = currency.fee;
+    } else {
+      currencies.push(currency);
+    }
+    return this.setContractCurrencies(currencies);
+  }
+
+  public async removeContractCurrency(collectionId: number): Promise<void> {
+    const currencies = await this.getContractCurrencies();
+    const newCurrencies = currencies.filter((c) => c.collectionId !== collectionId);
+
+    return this.setContractCurrencies(newCurrencies);
+  }
+
   public async getContractCurrencies(): Promise<CurrencyDto[]> {
     const value = await this.getValue('contract_currencies');
     return value ? JSON.parse(value) : [];

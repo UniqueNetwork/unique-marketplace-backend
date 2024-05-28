@@ -8,7 +8,7 @@ import { CheckApprovedDto } from './dto/check-approved.dto';
 import { getContractAbi } from '@app/contracts/scripts';
 import { Market } from '@app/contracts/assemblies/3/market';
 import { OfferStatus } from '@app/common/modules/types';
-import { SetCurrenciesDto } from './dto/set-currencies.dto';
+import { RemoveCurrencyDto, SetCurrenciesDto } from './dto/set-currencies.dto';
 
 interface ContractEventValue {
   item: Market.OrderStructOutput;
@@ -115,11 +115,24 @@ export class ContractsService {
     }, {});
   }
 
-  public async setCurrencies(dto: SetCurrenciesDto): Promise<any> {
-    const { contractAddress, currencies } = dto;
+  public async delCurrency(dto: RemoveCurrencyDto): Promise<void> {
+    const { collectionId, contractAddress } = dto;
+    await this.settingsService.removeContractCurrency(collectionId);
+    await this.currencyCall(contractAddress, 'removeCurrency', { collectionId });
+  }
+  public async addCurrency(dto: SetCurrenciesDto): Promise<void> {
+    const { currency, contractAddress } = dto;
+    await this.settingsService.addContractCurrency(currency);
 
-    await this.settingsService.setContractCurrencies(currencies);
+    const { collectionId, fee, decimals } = currency;
+    await this.currencyCall(contractAddress, 'addCurrency', {
+      collectionId,
+      decimals,
+      fee,
+    });
+  }
 
+  private async currencyCall(contractAddress: string, method: string, args: any): Promise<any> {
     const contractEntity = await this.contractService.findOne({
       where: {
         address: contractAddress,
@@ -138,11 +151,10 @@ export class ContractsService {
 
     const callArgs = {
       address: this.sdk.options.signer.address,
-      funcName: 'setCurrencies',
-      args: {
-        currencies,
-      },
+      funcName: method,
+      args: args,
     };
+
     try {
       await contract.call(callArgs);
     } catch (err) {
