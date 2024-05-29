@@ -32,9 +32,13 @@ export default class SdkHelper {
     return new SdkHelper(sdk, account);
   }
 
-  async transfer(amount: bigint, address: string) {
+  async getNonce(address: string) {
+    return this.sdk.common.getNonce({address});
+  }
+
+  async transfer(amount: bigint, address: string, nonce?: number) {
     const formated = parseInt(ethers.formatEther(amount));
-    await this.sdk.balance.transfer.submitWaitResult({amount: formated, destination: address, });
+    await this.sdk.balance.transfer.submitWaitResult({amount: formated, destination: address, }, {nonce});
   }
 
   async createCollection(body?: Partial<CreateCollectionV2ArgsDto>): Promise<TestCollection> {
