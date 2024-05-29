@@ -124,10 +124,9 @@ export class ContractsService {
     const { currency, contractAddress } = dto;
     await this.settingsService.addContractCurrency(currency);
 
-    const { collectionId, fee, decimals } = currency;
+    const { collectionId, fee } = currency;
     await this.currencyCall(contractAddress, 'addCurrency', {
       collectionId,
-      decimals,
       fee,
     });
   }
