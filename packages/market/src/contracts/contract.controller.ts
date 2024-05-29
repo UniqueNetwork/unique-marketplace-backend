@@ -46,7 +46,7 @@ export class ContractsController extends BaseController<ContractsService> {
   @Post('/currencies/del')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Add available currency',
+    summary: 'Remove currency from available list',
   })
   delCurrency(@Body() dto: RemoveCurrencyDto) {
     return this.contractsService.delCurrency(dto);
