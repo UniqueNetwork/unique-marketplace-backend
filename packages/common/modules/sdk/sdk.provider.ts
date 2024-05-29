@@ -19,9 +19,12 @@ export const sdkProvider: Provider = {
       signer = provider.addSeed(seed);
     }
 
+    const baseUrl = configService.get('uniqueSdkRestUrl');
+
+    console.log(`Sdk provider created with signer: ${signer}, baseUrl: ${baseUrl}`);
     return new Sdk({
       signer,
-      baseUrl: configService.get('uniqueSdkRestUrl'),
+      baseUrl,
     });
   },
   inject: [ConfigService],
