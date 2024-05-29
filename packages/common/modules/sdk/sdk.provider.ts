@@ -21,7 +21,7 @@ export const sdkProvider: Provider = {
 
     const baseUrl = configService.get('uniqueSdkRestUrl');
 
-    console.log(`Sdk provider created with signer: ${signer}, baseUrl: ${baseUrl}`);
+    console.log(`Sdk provider created with signer: ${signer?.address}, baseUrl: ${baseUrl}`);
     return new Sdk({
       signer,
       baseUrl,
