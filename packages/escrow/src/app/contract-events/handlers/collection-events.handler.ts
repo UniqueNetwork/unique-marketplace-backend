@@ -43,7 +43,7 @@ export class CollectionEventsHandler {
     this.logger.log(`load collection from block ${fromBlock}`);
 
     this.client.subscribeCollection({
-      // fromBlock,
+      fromBlock,
     });
   }
 
