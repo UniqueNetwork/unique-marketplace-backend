@@ -1,6 +1,11 @@
-import { UniqueNFT } from "../../typechain-types";
+import { UniqueNFT, UniqueFungible } from "../../typechain-types";
 
-export type TestCollection = {
+export type TestNftCollection = {
   collectionId: number,
   contract: UniqueNFT,
+}
+
+export type TestFungibleCollection = {
+  collectionId: number,
+  contract: UniqueFungible,
 }

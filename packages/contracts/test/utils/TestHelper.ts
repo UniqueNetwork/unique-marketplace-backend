@@ -7,6 +7,7 @@ import SdkHelper from "./SdkHelper";
 import testConfig from './testConfig';
 import { Wallet } from 'ethers';
 import { MarketHelper } from './MarketHelper';
+import { convertBigintToNumber } from './helpers';
 
 export default class TestHelper {
   sdk: SdkHelper;
@@ -28,8 +29,8 @@ export default class TestHelper {
     const donor = (await ethers.getSigners())[0];
 
     const donorBalance = await sdk.getBalanceOf(donor.address);
-    if (donorBalance < TKN(10_000)) {
-      await sdk.transfer(TKN(10_000), donor.address);
+    if (donorBalance < TKN(10_000, 18)) {
+      await sdk.transfer(TKN(10_000, 18), donor.address);
     };
 
     const contractHelpers = ContractHelpers__factory.connect(testConfig.contractHelperAddress, donor);
@@ -39,10 +40,17 @@ export default class TestHelper {
 
   async deployMarket() {
     const MarketFactory = await ethers.getContractFactory('Market');
-    const contract = await upgrades.deployProxy(MarketFactory, [0], {
+    const RoyaltyHelper = await ethers.getContractFactory('UniqueRoyaltyHelper');
+
+    const royaltyHelper = await RoyaltyHelper.deploy({
+      gasLimit: 7_000_000
+    });
+    await royaltyHelper.waitForDeployment();
+
+    const contract = await upgrades.deployProxy(MarketFactory, [0, await royaltyHelper.getAddress()], {
       initializer: 'initialize',
       txOverrides: {
-        gasLimit: 7000000,
+        gasLimit: 7_000_000,
       },
     });
 
@@ -53,15 +61,58 @@ export default class TestHelper {
 
     // Set self-sponsoring, and deposit 100 tokens
     await Promise.all([
+      // sponsor transactions from contract itself:
       (await this.contractHelpers.selfSponsoredEnable(marketAddress, {gasLimit: 300000})).wait(),
-      (await this.sdk.transfer(TKN(100), marketAddress)),
+      // sponsor every transaction:
+      (await this.contractHelpers.setSponsoringRateLimit(marketAddress, 0, {gasLimit: 300000})).wait(),
+      // set generous mode:
+      (await this.contractHelpers.setSponsoringMode(marketAddress, 2, {gasLimit: 300000})).wait(),
+      // top up contract's balance for sponsoring:
+      (await this.sdk.transfer(TKN(1000, 18), marketAddress)),
     ]);
 
     return new MarketHelper(this.sdk.sdk, market, await market.getAddress());
   }
 
-  async createCollectionV2() {
-    return this.sdk.createCollection();
+  async createFungibleCollection(decimals: number) {
+    const funCollection = await this.sdk.createFungibleCollection({
+      decimals,
+      name: "Wrapped USD",
+      tokenPrefix: "WUSD",
+      description: "Not a real USD",
+    });
+
+    const oneMillion = 1000_000;
+    const {error} = await this.sdk.sdk.fungible.addTokens({
+      amount: oneMillion,
+      collectionId: funCollection.collectionId,
+      recipient: this.sdk.donor.address
+    });
+
+    if (error) {
+      console.error(error);
+      throw Error("Cannot mint fungible tokens");
+    }
+
+    return funCollection;
+  }
+
+  async topUpFungibleBalance(collectionId: number, amount: bigint, recipient: string) {
+    // TODO use wei
+    const decimals = collectionId === 0 
+      ? 18
+      : (await this.sdk.sdk.fungible.getCollection({collectionId})).decimals;
+    const amountToNumber = convertBigintToNumber(amount, decimals);
+    const {error} = await this.sdk.sdk.fungible.transferTokens({collectionId, recipient, amount: amountToNumber });
+    if (error) throw Error('Cannot top up fungible balance');
+  }
+
+  async getBalance(address: string, collectionId = 0) {
+    return this.sdk.getBalanceOf(address, collectionId);
+  }
+
+  async createNftCollectionV2() {
+    return this.sdk.createNftCollection();
   }
 
   async createNft(collectionId: number, owner: string) {
