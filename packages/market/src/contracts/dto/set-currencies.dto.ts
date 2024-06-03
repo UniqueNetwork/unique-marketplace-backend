@@ -28,6 +28,10 @@ export class CurrencyDto {
   @ApiProperty()
   @IsNumber()
   fee: number;
+
+  @ApiProperty()
+  @IsString()
+  name: string;
 }
 
 export class SetCurrenciesDto {

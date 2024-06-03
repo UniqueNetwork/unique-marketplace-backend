@@ -64,6 +64,7 @@ export class SettingsService {
       found.iconUrl = currency.iconUrl;
       found.decimals = currency.decimals;
       found.fee = currency.fee;
+      found.name = currency.name;
     } else {
       currencies.push(currency);
     }
