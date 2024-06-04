@@ -20,7 +20,7 @@ const config: HardhatUserConfig = {
   typechain: {
     outDir: "./typechain-types"
   },
-  defaultNetwork: 'opal',
+  defaultNetwork: 'test',
   networks: {
     opal: {
       url: appConfig.opal.rpcUrl,

@@ -1,5 +1,4 @@
 import { Address } from '@unique-nft/utils';
-import { ethers, upgrades } from 'hardhat';
 import { HDNodeWallet, ContractTransactionResponse } from 'ethers';
 import { Market } from './../../typechain-types/src/Market.sol/Market';
 import { Market__factory } from '../../typechain-types';
@@ -49,11 +48,11 @@ export class MarketHelper {
   }
 
   async approveNFT(token: TokenId, signer: MarketAccount) {
-    const response = signer instanceof HDNodeWallet 
-      ? await this.approveNftEthers(token, signer)
-      : await this.approveNftSdk(token, signer);
+    return this._approveNFT({token, signer, isApprove: true});
+  }
 
-    return this.handleTransactionResponse(response);
+  async removeAllowanceNFT(token: TokenId, signer: MarketAccount) {
+    return this._approveNFT({token, signer, isApprove: false});
   }
 
   async approveFungible(collectionId: number, amount: bigint, signer: MarketAccount) {
@@ -97,10 +96,26 @@ export class MarketHelper {
   }
 
   // TODO add substrate
-  async revoke(revokeArgs: {token: TokenId, amount?: number, signer: HDNodeWallet}) {
+  async revoke(revokeArgs: {token: TokenId, amount?: number, signer: MarketAccount}) {
+    if (!(revokeArgs.signer instanceof HDNodeWallet)) throw Error('Account revoke not implemented in tests')
     const {collectionId, tokenId} = revokeArgs.token;
     const amount = revokeArgs.amount ? revokeArgs.amount : 1;
-    const response = await this.contract.connect(revokeArgs.signer).revoke(collectionId, tokenId, amount);
+    const response = await this.contract.connect(revokeArgs.signer).revoke(collectionId, tokenId, amount, {gasLimit: 300_000});
+
+    return this.handleTransactionResponse(response);
+  }
+
+  
+  async revokeAdmin(revokeArgs: {token: TokenId}) {
+    const {collectionId, tokenId} = revokeArgs.token;
+    const response = await this.contract.revokeAdmin(collectionId, tokenId, {gasLimit: 300_000});
+
+    return this.handleTransactionResponse(response);
+  }
+
+  async checkApproved(args: {token: TokenId}) {
+    const {collectionId, tokenId} = args.token;
+    const response = await this.contract.checkApproved(collectionId, tokenId, {gasLimit: 300_000});
 
     return this.handleTransactionResponse(response);
   }
@@ -131,6 +146,8 @@ export class MarketHelper {
     expect(order.seller).to.be.oneOf(["0x0000000000000000000000000000000000000000", 0]);
   }
 
+  // ---------------- PRIVATE ----------------- //
+
   private async approveFungibleEthers(collectionId: number, amount: bigint, signer: HDNodeWallet) {
     const collectionContract = await getFungibleContract(collectionId);
     return collectionContract
@@ -149,17 +166,28 @@ export class MarketHelper {
     });
   }
 
-  private async approveNftEthers(token: TokenId, signer: HDNodeWallet) {
-    const collectionContract = await getNftContract(token.collectionId);
-    return collectionContract.connect(signer).approve(this.address, token.tokenId, {gasLimit: 300_000});
+  private async _approveNFT(args: {token: TokenId, isApprove?: boolean, signer: MarketAccount}) {
+    const {token, signer} = args;
+    const isApprove = args.isApprove ?? true;
+    const response = signer instanceof HDNodeWallet 
+      ? await this.approveNftEthers(token, signer, isApprove)
+      : await this.approveNftSdk(token, signer, isApprove);
+
+    return this.handleTransactionResponse(response);
   }
 
-  private async approveNftSdk(token: TokenId, signer: Account) {
+  private async approveNftEthers(token: TokenId, signer: HDNodeWallet, isApprove: boolean) {
+    const collectionContract = await getNftContract(token.collectionId);
+    const approvedAddress = isApprove ? this.address : signer.address;
+    return collectionContract.connect(signer).approve(approvedAddress, token.tokenId, {gasLimit: 300_000});
+  }
+
+  private async approveNftSdk(token: TokenId, signer: Account, isApprove: boolean) {
     return this.sdk.token.approve({
       collectionId: token.collectionId,
       tokenId: token.tokenId,
       spender: this.address,
-      isApprove: true,
+      isApprove: isApprove,
       address: signer.address
     }, {
       signer: signer.signer
@@ -180,7 +208,7 @@ export class MarketHelper {
       {eth: signer.address, sub: "0"},
       {
         value: price,
-        gasLimit: 2_000_000,
+        gasLimit: 300_000,
       }
     );
   }
@@ -248,7 +276,7 @@ export class MarketHelper {
       const receipt = await response.wait();
       if (receipt?.status === 0) throw Error("Ethers transaction failed");
       if (!receipt) throw Error("Cannot get receipt");
-      const { hash, fee } = receipt;
+      const { hash, fee, logs } = receipt;
 
       // TODO: For sponsored transactions, the commission is calculated incorrectly
       // Check refund inside substrate
@@ -269,4 +297,3 @@ export class MarketHelper {
     }
   }
 }
-

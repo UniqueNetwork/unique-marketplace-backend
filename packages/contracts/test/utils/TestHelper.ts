@@ -59,7 +59,7 @@ export default class TestHelper {
       gasLimit: 7_000_000
     });
     await royaltyHelper.waitForDeployment();
-    await market.setRoyaltyHelpers(royaltyHelper.getAddress());
+    await market.setRoyaltyHelpers(royaltyHelper.getAddress(), {gasLimit: 300000});
 
     // Set self-sponsoring, and deposit 100 tokens
     await Promise.all([
