@@ -19,6 +19,7 @@ export class ContractModule {
     }
 
     return {
+      imports: [forwardRef(() => PgNotifyClientModule)],
       controllers: [ContractsController],
       providers: [ContractsService, sdkProvider, SdkMarketService, SessionService],
       module: ContractModule,
