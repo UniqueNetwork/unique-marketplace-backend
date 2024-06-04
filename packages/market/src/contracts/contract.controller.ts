@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BaseController } from '@app/common/src/lib/base.controller';
 import { readApiDocs } from '../utils/utils';
@@ -39,8 +39,8 @@ export class ContractsController extends BaseController<ContractsService> {
   @ApiOperation({
     summary: 'Add available currency',
   })
-  addCurrency(@Body() dto: SetCurrenciesDto) {
-    return this.contractsService.addCurrency(dto);
+  addCurrency(@Query('secretKey') secretKey: string, @Body() dto: SetCurrenciesDto) {
+    return this.contractsService.addCurrency(secretKey, dto);
   }
 
   @Post('/currencies/del')
@@ -48,7 +48,7 @@ export class ContractsController extends BaseController<ContractsService> {
   @ApiOperation({
     summary: 'Remove currency from available list',
   })
-  delCurrency(@Body() dto: RemoveCurrencyDto) {
-    return this.contractsService.delCurrency(dto);
+  delCurrency(@Query('secretKey') secretKey: string, @Body() dto: RemoveCurrencyDto) {
+    return this.contractsService.delCurrency(secretKey, dto);
   }
 }

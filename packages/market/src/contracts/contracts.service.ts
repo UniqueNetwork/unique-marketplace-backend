@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ContractEntity, OfferService, SettingsService } from '@app/common/modules/database';
@@ -17,14 +18,18 @@ interface ContractEventValue {
 @Injectable()
 export class ContractsService {
   private logger: Logger = new Logger(ContractsService.name);
+  private readonly adminSecretKey: string;
 
   constructor(
+    config: ConfigService,
     private readonly sdk: Sdk,
     @InjectRepository(ContractEntity)
     private contractService: Repository<ContractEntity>,
     private offerService: OfferService,
     private settingsService: SettingsService,
-  ) {}
+  ) {
+    this.adminSecretKey = config.get('adminSecretKey');
+  }
 
   public async checkApproved(params: CheckApprovedDto) {
     this.logger.log('check-approved', params);
@@ -115,12 +120,17 @@ export class ContractsService {
     }, {});
   }
 
-  public async delCurrency(dto: RemoveCurrencyDto): Promise<void> {
+  public async delCurrency(secretKey: string, dto: RemoveCurrencyDto): Promise<void> {
+    this.checkSecret(secretKey);
+
     const { collectionId, contractAddress } = dto;
     await this.settingsService.removeContractCurrency(collectionId);
     await this.currencyCall(contractAddress, 'removeCurrency', { collectionId });
   }
-  public async addCurrency(dto: SetCurrenciesDto): Promise<void> {
+
+  public async addCurrency(secretKey: string, dto: SetCurrenciesDto): Promise<void> {
+    this.checkSecret(secretKey);
+
     const { currency, contractAddress } = dto;
     await this.settingsService.addContractCurrency(currency);
 
@@ -129,6 +139,12 @@ export class ContractsService {
       collectionId,
       fee,
     });
+  }
+
+  private checkSecret(secret: string) {
+    if (secret !== this.adminSecretKey) {
+      throw new UnauthorizedException('Invalid secret key');
+    }
   }
 
   private async currencyCall(contractAddress: string, method: string, args: any): Promise<any> {
