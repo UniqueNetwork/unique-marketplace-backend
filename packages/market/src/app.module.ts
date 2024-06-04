@@ -28,7 +28,7 @@ import { BannersModule } from './banners/banners.module';
     TokensModule,
     TradesModule,
     SettingsModule,
-    ContractModule,
+    ContractModule.register(),
     BannersModule.register(),
   ],
   providers: [sdkProvider, SdkMarketService],
