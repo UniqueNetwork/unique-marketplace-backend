@@ -1,12 +1,11 @@
 import { Address } from '@unique-nft/utils';
-import { Sr25519Account } from '@unique-nft/sr25519';
 import { ethers, upgrades } from 'hardhat';
 import { HDNodeWallet, ContractTransactionResponse } from 'ethers';
 import { Market } from './../../typechain-types/src/Market.sol/Market';
-import { Market__factory, UniqueNFT__factory } from '../../typechain-types';
-import { Account, TokenId, ExtrinsicResultResponse, Sdk, EvmSendResultParsed } from '@unique-nft/sdk/full';
+import { Market__factory } from '../../typechain-types';
+import { Account, TokenId, ExtrinsicResultResponse, Sdk } from '@unique-nft/sdk/full';
 import { expect } from 'chai';
-import { getNftContract } from './helpers';
+import { convertBigintToNumber, getFungibleContract, getNftContract } from './helpers';
 
 
 export interface MarketOrder {
@@ -16,6 +15,10 @@ export interface MarketOrder {
   amount?: bigint | number,
   currency: bigint | number,
 }
+
+export type TransactionResponse<T> = ExtrinsicResultResponse<T> | ContractTransactionResponse;
+
+export type MarketAccount = HDNodeWallet | Account;
 
 export type CrossAddress = {eth: string, sub: bigint}
 
@@ -38,50 +41,68 @@ export class MarketHelper {
     });
   }
 
-  static async deployProxy() {
-    const signer = (await ethers.getSigners())[0];
-    const MarketFactory = await ethers.getContractFactory('Market', signer);
-
-    const contract = await upgrades.deployProxy(MarketFactory, [0], {
-      initializer: 'initialize',
-      txOverrides: {
-        gasLimit: 7_000_000,
-      }
+  async registerCurrency(collectionId: number, marketFee: number) {
+    const response = await this.contract.addCurrency(collectionId, marketFee, {
+      gasLimit: 300_000
     });
-
-    await contract.waitForDeployment();
-    const address = await contract.getAddress();
-    const market = Market__factory.connect(address, ethers.provider);
-    return market;
+    await this.handleTransactionResponse(response);
   }
 
-  async approveNFT(token: TokenId, signer: HDNodeWallet | Account) {
+  async approveNFT(token: TokenId, signer: MarketAccount) {
+    const response = signer instanceof HDNodeWallet 
+      ? await this.approveNftEthers(token, signer)
+      : await this.approveNftSdk(token, signer);
+
+    return this.handleTransactionResponse(response);
+  }
+
+  async approveFungible(collectionId: number, amount: bigint, signer: MarketAccount) {
+    let response;
     if (signer instanceof HDNodeWallet)
-      return this.approveEthers(token, signer);
-    else
-      return this.approveSdk(token, signer);
+      response = await this.approveFungibleEthers(collectionId, amount, signer);
+    else {
+      // TODO use bigint for amount when sdk will have amountInWei
+      const decimals = collectionId === 0
+        ? 18
+        : (await this.sdk.fungible.getCollection({collectionId})).decimals;
+
+      const amountToNumber = convertBigintToNumber(amount, decimals);
+      response = await this.approveFungibleSdk(collectionId, amountToNumber, signer);
+    }
+
+    return this.handleTransactionResponse(response);
   }
 
-  async put(putArgs: MarketOrder & {signer: HDNodeWallet | Account}) {
+  async put(putArgs: MarketOrder & {signer: MarketAccount}) {
     const {collectionId, tokenId, price, currency, signer, amount} = putArgs;
 
-    let result: {hash: string, fee: bigint};
-    if (signer instanceof HDNodeWallet)
-      result = await this.putEthers({collectionId, tokenId, price, currency, signer, amount});
-    else
-      result = await this.putSdk({collectionId, tokenId, price, currency, signer, amount});
+    const response = signer instanceof HDNodeWallet
+      ? await this.putEthers({collectionId, tokenId, price, currency, signer, amount})
+      : await this.putSdk({collectionId, tokenId, price, currency, signer, amount});
+
     this.lastOrderId++;
 
-    return result;
+    return this.handleTransactionResponse(response);
   }
 
-  async buy(putArgs: Omit<MarketOrder, 'currency'> & {signer: HDNodeWallet | Account}) {
+  async buy(putArgs: Omit<MarketOrder, 'currency'> & {signer: MarketAccount}) {
     const { collectionId, tokenId, price, signer } = putArgs;
     const amount = putArgs.amount ?? 1;
 
-    if (signer instanceof HDNodeWallet)
-      return this.buyEthers(collectionId, tokenId, price, amount, signer);
-    else return this.buySdk(collectionId, tokenId, price, amount, signer);
+    const response = signer instanceof HDNodeWallet
+      ? await this.buyEthers(collectionId, tokenId, price, amount, signer)
+      : await this.buySdk(collectionId, tokenId, price, amount, signer);
+
+    return this.handleTransactionResponse(response);
+  }
+
+  // TODO add substrate
+  async revoke(revokeArgs: {token: TokenId, amount?: number, signer: HDNodeWallet}) {
+    const {collectionId, tokenId} = revokeArgs.token;
+    const amount = revokeArgs.amount ? revokeArgs.amount : 1;
+    const response = await this.contract.connect(revokeArgs.signer).revoke(collectionId, tokenId, amount);
+
+    return this.handleTransactionResponse(response);
   }
 
   async getOrder(token: TokenId): Promise<MarketOrder & {seller: string} & { id: bigint }> {
@@ -107,17 +128,34 @@ export class MarketHelper {
     expect(order.collectionId).to.eq(0n);
     expect(order.tokenId).to.eq(0n);
     expect(order.price).to.eq(0n);
-    expect(order.seller).to.deep.eq(["0", 0n]);
+    expect(order.seller).to.be.oneOf(["0x0000000000000000000000000000000000000000", 0]);
   }
 
-  private async approveEthers(token: TokenId, signer: HDNodeWallet) {
+  private async approveFungibleEthers(collectionId: number, amount: bigint, signer: HDNodeWallet) {
+    const collectionContract = await getFungibleContract(collectionId);
+    return collectionContract
+      .connect(signer)
+      .approve(this.address, amount, {gasLimit: 300_000});
+  }
+
+  private async approveFungibleSdk(collectionId: number, amount: number, signer: Account) {
+    return this.sdk.fungible.approveTokens({
+      collectionId,
+      amount,
+      spender: this.address,
+      address: signer.address
+    }, {
+      signer: signer.signer
+    });
+  }
+
+  private async approveNftEthers(token: TokenId, signer: HDNodeWallet) {
     const collectionContract = await getNftContract(token.collectionId);
-    const response = await collectionContract.connect(signer).approve(this.address, token.tokenId, {gasLimit: 300_000});
-    return this.handleTransactionResponse(response);
+    return collectionContract.connect(signer).approve(this.address, token.tokenId, {gasLimit: 300_000});
   }
 
-  private async approveSdk(token: TokenId, signer: Account) {
-    const response = await this.sdk.token.approve({
+  private async approveNftSdk(token: TokenId, signer: Account) {
+    return this.sdk.token.approve({
       collectionId: token.collectionId,
       tokenId: token.tokenId,
       spender: this.address,
@@ -126,8 +164,6 @@ export class MarketHelper {
     }, {
       signer: signer.signer
     })
-
-    return this.handleTransactionResponse(response);
   }
 
   private async buyEthers(
@@ -137,18 +173,16 @@ export class MarketHelper {
     amount: number | bigint,
     signer: HDNodeWallet,
   ) {
-    const response = await this.contract.connect(signer).buy(
+    return this.contract.connect(signer).buy(
       collectionId,
       tokenId,
       amount,
-      {eth: signer.address, sub: 0n},
+      {eth: signer.address, sub: "0"},
       {
         value: price,
         gasLimit: 2_000_000,
       }
     );
-
-    return this.handleTransactionResponse(response);
   }
 
   private async buySdk(
@@ -162,7 +196,7 @@ export class MarketHelper {
 
     const publicAddress = Address.extract.substratePublicKey(signer.address);
 
-    const response = await this.sdk.evm.send({
+    return this.sdk.evm.send({
       abi: this.abi,
       funcName: 'buy',
       args: [collectionId, tokenId, amount, ["0x0000000000000000000000000000000000000000", publicAddress]],
@@ -173,15 +207,13 @@ export class MarketHelper {
     }, {
       signer: signer.signer
     });
-
-    return this.handleTransactionResponse(response);
   }
 
   private async putEthers(putArgs: MarketOrder & {signer: HDNodeWallet}) {
     const {collectionId, tokenId, price, currency, signer} = putArgs;
     const amount = putArgs.amount ?? 1;
 
-    const response = await this.contract.connect(signer).put(
+    return this.contract.connect(signer).put(
       collectionId,
       tokenId,
       price,
@@ -190,8 +222,6 @@ export class MarketHelper {
       {eth: signer.address, sub: 0},
       {gasLimit: 1_000_000}
     );
-
-    return this.handleTransactionResponse(response);
   }
 
   private async putSdk(putArgs: MarketOrder & {signer: Account}) {
@@ -201,7 +231,7 @@ export class MarketHelper {
     const amount = putArgs.amount ?? 1;
 
     const publicAddress = Address.extract.substratePublicKey(signer.address);
-    const response = await this.sdk.evm.send({
+    return this.sdk.evm.send({
       abi: this.abi,
       funcName: 'put',
       args: [collectionId, tokenId, price.toString(), currency, amount, ["0x0000000000000000000000000000000000000000", publicAddress]],
@@ -211,20 +241,22 @@ export class MarketHelper {
     }, {
       signer: signer.signer
     });
-
-    return this.handleTransactionResponse(response);
   }
 
-  private async handleTransactionResponse<T>(
-    response: ExtrinsicResultResponse<T> | ContractTransactionResponse
-  ): Promise<{hash: string, fee: bigint}> {
+  private async handleTransactionResponse<T>(response: TransactionResponse<T>): Promise<{hash: string, fee: bigint}> {
     if (response instanceof ContractTransactionResponse) {
       const receipt = await response.wait();
+      if (receipt?.status === 0) throw Error("Ethers transaction failed");
       if (!receipt) throw Error("Cannot get receipt");
       const { hash, fee } = receipt;
+
+      // TODO: For sponsored transactions, the commission is calculated incorrectly
+      // Check refund inside substrate
+      // const sponsoringRefund = ...
       return { hash, fee };
     } else {
-      const {hash, events} = response;
+      const {hash, events, error} = response;
+      if (error) throw Error("SDK transaction failed")
       let fee = response.fee?.raw ?? 0;
       if (!fee) {
         let feeEvent = events.find(e => e.section === 'treasury' && e.method === 'Deposit');

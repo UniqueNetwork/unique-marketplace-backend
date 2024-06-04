@@ -2,10 +2,11 @@ import { Sdk, Account, CreateCollectionV2ArgsDto, CreateTokenV2ArgsDto, TokenIdQ
 import { Sr25519Account } from '@unique-nft/sr25519';
 import { collectionMetadata } from "../data/collectionMetadata";
 import testConfig from "./testConfig";
-import { getNftContract } from './helpers';
-import { TestCollection } from './types';
+import { getFungibleContract, getNftContract } from './helpers';
+import { TestFungibleCollection, TestNftCollection } from './types';
 import { ethers } from 'hardhat';
 import { TKN } from './currency';
+import { CreateFungibleCollectionRequest } from '@unique-nft/sdk';
 
 export default class SdkHelper {
   readonly sdk: Sdk;
@@ -25,7 +26,7 @@ export default class SdkHelper {
     });
 
     const donorBalance = await sdk.balance.get({address: account.address})
-    if (BigInt(donorBalance.availableBalance.raw) < TKN(1000)) {
+    if (BigInt(donorBalance.availableBalance.raw) < TKN(1000, 18)) {
       throw Error("substrate donor: balance low");
     }
 
@@ -41,7 +42,18 @@ export default class SdkHelper {
     await this.sdk.balance.transfer.submitWaitResult({amount: formated, destination: address, }, {nonce});
   }
 
-  async createCollection(body?: Partial<CreateCollectionV2ArgsDto>): Promise<TestCollection> {
+  async createFungibleCollection(body: Omit<CreateFungibleCollectionRequest, 'address'>): Promise<TestFungibleCollection> {
+    const response = await this.sdk.fungible.createCollection(body);
+
+    const {collectionId} = await handleSdkResponse(response);
+
+    return {
+      collectionId,
+      contract: await getFungibleContract(collectionId),
+    }
+  }
+
+  async createNftCollection(body?: Partial<CreateCollectionV2ArgsDto>): Promise<TestNftCollection> {
     const payload = {...collectionMetadata, ...body};
     const response = await this.sdk.collection.createV2(payload);
 
@@ -66,10 +78,14 @@ export default class SdkHelper {
     });
   }
 
-  async getBalanceOf(address: string): Promise<bigint> {
-    const result = await this.sdk.balance.get({address});
+  async getBalanceOf(address: string, collectionId = 0): Promise<bigint> {
+    if (collectionId === 0) {
+      const result = await this.sdk.balance.get({address});
+      return BigInt(result.availableBalance.raw);
+    }
 
-    return BigInt(result.availableBalance.raw);
+    const result = await this.sdk.fungible.getBalance({collectionId, address});
+    return BigInt(result.raw);
   }
 
   async getOwnerOf(token: TokenIdQuery) {

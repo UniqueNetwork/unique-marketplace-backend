@@ -1,6 +1,6 @@
 {
   "name": "unique-marketplace-backend",
-  "version": "3.0.278",
+  "version": "3.0.280",
   "description": "Backend project for unique marketplace",
   "author": "Unique Network",
   "private": true,
@@ -27,7 +27,7 @@
     "changelog": "git cliff --prepend ./CHANGELOG.md -u -c ./cliff.toml -r ./ --include-path 'packages/escrow/*' --include-path 'packages/market/*' ",
     "tools:generate:docs": "ts-node tools/generate-docs.ts",
     "generate:client:api": "npx ts-node --project tools/tsconfig.tools.json tools/generate-client-api.ts",
-    "sol:test": "npx hardhat test",
+    "sol:test": "npx hardhat test --config ./packages/contracts/hardhat-test.config.ts",
     "sol:compile": "npx hardhat compile --config ./packages/contracts/hardhat.config.ts --force",
     "sol:build:version": "npm run sol:compile && npx hardhat --config ./packages/contracts/hardhat.config.ts build:version",
     "sol:deploy:upgradeable:opal": "npx hardhat run --network opal --config ./packages/contracts/hardhat.config.ts packages/contracts/scripts/deploy-upgradeable-market.ts",
@@ -105,6 +105,7 @@
   "devDependencies": {
     "@nestjs/schematics": "^9.0.4",
     "@nestjs/testing": "^9.3.9",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.6",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nrwl/cli": "^15.7.2",
     "@nrwl/eslint-plugin-nx": "^15.7.2",
