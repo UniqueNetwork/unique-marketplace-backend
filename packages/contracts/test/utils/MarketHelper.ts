@@ -41,23 +41,6 @@ export class MarketHelper {
     });
   }
 
-  static async deployProxy() {
-    const signer = (await ethers.getSigners())[0];
-    const MarketFactory = await ethers.getContractFactory('Market', signer);
-
-    const contract = await upgrades.deployProxy(MarketFactory, [0], {
-      initializer: 'initialize',
-      txOverrides: {
-        gasLimit: 7_000_000,
-      }
-    });
-
-    await contract.waitForDeployment();
-    const address = await contract.getAddress();
-    const market = Market__factory.connect(address, ethers.provider);
-    return market;
-  }
-
   async registerCurrency(collectionId: number, marketFee: number) {
     const response = await this.contract.addCurrency(collectionId, marketFee, {
       gasLimit: 300_000
@@ -93,8 +76,6 @@ export class MarketHelper {
   async put(putArgs: MarketOrder & {signer: MarketAccount}) {
     const {collectionId, tokenId, price, currency, signer, amount} = putArgs;
 
-    let result: {hash: string, fee: bigint};
-
     const response = signer instanceof HDNodeWallet
       ? await this.putEthers({collectionId, tokenId, price, currency, signer, amount})
       : await this.putSdk({collectionId, tokenId, price, currency, signer, amount});
@@ -111,6 +92,15 @@ export class MarketHelper {
     const response = signer instanceof HDNodeWallet
       ? await this.buyEthers(collectionId, tokenId, price, amount, signer)
       : await this.buySdk(collectionId, tokenId, price, amount, signer);
+
+    return this.handleTransactionResponse(response);
+  }
+
+  // TODO add substrate
+  async revoke(revokeArgs: {token: TokenId, amount?: number, signer: HDNodeWallet}) {
+    const {collectionId, tokenId} = revokeArgs.token;
+    const amount = revokeArgs.amount ? revokeArgs.amount : 1;
+    const response = await this.contract.connect(revokeArgs.signer).revoke(collectionId, tokenId, amount);
 
     return this.handleTransactionResponse(response);
   }

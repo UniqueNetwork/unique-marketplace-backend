@@ -109,9 +109,9 @@ contract Market is OwnableUpgradeable {
 
     constructor() {}
 
-    function initialize(uint32 fee, address royaltyHelper) public initializer {
+    function initialize(uint32 fee) public initializer {
       marketFee = fee;
-      royaltyHelpers = IUniqueRoyaltyHelper(royaltyHelper);
+      royaltyHelpers = IUniqueRoyaltyHelper(0x69470426d9618a23EA1cf91ffD6A115E4D8dC8be);
 
       if (marketFee >= 100) {
         revert InvalidMarketFee();

@@ -42,12 +42,7 @@ export default class TestHelper {
     const MarketFactory = await ethers.getContractFactory('Market');
     const RoyaltyHelper = await ethers.getContractFactory('UniqueRoyaltyHelper');
 
-    const royaltyHelper = await RoyaltyHelper.deploy({
-      gasLimit: 7_000_000
-    });
-    await royaltyHelper.waitForDeployment();
-
-    const contract = await upgrades.deployProxy(MarketFactory, [0, await royaltyHelper.getAddress()], {
+    const contract = await upgrades.deployProxy(MarketFactory, [0], {
       initializer: 'initialize',
       txOverrides: {
         gasLimit: 7_000_000,
@@ -58,6 +53,13 @@ export default class TestHelper {
     const marketAddress = await contract.getAddress();
 
     const market = Market__factory.connect(marketAddress, this.donor);
+
+    // Setting royalty helper. Only for tests! In production this lib has static address
+    const royaltyHelper = await RoyaltyHelper.deploy({
+      gasLimit: 7_000_000
+    });
+    await royaltyHelper.waitForDeployment();
+    await market.setRoyaltyHelpers(royaltyHelper.getAddress());
 
     // Set self-sponsoring, and deposit 100 tokens
     await Promise.all([

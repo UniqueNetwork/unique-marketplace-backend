@@ -4,7 +4,6 @@ import { ContractHelpers__factory, Market } from '../typechain-types';
 import { Address } from '@unique-nft/utils';
 
 const seed = process.env.SUBSTRATE_SIGNER_SEED!;
-const ROYALTY_HELPER_PRODUCTION = "0x69470426d9618a23EA1cf91ffD6A115E4D8dC8be";
 const CONTRACT_HELPERS = "0x842899ecf380553e8a4de75bf534cdf6fbf64049";
 
 async function main() {
@@ -14,7 +13,7 @@ async function main() {
 
   console.log('Deploying Market...');
 
-  const contract = await upgrades.deployProxy(MarketFactory, [0, ROYALTY_HELPER_PRODUCTION], {
+  const contract = await upgrades.deployProxy(MarketFactory, [0], {
     initializer: 'initialize',
     txOverrides: {
       gasLimit: 7000000,

@@ -1,5 +1,6 @@
 import '@typechain/hardhat';
 import '@nomicfoundation/hardhat-ethers';
+import '@nomicfoundation/hardhat-chai-matchers';
 import '@openzeppelin/hardhat-upgrades';
 import { HardhatUserConfig, task } from 'hardhat/config';
 import { loadConfig } from './scripts';
