@@ -24,7 +24,7 @@ describe('Revoke', () => {
 
     const nft = await helper.createNft(nftCollection.collectionId, ethSeller.address);
     await canPutOnSale(ethSeller, nft, TKN(200, 18), 0, marketplace);
-    await marketplace.revoke({token: nft, signer: ethSeller});
+    await marketplace.revoke({ token: nft, signer: ethSeller });
     await marketplace.expectOrderZero(nft);
   });
 
@@ -34,7 +34,7 @@ describe('Revoke', () => {
 
     const nft = await helper.createNft(nftCollection.collectionId, ethSeller.address);
     await canPutOnSale(ethSeller, nft, TKN(200, 18), 0, marketplace);
-    await marketplace.revokeAdmin({token: nft});
+    await marketplace.revokeAdmin({ token: nft });
     await marketplace.expectOrderZero(nft);
   });
 
@@ -48,7 +48,7 @@ describe('Revoke', () => {
     await marketplace.removeAllowanceNFT(nft, ethSeller);
 
     // checkApproved removes order
-    await marketplace.checkApproved({token: nft});
+    await marketplace.checkApproved({ token: nft });
     await marketplace.expectOrderZero(nft);
   });
 

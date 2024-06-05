@@ -1,6 +1,6 @@
-import { TokenId } from "@unique-nft/sdk";
-import { MarketAccount, MarketHelper } from "./MarketHelper";
-import { expect } from "chai";
+import { TokenId } from '@unique-nft/sdk';
+import { MarketAccount, MarketHelper } from './MarketHelper';
+import { expect } from 'chai';
 
 export const canPutOnSale = async (
   seller: MarketAccount,
@@ -29,30 +29,22 @@ export const canPutOnSale = async (
   expect(order.tokenId).to.eq(BigInt(token.tokenId));
   expect(order.price).to.eq(price);
   expect(order.seller).to.deep.eq(seller.address);
-}
+};
 
-export const canRevoke = async (
-  seller: MarketAccount,
-  token: TokenId,
-  amount = 1,
-  marketplace: MarketHelper,
-) => {
+export const canRevoke = async (seller: MarketAccount, token: TokenId, amount = 1, marketplace: MarketHelper) => {
   if (!seller.address) throw Error('Cannot get account address');
   // 1. approve
-  const revokeTx = await marketplace.revoke({token, amount, signer: seller});
+  const revokeTx = await marketplace.revoke({ token, amount, signer: seller });
 
   await marketplace.expectOrderZero(token);
 
   return revokeTx;
-}
+};
 
-export const canRevokeAdmin = async (
-  token: TokenId,
-  marketplace: MarketHelper,
-) => {
-  const revokeTx = await marketplace.revokeAdmin({token});
+export const canRevokeAdmin = async (token: TokenId, marketplace: MarketHelper) => {
+  const revokeTx = await marketplace.revokeAdmin({ token });
 
   await marketplace.expectOrderZero(token);
 
   return revokeTx;
-}
+};

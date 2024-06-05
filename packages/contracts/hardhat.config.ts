@@ -16,7 +16,7 @@ const config: HardhatUserConfig = {
     artifacts: '../../dist/packages/contracts/artifacts',
   },
   typechain: {
-    outDir: "./typechain-types"
+    outDir: './typechain-types',
   },
   defaultNetwork: 'opal',
   networks: {

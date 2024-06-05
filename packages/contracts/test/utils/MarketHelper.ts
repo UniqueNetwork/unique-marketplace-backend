@@ -6,26 +6,25 @@ import { Account, TokenId, ExtrinsicResultResponse, Sdk } from '@unique-nft/sdk/
 import { expect } from 'chai';
 import { convertBigintToNumber, getFungibleContract, getNftContract } from './helpers';
 
-
 export interface MarketOrder {
-  collectionId: bigint | number,
-  tokenId: bigint | number,
-  price: bigint | number,
-  amount?: bigint | number,
-  currency: bigint | number,
+  collectionId: bigint | number;
+  tokenId: bigint | number;
+  price: bigint | number;
+  amount?: bigint | number;
+  currency: bigint | number;
 }
 
 export type TransactionResponse<T> = ExtrinsicResultResponse<T> | ContractTransactionResponse;
 
 export type MarketAccount = HDNodeWallet | Account;
 
-export type CrossAddress = {eth: string, sub: bigint}
+export type CrossAddress = { eth: string; sub: bigint };
 
 export class MarketHelper {
   readonly contract: Market;
   readonly address: string;
   readonly abi: any;
-  
+
   private lastOrderId = 0n;
 
   private sdk: Sdk;
@@ -42,28 +41,25 @@ export class MarketHelper {
 
   async registerCurrency(collectionId: number, marketFee: number) {
     const response = await this.contract.addCurrency(collectionId, marketFee, {
-      gasLimit: 300_000
+      gasLimit: 300_000,
     });
     await this.handleTransactionResponse(response);
   }
 
   async approveNFT(token: TokenId, signer: MarketAccount) {
-    return this._approveNFT({token, signer, isApprove: true});
+    return this._approveNFT({ token, signer, isApprove: true });
   }
 
   async removeAllowanceNFT(token: TokenId, signer: MarketAccount) {
-    return this._approveNFT({token, signer, isApprove: false});
+    return this._approveNFT({ token, signer, isApprove: false });
   }
 
   async approveFungible(collectionId: number, amount: bigint, signer: MarketAccount) {
     let response;
-    if (signer instanceof HDNodeWallet)
-      response = await this.approveFungibleEthers(collectionId, amount, signer);
+    if (signer instanceof HDNodeWallet) response = await this.approveFungibleEthers(collectionId, amount, signer);
     else {
       // TODO use bigint for amount when sdk will have amountInWei
-      const decimals = collectionId === 0
-        ? 18
-        : (await this.sdk.fungible.getCollection({collectionId})).decimals;
+      const decimals = collectionId === 0 ? 18 : (await this.sdk.fungible.getCollection({ collectionId })).decimals;
 
       const amountToNumber = convertBigintToNumber(amount, decimals);
       response = await this.approveFungibleSdk(collectionId, amountToNumber, signer);
@@ -72,65 +68,72 @@ export class MarketHelper {
     return this.handleTransactionResponse(response);
   }
 
-  async put(putArgs: MarketOrder & {signer: MarketAccount}) {
-    const {collectionId, tokenId, price, currency, signer, amount} = putArgs;
+  async put(putArgs: MarketOrder & { signer: MarketAccount }) {
+    const { collectionId, tokenId, price, currency, signer, amount } = putArgs;
 
-    const response = signer instanceof HDNodeWallet
-      ? await this.putEthers({collectionId, tokenId, price, currency, signer, amount})
-      : await this.putSdk({collectionId, tokenId, price, currency, signer, amount});
+    const response =
+      signer instanceof HDNodeWallet
+        ? await this.putEthers({ collectionId, tokenId, price, currency, signer, amount })
+        : await this.putSdk({ collectionId, tokenId, price, currency, signer, amount });
 
     this.lastOrderId++;
 
     return this.handleTransactionResponse(response);
   }
 
-  async buy(putArgs: Omit<MarketOrder, 'currency'> & {signer: MarketAccount}) {
+  async buy(putArgs: Omit<MarketOrder, 'currency'> & { signer: MarketAccount }) {
     const { collectionId, tokenId, price, signer } = putArgs;
     const amount = putArgs.amount ?? 1;
 
-    const response = signer instanceof HDNodeWallet
-      ? await this.buyEthers(collectionId, tokenId, price, amount, signer)
-      : await this.buySdk(collectionId, tokenId, price, amount, signer);
+    const response =
+      signer instanceof HDNodeWallet
+        ? await this.buyEthers(collectionId, tokenId, price, amount, signer)
+        : await this.buySdk(collectionId, tokenId, price, amount, signer);
 
     return this.handleTransactionResponse(response);
   }
 
   // TODO add substrate
-  async revoke(revokeArgs: {token: TokenId, amount?: number, signer: MarketAccount}) {
-    if (!(revokeArgs.signer instanceof HDNodeWallet)) throw Error('Account revoke not implemented in tests')
-    const {collectionId, tokenId} = revokeArgs.token;
+  async revoke(revokeArgs: { token: TokenId; amount?: number; signer: MarketAccount }) {
+    if (!(revokeArgs.signer instanceof HDNodeWallet)) throw Error('Account revoke not implemented in tests');
+    const { collectionId, tokenId } = revokeArgs.token;
     const amount = revokeArgs.amount ? revokeArgs.amount : 1;
-    const response = await this.contract.connect(revokeArgs.signer).revoke(collectionId, tokenId, amount, {gasLimit: 300_000});
+    const response = await this.contract.connect(revokeArgs.signer).revoke(collectionId, tokenId, amount, { gasLimit: 300_000 });
 
     return this.handleTransactionResponse(response);
   }
 
-  
-  async revokeAdmin(revokeArgs: {token: TokenId}) {
-    const {collectionId, tokenId} = revokeArgs.token;
-    const response = await this.contract.revokeAdmin(collectionId, tokenId, {gasLimit: 300_000});
+  async revokeAdmin(revokeArgs: { token: TokenId }) {
+    const { collectionId, tokenId } = revokeArgs.token;
+    const response = await this.contract.revokeAdmin(collectionId, tokenId, { gasLimit: 300_000 });
 
     return this.handleTransactionResponse(response);
   }
 
-  async checkApproved(args: {token: TokenId}) {
-    const {collectionId, tokenId} = args.token;
-    const response = await this.contract.checkApproved(collectionId, tokenId, {gasLimit: 300_000});
+  async checkApproved(args: { token: TokenId }) {
+    const { collectionId, tokenId } = args.token;
+    const response = await this.contract.checkApproved(collectionId, tokenId, { gasLimit: 300_000 });
 
     return this.handleTransactionResponse(response);
   }
 
-  async getOrder(token: TokenId): Promise<MarketOrder & {seller: string} & { id: bigint }> {
-    const {id, collectionId, tokenId, price, currency, amount, seller} 
-      = await this.contract.getOrder(token.collectionId, token.tokenId);
+  async getOrder(token: TokenId): Promise<MarketOrder & { seller: string } & { id: bigint }> {
+    const { id, collectionId, tokenId, price, currency, amount, seller } = await this.contract.getOrder(
+      token.collectionId,
+      token.tokenId,
+    );
 
-    const sellerAddress = seller.sub !== 0n 
-      ? Address.substrate.encode(seller.sub)
-      : seller.eth;
+    const sellerAddress = seller.sub !== 0n ? Address.substrate.encode(seller.sub) : seller.eth;
 
     return {
-      id, collectionId, tokenId, price, currency, amount, seller: sellerAddress
-    }
+      id,
+      collectionId,
+      tokenId,
+      price,
+      currency,
+      amount,
+      seller: sellerAddress,
+    };
   }
 
   getLastOrderId() {
@@ -143,35 +146,37 @@ export class MarketHelper {
     expect(order.collectionId).to.eq(0n);
     expect(order.tokenId).to.eq(0n);
     expect(order.price).to.eq(0n);
-    expect(order.seller).to.be.oneOf(["0x0000000000000000000000000000000000000000", 0]);
+    expect(order.seller).to.be.oneOf(['0x0000000000000000000000000000000000000000', 0]);
   }
 
   // ---------------- PRIVATE ----------------- //
 
   private async approveFungibleEthers(collectionId: number, amount: bigint, signer: HDNodeWallet) {
     const collectionContract = await getFungibleContract(collectionId);
-    return collectionContract
-      .connect(signer)
-      .approve(this.address, amount, {gasLimit: 300_000});
+    return collectionContract.connect(signer).approve(this.address, amount, { gasLimit: 300_000 });
   }
 
   private async approveFungibleSdk(collectionId: number, amount: number, signer: Account) {
-    return this.sdk.fungible.approveTokens({
-      collectionId,
-      amount,
-      spender: this.address,
-      address: signer.address
-    }, {
-      signer: signer.signer
-    });
+    return this.sdk.fungible.approveTokens(
+      {
+        collectionId,
+        amount,
+        spender: this.address,
+        address: signer.address,
+      },
+      {
+        signer: signer.signer,
+      },
+    );
   }
 
-  private async _approveNFT(args: {token: TokenId, isApprove?: boolean, signer: MarketAccount}) {
-    const {token, signer} = args;
+  private async _approveNFT(args: { token: TokenId; isApprove?: boolean; signer: MarketAccount }) {
+    const { token, signer } = args;
     const isApprove = args.isApprove ?? true;
-    const response = signer instanceof HDNodeWallet 
-      ? await this.approveNftEthers(token, signer, isApprove)
-      : await this.approveNftSdk(token, signer, isApprove);
+    const response =
+      signer instanceof HDNodeWallet
+        ? await this.approveNftEthers(token, signer, isApprove)
+        : await this.approveNftSdk(token, signer, isApprove);
 
     return this.handleTransactionResponse(response);
   }
@@ -179,19 +184,22 @@ export class MarketHelper {
   private async approveNftEthers(token: TokenId, signer: HDNodeWallet, isApprove: boolean) {
     const collectionContract = await getNftContract(token.collectionId);
     const approvedAddress = isApprove ? this.address : signer.address;
-    return collectionContract.connect(signer).approve(approvedAddress, token.tokenId, {gasLimit: 300_000});
+    return collectionContract.connect(signer).approve(approvedAddress, token.tokenId, { gasLimit: 300_000 });
   }
 
   private async approveNftSdk(token: TokenId, signer: Account, isApprove: boolean) {
-    return this.sdk.token.approve({
-      collectionId: token.collectionId,
-      tokenId: token.tokenId,
-      spender: this.address,
-      isApprove: isApprove,
-      address: signer.address
-    }, {
-      signer: signer.signer
-    })
+    return this.sdk.token.approve(
+      {
+        collectionId: token.collectionId,
+        tokenId: token.tokenId,
+        spender: this.address,
+        isApprove: isApprove,
+        address: signer.address,
+      },
+      {
+        signer: signer.signer,
+      },
+    );
   }
 
   private async buyEthers(
@@ -205,11 +213,11 @@ export class MarketHelper {
       collectionId,
       tokenId,
       amount,
-      {eth: signer.address, sub: "0"},
+      { eth: signer.address, sub: '0' },
       {
         value: price,
         gasLimit: 300_000,
-      }
+      },
     );
   }
 
@@ -224,58 +232,65 @@ export class MarketHelper {
 
     const publicAddress = Address.extract.substratePublicKey(signer.address);
 
-    return this.sdk.evm.send({
-      abi: this.abi,
-      funcName: 'buy',
-      args: [collectionId, tokenId, amount, ["0x0000000000000000000000000000000000000000", publicAddress]],
-      contractAddress: this.address,
-      address: signer.address,
-      gasLimit: 300_000,
-      value: price.toString()
-    }, {
-      signer: signer.signer
-    });
-  }
-
-  private async putEthers(putArgs: MarketOrder & {signer: HDNodeWallet}) {
-    const {collectionId, tokenId, price, currency, signer} = putArgs;
-    const amount = putArgs.amount ?? 1;
-
-    return this.contract.connect(signer).put(
-      collectionId,
-      tokenId,
-      price,
-      currency,
-      amount,
-      {eth: signer.address, sub: 0},
-      {gasLimit: 1_000_000}
+    return this.sdk.evm.send(
+      {
+        abi: this.abi,
+        funcName: 'buy',
+        args: [collectionId, tokenId, amount, ['0x0000000000000000000000000000000000000000', publicAddress]],
+        contractAddress: this.address,
+        address: signer.address,
+        gasLimit: 300_000,
+        value: price.toString(),
+      },
+      {
+        signer: signer.signer,
+      },
     );
   }
 
-  private async putSdk(putArgs: MarketOrder & {signer: Account}) {
-    const {collectionId, tokenId, price, currency, signer} = putArgs;
+  private async putEthers(putArgs: MarketOrder & { signer: HDNodeWallet }) {
+    const { collectionId, tokenId, price, currency, signer } = putArgs;
+    const amount = putArgs.amount ?? 1;
+
+    return this.contract
+      .connect(signer)
+      .put(collectionId, tokenId, price, currency, amount, { eth: signer.address, sub: 0 }, { gasLimit: 1_000_000 });
+  }
+
+  private async putSdk(putArgs: MarketOrder & { signer: Account }) {
+    const { collectionId, tokenId, price, currency, signer } = putArgs;
     if (!signer.address) throw Error('Signer has no address');
 
     const amount = putArgs.amount ?? 1;
 
     const publicAddress = Address.extract.substratePublicKey(signer.address);
-    return this.sdk.evm.send({
-      abi: this.abi,
-      funcName: 'put',
-      args: [collectionId, tokenId, price.toString(), currency, amount, ["0x0000000000000000000000000000000000000000", publicAddress]],
-      contractAddress: this.address,
-      gasLimit: 300_000,
-      address: signer.address
-    }, {
-      signer: signer.signer
-    });
+    return this.sdk.evm.send(
+      {
+        abi: this.abi,
+        funcName: 'put',
+        args: [
+          collectionId,
+          tokenId,
+          price.toString(),
+          currency,
+          amount,
+          ['0x0000000000000000000000000000000000000000', publicAddress],
+        ],
+        contractAddress: this.address,
+        gasLimit: 300_000,
+        address: signer.address,
+      },
+      {
+        signer: signer.signer,
+      },
+    );
   }
 
-  private async handleTransactionResponse<T>(response: TransactionResponse<T>): Promise<{hash: string, fee: bigint}> {
+  private async handleTransactionResponse<T>(response: TransactionResponse<T>): Promise<{ hash: string; fee: bigint }> {
     if (response instanceof ContractTransactionResponse) {
       const receipt = await response.wait();
-      if (receipt?.status === 0) throw Error("Ethers transaction failed");
-      if (!receipt) throw Error("Cannot get receipt");
+      if (receipt?.status === 0) throw Error('Ethers transaction failed');
+      if (!receipt) throw Error('Cannot get receipt');
       const { hash, fee, logs } = receipt;
 
       // TODO: For sponsored transactions, the commission is calculated incorrectly
@@ -283,17 +298,17 @@ export class MarketHelper {
       // const sponsoringRefund = ...
       return { hash, fee };
     } else {
-      const {hash, events, error} = response;
-      if (error) throw Error("SDK transaction failed")
+      const { hash, events, error } = response;
+      if (error) throw Error('SDK transaction failed');
       let fee = response.fee?.raw ?? 0;
       if (!fee) {
-        let feeEvent = events.find(e => e.section === 'treasury' && e.method === 'Deposit');
+        let feeEvent = events.find((e) => e.section === 'treasury' && e.method === 'Deposit');
         if (feeEvent) {
           fee = (feeEvent.data as any)[0];
           if (!fee) fee = '0';
-        };
+        }
       }
-      return { hash, fee: BigInt(fee)};  
+      return { hash, fee: BigInt(fee) };
     }
   }
 }

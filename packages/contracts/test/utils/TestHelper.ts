@@ -3,7 +3,7 @@ import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { TKN } from './currency';
 import { upgrades, ethers } from 'hardhat';
 import { ContractHelpers, ContractHelpers__factory, Market__factory } from '../../typechain-types';
-import SdkHelper from "./SdkHelper";
+import SdkHelper from './SdkHelper';
 import testConfig from './testConfig';
 import { Wallet } from 'ethers';
 import { MarketHelper } from './MarketHelper';
@@ -14,11 +14,7 @@ export default class TestHelper {
   contractHelpers: ContractHelpers;
   donor: HardhatEthersSigner;
 
-  private constructor(
-    sdk: SdkHelper,
-    donor: HardhatEthersSigner,
-    contractHelpers: ContractHelpers,
-  ) {
+  private constructor(sdk: SdkHelper, donor: HardhatEthersSigner, contractHelpers: ContractHelpers) {
     this.sdk = sdk;
     this.contractHelpers = contractHelpers;
     this.donor = donor;
@@ -31,7 +27,7 @@ export default class TestHelper {
     const donorBalance = await sdk.getBalanceOf(donor.address);
     if (donorBalance < TKN(10_000, 18)) {
       await sdk.transfer(TKN(10_000, 18), donor.address);
-    };
+    }
 
     const contractHelpers = ContractHelpers__factory.connect(testConfig.contractHelperAddress, donor);
 
@@ -56,21 +52,21 @@ export default class TestHelper {
 
     // Setting royalty helper. Only for tests! In production this lib has static address
     const royaltyHelper = await RoyaltyHelper.deploy({
-      gasLimit: 7_000_000
+      gasLimit: 7_000_000,
     });
     await royaltyHelper.waitForDeployment();
-    await market.setRoyaltyHelpers(royaltyHelper.getAddress(), {gasLimit: 300000});
+    await market.setRoyaltyHelpers(royaltyHelper.getAddress(), { gasLimit: 300000 });
 
     // Set self-sponsoring, and deposit 100 tokens
     await Promise.all([
       // sponsor transactions from contract itself:
-      (await this.contractHelpers.selfSponsoredEnable(marketAddress, {gasLimit: 300000})).wait(),
+      (await this.contractHelpers.selfSponsoredEnable(marketAddress, { gasLimit: 300000 })).wait(),
       // sponsor every transaction:
-      (await this.contractHelpers.setSponsoringRateLimit(marketAddress, 0, {gasLimit: 300000})).wait(),
+      (await this.contractHelpers.setSponsoringRateLimit(marketAddress, 0, { gasLimit: 300000 })).wait(),
       // set generous mode:
-      (await this.contractHelpers.setSponsoringMode(marketAddress, 2, {gasLimit: 300000})).wait(),
+      (await this.contractHelpers.setSponsoringMode(marketAddress, 2, { gasLimit: 300000 })).wait(),
       // top up contract's balance for sponsoring:
-      (await this.sdk.transfer(TKN(1000, 18), marketAddress)),
+      await this.sdk.transfer(TKN(1000, 18), marketAddress),
     ]);
 
     return new MarketHelper(this.sdk.sdk, market, await market.getAddress());
@@ -79,21 +75,21 @@ export default class TestHelper {
   async createFungibleCollection(decimals: number) {
     const funCollection = await this.sdk.createFungibleCollection({
       decimals,
-      name: "Wrapped USD",
-      tokenPrefix: "WUSD",
-      description: "Not a real USD",
+      name: 'Wrapped USD',
+      tokenPrefix: 'WUSD',
+      description: 'Not a real USD',
     });
 
     const oneMillion = 1000_000;
-    const {error} = await this.sdk.sdk.fungible.addTokens({
+    const { error } = await this.sdk.sdk.fungible.addTokens({
       amount: oneMillion,
       collectionId: funCollection.collectionId,
-      recipient: this.sdk.donor.address
+      recipient: this.sdk.donor.address,
     });
 
     if (error) {
       console.error(error);
-      throw Error("Cannot mint fungible tokens");
+      throw Error('Cannot mint fungible tokens');
     }
 
     return funCollection;
@@ -101,11 +97,9 @@ export default class TestHelper {
 
   async topUpFungibleBalance(collectionId: number, amount: bigint, recipient: string) {
     // TODO use wei
-    const decimals = collectionId === 0 
-      ? 18
-      : (await this.sdk.sdk.fungible.getCollection({collectionId})).decimals;
+    const decimals = collectionId === 0 ? 18 : (await this.sdk.sdk.fungible.getCollection({ collectionId })).decimals;
     const amountToNumber = convertBigintToNumber(amount, decimals);
-    const {error} = await this.sdk.sdk.fungible.transferTokens({collectionId, recipient, amount: amountToNumber });
+    const { error } = await this.sdk.sdk.fungible.transferTokens({ collectionId, recipient, amount: amountToNumber });
     if (error) throw Error('Cannot top up fungible balance');
   }
 
@@ -118,25 +112,31 @@ export default class TestHelper {
   }
 
   async createNft(collectionId: number, owner: string) {
-    return this.sdk.createNft(collectionId, {owner});
+    return this.sdk.createNft(collectionId, { owner });
   }
 
   async createSubAccounts(balances: bigint[]) {
-    const wallets = balances.map(_ => Sr25519Account.fromUri(Sr25519Account.generateMnemonic()));
-    await this.createAccounts(balances, wallets.map(w => w.address));
+    const wallets = balances.map((_) => Sr25519Account.fromUri(Sr25519Account.generateMnemonic()));
+    await this.createAccounts(
+      balances,
+      wallets.map((w) => w.address),
+    );
 
     return wallets;
   }
 
   async createEthAccounts(balances: bigint[]) {
-    const wallets = balances.map(_ => Wallet.createRandom().connect(ethers.provider));
-    await this.createAccounts(balances, wallets.map(w => w.address));
+    const wallets = balances.map((_) => Wallet.createRandom().connect(ethers.provider));
+    await this.createAccounts(
+      balances,
+      wallets.map((w) => w.address),
+    );
 
     return wallets;
   }
 
   private async createAccounts(balances: bigint[], addresses: string[]) {
-    let {nonce} = await this.sdk.getNonce(this.sdk.donor.address!);
+    let { nonce } = await this.sdk.getNonce(this.sdk.donor.address!);
     const txs = [];
 
     for (const [i, balance] of balances.entries()) {

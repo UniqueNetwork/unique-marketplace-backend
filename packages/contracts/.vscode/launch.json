@@ -7,7 +7,7 @@
       "request": "launch",
       "console": "integratedTerminal",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run","testhh", "${file}"]
+      "runtimeArgs": ["run", "testhh", "${file}"]
     }
   ]
 }

@@ -18,22 +18,22 @@ describe('Can put for sale and buy', () => {
     await marketplace.registerCurrency(fungibleCollection.collectionId, 0);
   });
 
-  describe("for native token", () => {
+  describe('for native token', () => {
     const PRICE = TKN(5, 18);
     const INITIAL_BALANCE = TKN(50, 18);
-  
+
     it('using ethereum', async () => {
       const [ethSeller, ethBuyer] = await helper.createEthAccounts([INITIAL_BALANCE, INITIAL_BALANCE]);
       await canPutOnSaleAndBuy(ethSeller, ethBuyer, PRICE, 0);
     });
-  
+
     it('using sdk', async () => {
       const [seller, buyer] = await helper.createSubAccounts([INITIAL_BALANCE, INITIAL_BALANCE]);
       await canPutOnSaleAndBuy(seller, buyer, PRICE, 0);
     });
   });
 
-  describe("for erc20 token", () => {
+  describe('for erc20 token', () => {
     const NATIVE_BALANCE = TKN(10, 18);
     const PRICE = TKN(5, 6);
     const ERC20_BALANCE = TKN(50, 6);
@@ -47,14 +47,14 @@ describe('Can put for sale and buy', () => {
 
       await canPutOnSaleAndBuy(ethSeller, ethBuyer, PRICE, fungibleCollection.collectionId);
     });
-  
+
     it('using sdk', async () => {
       const [subSeller, subBuyer] = await helper.createSubAccounts([NATIVE_BALANCE, NATIVE_BALANCE]);
 
       // Top up seller ERC-20 balance
       await helper.topUpFungibleBalance(fungibleCollection.collectionId, ERC20_BALANCE, subBuyer.address);
       await marketplace.approveFungible(fungibleCollection.collectionId, PRICE, subBuyer);
-      
+
       await canPutOnSaleAndBuy(subSeller, subBuyer, PRICE, fungibleCollection.collectionId);
     });
   });
@@ -66,10 +66,7 @@ async function canPutOnSaleAndBuy(seller: MarketAccount, buyer: MarketAccount, p
   const BUYER_INITIAL_BALANCE = await helper.getBalance(buyer.address, currencyId);
   // 0. arrange
   // const [seller, buyer] = await helper.createEthAccounts([INITIAL_BALANCE, INITIAL_BALANCE]);
-  const token = await helper.createNft(
-    nftCollection.collectionId,
-    seller.address,
-  );
+  const token = await helper.createNft(nftCollection.collectionId, seller.address);
 
   // 1. approve
   const approveTx = await marketplace.approveNFT(token, seller);
@@ -96,7 +93,7 @@ async function canPutOnSaleAndBuy(seller: MarketAccount, buyer: MarketAccount, p
     collectionId: token.collectionId,
     tokenId: token.tokenId,
     price: price,
-    signer: buyer
+    signer: buyer,
   });
 
   // 5. Check order deleted
@@ -112,11 +109,11 @@ async function canPutOnSaleAndBuy(seller: MarketAccount, buyer: MarketAccount, p
   const balanceBuyerAfter = await helper.getBalance(buyer.address, currencyId);
   // TODO enable sponsoring for collection and contract
 
-  if(currencyId === 0) {
+  if (currencyId === 0) {
     // For native token subtract tx fee
     // putTx.fee and buyTx.fee should be zero due to sponsoring
     expect(balanceSellerAfter).to.eq(SELLER_INITIAL_BALANCE - approveTx.fee + price);
-    expect(balanceBuyerAfter).to.eq(BUYER_INITIAL_BALANCE - price);  
+    expect(balanceBuyerAfter).to.eq(BUYER_INITIAL_BALANCE - price);
   } else {
     // No Fee in ERC-20 tokens
     expect(balanceSellerAfter).to.eq(SELLER_INITIAL_BALANCE + price);
