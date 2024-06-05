@@ -54,6 +54,7 @@ export class ContractsService {
     const callArgs = {
       address: this.sdk.options.signer.address,
       funcName: 'checkApproved',
+      gasLimit: 300_000,
       args: {
         collectionId,
         tokenId,
