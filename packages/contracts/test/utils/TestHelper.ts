@@ -8,6 +8,7 @@ import testConfig from './testConfig';
 import { Wallet } from 'ethers';
 import { MarketHelper } from './MarketHelper';
 import { convertBigintToNumber } from './helpers';
+import { TokenId } from '@unique-nft/sdk';
 
 export default class TestHelper {
   sdk: SdkHelper;
@@ -69,7 +70,7 @@ export default class TestHelper {
       await this.sdk.transfer(TKN(1000, 18), marketAddress),
     ]);
 
-    return new MarketHelper(this.sdk.sdk, market, await market.getAddress());
+    return MarketHelper.create(this.sdk.sdk, market);
   }
 
   async createFungibleCollection(decimals: number) {
@@ -113,6 +114,10 @@ export default class TestHelper {
 
   async createNft(collectionId: number, owner: string) {
     return this.sdk.createNft(collectionId, { owner });
+  }
+
+  async getOwnerOf(token: TokenId) {
+    return this.sdk.getOwnerOf(token);
   }
 
   async createSubAccounts(balances: bigint[]) {

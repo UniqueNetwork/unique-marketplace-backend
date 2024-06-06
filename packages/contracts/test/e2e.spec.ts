@@ -9,7 +9,7 @@ let marketplace: MarketHelper;
 let nftCollection: TestNftCollection;
 let fungibleCollection: TestFungibleCollection;
 
-describe('Can put for sale and buy', () => {
+describe('Can put on sale and buy', () => {
   before(async () => {
     helper = await TestHelper.init();
     marketplace = await helper.deployMarket();

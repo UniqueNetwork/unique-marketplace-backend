@@ -24,11 +24,13 @@ export const canPutOnSale = async (
 
   // 3. Check the order
   const order = await marketplace.getOrder(token);
-  expect(order.id).to.eq(marketplace.getLastOrderId());
   expect(order.collectionId).to.eq(BigInt(token.collectionId));
   expect(order.tokenId).to.eq(BigInt(token.tokenId));
   expect(order.price).to.eq(price);
   expect(order.seller).to.deep.eq(seller.address);
+  expect(order.id).to.eq(marketplace.getLastOrderId());
+
+  return order;
 };
 
 export const canRevoke = async (seller: MarketAccount, token: TokenId, amount = 1, marketplace: MarketHelper) => {

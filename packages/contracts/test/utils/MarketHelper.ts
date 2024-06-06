@@ -5,6 +5,7 @@ import { Market__factory } from '../../typechain-types';
 import { Account, TokenId, ExtrinsicResultResponse, Sdk } from '@unique-nft/sdk/full';
 import { expect } from 'chai';
 import { convertBigintToNumber, getFungibleContract, getNftContract } from './helpers';
+import { IContract } from '@unique-nft/sdk';
 
 export interface MarketOrder {
   collectionId: bigint | number;
@@ -22,25 +23,41 @@ export type CrossAddress = { eth: string; sub: bigint };
 
 export class MarketHelper {
   readonly contract: Market;
+  readonly contractSdk: IContract;
   readonly address: string;
   readonly abi: any;
-
   private lastOrderId = 0n;
 
   private sdk: Sdk;
 
-  constructor(sdk: Sdk, market: Market, marketAddress: string) {
+  private constructor(sdk: Sdk, marketAddress: string, market: Market, marketSdk: IContract, abi: any) {
     this.contract = market;
     this.address = marketAddress;
     this.sdk = sdk;
-    this.abi = JSON.parse(JSON.stringify(Market__factory.abi)).map((o: any) => {
+    this.contractSdk = marketSdk;
+    this.abi = abi;
+  }
+
+  static async create(sdk: Sdk, market: Market) {
+    const marketAddress = await market.getAddress();
+    const abi = JSON.parse(JSON.stringify(Market__factory.abi)).map((o: any) => {
       if (!o.outputs) o.outputs = [];
       return o;
     });
+    const marketSdk = await sdk.evm.contractConnect(marketAddress, abi);
+
+    return new MarketHelper(sdk, marketAddress, market, marketSdk, abi);
   }
 
   async registerCurrency(collectionId: number, marketFee: number) {
     const response = await this.contract.addCurrency(collectionId, marketFee, {
+      gasLimit: 300_000,
+    });
+    await this.handleTransactionResponse(response);
+  }
+
+  async removeCurrency(collectionId: number) {
+    const response = await this.contract.removeCurrency(collectionId, {
       gasLimit: 300_000,
     });
     await this.handleTransactionResponse(response);
@@ -76,9 +93,22 @@ export class MarketHelper {
         ? await this.putEthers({ collectionId, tokenId, price, currency, signer, amount })
         : await this.putSdk({ collectionId, tokenId, price, currency, signer, amount });
 
+    const handleResult = await this.handleTransactionResponse(response);
     this.lastOrderId++;
 
-    return this.handleTransactionResponse(response);
+    return handleResult;
+  }
+
+  async changePrice(args: { token: TokenId; newPrice: bigint; currency: number; signer: MarketAccount }) {
+    const { token, newPrice, currency, signer } = args;
+    if (signer instanceof HDNodeWallet) {
+      const response = await this.contract
+        .connect(signer)
+        .changePrice(token.collectionId, token.tokenId, newPrice, currency, { gasLimit: 300_000 });
+      return this.handleTransactionResponse(response);
+    } else {
+      throw Error('Not implemented yet');
+    }
   }
 
   async buy(putArgs: Omit<MarketOrder, 'currency'> & { signer: MarketAccount }) {
@@ -114,6 +144,16 @@ export class MarketHelper {
     const { collectionId, tokenId } = args.token;
     const response = await this.contract.checkApproved(collectionId, tokenId, { gasLimit: 300_000 });
 
+    return this.handleTransactionResponse(response);
+  }
+
+  async addToBlackList(collectionId: number) {
+    const response = await this.contract.addToBlacklist(collectionId, { gasLimit: 300000 });
+    return this.handleTransactionResponse(response);
+  }
+
+  async removeFromBlacklist(collectionId: number) {
+    const response = await this.contract.removeFromBlacklist(collectionId, { gasLimit: 300000 });
     return this.handleTransactionResponse(response);
   }
 
@@ -232,12 +272,10 @@ export class MarketHelper {
 
     const publicAddress = Address.extract.substratePublicKey(signer.address);
 
-    return this.sdk.evm.send(
+    return this.contractSdk.send(
       {
-        abi: this.abi,
         funcName: 'buy',
         args: [collectionId, tokenId, amount, ['0x0000000000000000000000000000000000000000', publicAddress]],
-        contractAddress: this.address,
         address: signer.address,
         gasLimit: 300_000,
         value: price.toString(),
@@ -264,9 +302,9 @@ export class MarketHelper {
     const amount = putArgs.amount ?? 1;
 
     const publicAddress = Address.extract.substratePublicKey(signer.address);
-    return this.sdk.evm.send(
+
+    return this.contractSdk.send(
       {
-        abi: this.abi,
         funcName: 'put',
         args: [
           collectionId,
@@ -276,7 +314,6 @@ export class MarketHelper {
           amount,
           ['0x0000000000000000000000000000000000000000', publicAddress],
         ],
-        contractAddress: this.address,
         gasLimit: 300_000,
         address: signer.address,
       },

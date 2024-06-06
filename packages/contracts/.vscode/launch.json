@@ -2,12 +2,20 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Hardhat individual test",
+      "name": "Hardhat Test Debug",
       "type": "node",
       "request": "launch",
       "console": "integratedTerminal",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "testhh", "${file}"]
+      "runtimeArgs": ["run", "sol:test:debug", "${file}"]
+    },
+    {
+      "name": "Hardhat Script Debug",
+      "type": "node",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "sol:script:debug", "${file}"]
     }
   ]
 }
