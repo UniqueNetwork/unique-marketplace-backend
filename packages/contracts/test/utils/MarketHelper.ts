@@ -107,7 +107,18 @@ export class MarketHelper {
         .changePrice(token.collectionId, token.tokenId, newPrice, currency, { gasLimit: 300_000 });
       return this.handleTransactionResponse(response);
     } else {
-      throw Error('Not implemented yet');
+      const response = await this.contractSdk.send(
+        {
+          funcName: 'changePrice',
+          args: [token.collectionId, token.tokenId, newPrice.toString(), currency],
+          address: signer.address,
+          gasLimit: 300_000,
+        },
+        {
+          signer: signer.signer,
+        },
+      );
+      return this.handleTransactionResponse(response);
     }
   }
 
@@ -123,13 +134,27 @@ export class MarketHelper {
     return this.handleTransactionResponse(response);
   }
 
-  // TODO add substrate
   async revoke(revokeArgs: { token: TokenId; amount?: number; signer: MarketAccount }) {
-    if (!(revokeArgs.signer instanceof HDNodeWallet)) throw Error('Account revoke not implemented in tests');
     const { collectionId, tokenId } = revokeArgs.token;
     const amount = revokeArgs.amount ? revokeArgs.amount : 1;
-    const response = await this.contract.connect(revokeArgs.signer).revoke(collectionId, tokenId, amount, { gasLimit: 300_000 });
+    if (revokeArgs.signer instanceof HDNodeWallet) {
+      const response = await this.contract
+        .connect(revokeArgs.signer)
+        .revoke(collectionId, tokenId, amount, { gasLimit: 300_000 });
 
+      return this.handleTransactionResponse(response);
+    }
+    const response = await this.contractSdk.send(
+      {
+        funcName: 'revoke',
+        args: [collectionId, tokenId, amount],
+        address: revokeArgs.signer.address,
+        gasLimit: 300_000,
+      },
+      {
+        signer: revokeArgs.signer.signer,
+      },
+    );
     return this.handleTransactionResponse(response);
   }
 

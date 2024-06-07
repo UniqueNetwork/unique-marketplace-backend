@@ -5,10 +5,11 @@ import { upgrades, ethers } from 'hardhat';
 import { ContractHelpers, ContractHelpers__factory, Market__factory } from '../../typechain-types';
 import SdkHelper from './SdkHelper';
 import testConfig from './testConfig';
-import { Wallet } from 'ethers';
-import { MarketHelper } from './MarketHelper';
-import { convertBigintToNumber } from './helpers';
+import { Wallet, HDNodeWallet } from 'ethers';
+import { MarketAccount, MarketHelper } from './MarketHelper';
+import { convertBigintToNumber, getNftContract } from './helpers';
 import { TokenId } from '@unique-nft/sdk';
+import { TestCaseMode } from './types';
 
 export default class TestHelper {
   sdk: SdkHelper;
@@ -116,13 +117,29 @@ export default class TestHelper {
     return this.sdk.createNft(collectionId, { owner });
   }
 
+  async transferNft(token: TokenId, to: string, signer: MarketAccount) {
+    if (signer instanceof HDNodeWallet) {
+      const nftContract = await getNftContract(token.collectionId);
+      return nftContract
+        .connect(signer)
+        .transfer(to, token.tokenId, { gasLimit: 300_000 })
+        .then((tx) => tx.wait());
+    }
+    return this.sdk.sdk.token.transfer({ ...token, to, address: signer.address }, { signer: signer.signer });
+  }
+
   async getOwnerOf(token: TokenId) {
-    return this.sdk.getOwnerOf(token);
+    return (await this.sdk.getOwnerOf(token)).toLowerCase();
+  }
+
+  async createAccounts(balances: bigint[], mode: TestCaseMode) {
+    if (mode === 'SDK') return this.createSubAccounts(balances);
+    return this.createEthAccounts(balances);
   }
 
   async createSubAccounts(balances: bigint[]) {
     const wallets = balances.map((_) => Sr25519Account.fromUri(Sr25519Account.generateMnemonic()));
-    await this.createAccounts(
+    await this._createAccounts(
       balances,
       wallets.map((w) => w.address),
     );
@@ -132,7 +149,7 @@ export default class TestHelper {
 
   async createEthAccounts(balances: bigint[]) {
     const wallets = balances.map((_) => Wallet.createRandom().connect(ethers.provider));
-    await this.createAccounts(
+    await this._createAccounts(
       balances,
       wallets.map((w) => w.address),
     );
@@ -140,7 +157,7 @@ export default class TestHelper {
     return wallets;
   }
 
-  private async createAccounts(balances: bigint[], addresses: string[]) {
+  private async _createAccounts(balances: bigint[], addresses: string[]) {
     let { nonce } = await this.sdk.getNonce(this.sdk.donor.address!);
     const txs = [];
 
