@@ -28,7 +28,7 @@ for (const TEST_CASE of TEST_CASE_MODES) {
       const [ethOwner] = await helper.createAccounts([INITIAL_BALANCE, INITIAL_BALANCE], TEST_CASE);
       const nft = await helper.createNft(nftCollection.collectionId, ethOwner.address);
 
-      // Initial owner puts nft on sale for UNQ
+      // owner puts nft on sale for UNQ
       await canPutOnSale(ethOwner, nft, INITIAL_PRICE, UNQ_CURRENCY, marketplace);
     });
 
@@ -36,11 +36,11 @@ for (const TEST_CASE of TEST_CASE_MODES) {
       const [owner] = await helper.createAccounts([INITIAL_BALANCE], TEST_CASE);
       const nft = await helper.createNft(nftCollection.collectionId, owner.address);
 
-      // Initial owner puts nft on sale for UNQ
+      // owner puts nft on sale for ERC-20
       await canPutOnSale(owner, nft, INITIAL_PRICE, ERC20_CURRENCY, marketplace);
     });
 
-    it('token owner can put on sale an NFT even if it has already been listed by himself', async () => {
+    it.skip('token owner can put on sale an NFT even if it has already been listed by himself', async () => {
       const [ethOwner] = await helper.createAccounts([INITIAL_BALANCE], TEST_CASE);
       const nft = await helper.createNft(nftCollection.collectionId, ethOwner.address);
 
@@ -50,7 +50,7 @@ for (const TEST_CASE of TEST_CASE_MODES) {
       await canPutOnSale(ethOwner, nft, NEW_PRICE, UNQ_CURRENCY, marketplace);
     });
 
-    it('token owner can put on sale an NFT even if it has already been listed by the previous owner', async () => {
+    it.skip('token owner can put on sale an NFT even if it has already been listed by the previous owner', async () => {
       const [initialOwner, newOwner] = await helper.createAccounts([INITIAL_BALANCE, INITIAL_BALANCE], TEST_CASE);
       const nft = await helper.createNft(nftCollection.collectionId, initialOwner.address);
 

@@ -98,11 +98,20 @@ export default class TestHelper {
   }
 
   async topUpFungibleBalance(collectionId: number, amount: bigint, recipient: string) {
-    // TODO use wei
-    const decimals = collectionId === 0 ? 18 : (await this.sdk.sdk.fungible.getCollection({ collectionId })).decimals;
-    const amountToNumber = convertBigintToNumber(amount, decimals);
-    const { error } = await this.sdk.sdk.fungible.transferTokens({ collectionId, recipient, amount: amountToNumber });
-    if (error) throw Error('Cannot top up fungible balance');
+    // for native token
+    if (collectionId === 0) {
+      const { error } = await this.sdk.sdk.balance.transfer({
+        amount: convertBigintToNumber(amount, 18),
+        destination: recipient,
+      });
+      if (error) throw Error('Cannot top up native balance');
+    } else {
+      // for fungible
+      const { decimals } = await this.sdk.sdk.fungible.getCollection({ collectionId });
+      const amountToNumber = convertBigintToNumber(amount, decimals);
+      const { error } = await this.sdk.sdk.fungible.transferTokens({ collectionId, recipient, amount: amountToNumber });
+      if (error) throw Error('Cannot top up fungible balance');
+    }
   }
 
   async getBalance(address: string, collectionId = 0) {

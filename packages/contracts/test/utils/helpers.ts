@@ -1,5 +1,6 @@
 import { Address } from '@unique-nft/utils';
 import { UniqueFungible__factory, UniqueNFT__factory } from '../../typechain-types';
+import { CrossAddress } from './MarketHelper';
 
 export const getNftContract = async (collectionId: number) => {
   const collectionAddress = Address.collection.idToAddress(collectionId);
@@ -29,4 +30,10 @@ export const convertBigintToNumber = (value: bigint, decimals: number) => {
 
   // Combine the integer and decimal parts
   return Number(`${integerPart}.${decimalPart}`);
+};
+
+export const crossAddressFromAddress = (address: string): CrossAddress => {
+  return address.startsWith('0x')
+    ? { eth: address, sub: 0n }
+    : { eth: '0x0000000000000000000000000000000000000000', sub: BigInt(Address.extract.substratePublicKey(address)) };
 };

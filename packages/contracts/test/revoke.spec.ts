@@ -40,6 +40,21 @@ for (const TEST_CASE of TEST_CASE_MODES) {
       await marketplace.expectOrderZero(nft);
     });
 
+    it('admin can revokeListAdmin', async () => {
+      const INITIAL_BALANCE = TKN(10, 18);
+      const [seller1, seller2] = await helper.createAccounts([INITIAL_BALANCE, INITIAL_BALANCE], TEST_CASE);
+
+      const nft1 = await helper.createNft(nftCollection.collectionId, seller1.address);
+      const nft2 = await helper.createNft(nftCollection.collectionId, seller2.address);
+      await canPutOnSale(seller1, nft1, TKN(200, 18), 0, marketplace);
+      await canPutOnSale(seller2, nft2, TKN(200, 18), 0, marketplace);
+
+      await marketplace.revokeListAdmin(nftCollection.collectionId, [nft1.tokenId, nft2.tokenId]);
+
+      await marketplace.expectOrderZero(nft1);
+      await marketplace.expectOrderZero(nft2);
+    });
+
     it('admin can revoke with checkApproved if allowance is zero', async () => {
       const INITIAL_BALANCE = TKN(20, 18);
       const [seller] = await helper.createAccounts([INITIAL_BALANCE], TEST_CASE);

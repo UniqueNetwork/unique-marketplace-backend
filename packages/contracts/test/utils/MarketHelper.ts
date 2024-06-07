@@ -4,7 +4,7 @@ import { Market } from './../../typechain-types/src/Market.sol/Market';
 import { Market__factory } from '../../typechain-types';
 import { Account, TokenId, ExtrinsicResultResponse, Sdk } from '@unique-nft/sdk/full';
 import { expect } from 'chai';
-import { convertBigintToNumber, getFungibleContract, getNftContract } from './helpers';
+import { convertBigintToNumber, crossAddressFromAddress, getFungibleContract, getNftContract } from './helpers';
 import { IContract } from '@unique-nft/sdk';
 
 export interface MarketOrder {
@@ -49,18 +49,36 @@ export class MarketHelper {
     return new MarketHelper(sdk, marketAddress, market, marketSdk, abi);
   }
 
-  async registerCurrency(collectionId: number, marketFee: number) {
-    const response = await this.contract.addCurrency(collectionId, marketFee, {
+  async addAdmin(newAdmin: string, signer?: HDNodeWallet) {
+    const context = signer ? this.contract.connect(signer) : this.contract;
+    const response = await context.addAdmin(newAdmin, {
       gasLimit: 300_000,
     });
-    await this.handleTransactionResponse(response);
+    return this.handleTransactionResponse(response);
   }
 
-  async removeCurrency(collectionId: number) {
-    const response = await this.contract.removeCurrency(collectionId, {
+  async removeAdmin(admin: string, signer?: HDNodeWallet) {
+    const context = signer ? this.contract.connect(signer) : this.contract;
+    const response = await context.removeAdmin(admin, {
       gasLimit: 300_000,
     });
-    await this.handleTransactionResponse(response);
+    return this.handleTransactionResponse(response);
+  }
+
+  async registerCurrency(collectionId: number, marketFee: number, signer?: HDNodeWallet) {
+    const context = signer ? this.contract.connect(signer) : this.contract;
+    const response = await context.addCurrency(collectionId, marketFee, {
+      gasLimit: 300_000,
+    });
+    return this.handleTransactionResponse(response);
+  }
+
+  async removeCurrency(collectionId: number, signer?: HDNodeWallet) {
+    const context = signer ? this.contract.connect(signer) : this.contract;
+    const response = await context.removeCurrency(collectionId, {
+      gasLimit: 300_000,
+    });
+    return this.handleTransactionResponse(response);
   }
 
   async approveNFT(token: TokenId, signer: MarketAccount) {
@@ -165,6 +183,17 @@ export class MarketHelper {
     return this.handleTransactionResponse(response);
   }
 
+  async revokeListAdmin(collectionId: number, tokenIds: number[]) {
+    const response = await this.contract.revokeListAdmin(collectionId, tokenIds, { gasLimit: 300_000 });
+
+    return this.handleTransactionResponse(response);
+  }
+
+  async isApproved(token: TokenId, by: string) {
+    const { isAllowed } = await this.sdk.token.allowance({ ...token, from: by, to: this.address });
+    return isAllowed;
+  }
+
   async checkApproved(args: { token: TokenId }) {
     const { collectionId, tokenId } = args.token;
     const response = await this.contract.checkApproved(collectionId, tokenId, { gasLimit: 300_000 });
@@ -179,6 +208,13 @@ export class MarketHelper {
 
   async removeFromBlacklist(collectionId: number) {
     const response = await this.contract.removeFromBlacklist(collectionId, { gasLimit: 300000 });
+    return this.handleTransactionResponse(response);
+  }
+
+  async withdraw(to: string, currency: number, amount: bigint, signer?: HDNodeWallet) {
+    const context = signer ? this.contract.connect(signer) : this.contract;
+
+    const response = await context.withdraw(crossAddressFromAddress(to), currency, amount, { gasLimit: 300_000 });
     return this.handleTransactionResponse(response);
   }
 
@@ -212,6 +248,13 @@ export class MarketHelper {
     expect(order.tokenId).to.eq(0n);
     expect(order.price).to.eq(0n);
     expect(order.seller).to.be.oneOf(['0x0000000000000000000000000000000000000000', 0]);
+  }
+
+  async expectCurrencyNotRegistered(collectionId: number) {
+    const currency = await this.contract.getCurrency(collectionId);
+    expect(currency.isAvailable).to.be.false;
+    expect(currency.collectionId).to.eq(0);
+    expect(currency.fee).to.eq(0);
   }
 
   // ---------------- PRIVATE ----------------- //

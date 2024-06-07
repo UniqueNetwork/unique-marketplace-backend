@@ -10,8 +10,12 @@ export const canPutOnSale = async (
   marketplace: MarketHelper,
 ) => {
   if (!seller.address) throw Error('Cannot get account address');
+  const approved = await marketplace.isApproved(token, seller.address);
   // 1. approve
-  const approveTx = await marketplace.approveNFT(token, seller);
+  if (!approved) {
+    const approveTx = await marketplace.approveNFT(token, seller);
+    expect(await marketplace.isApproved(token, seller.address)).to.be.true;
+  }
 
   // 2. put
   const putTx = await marketplace.put({
