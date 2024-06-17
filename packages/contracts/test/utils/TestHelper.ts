@@ -36,11 +36,13 @@ export default class TestHelper {
     return new TestHelper(sdk, donor, contractHelpers);
   }
 
-  async deployMarket() {
+  async deployMarket(marketFee?: bigint | number) {
     const MarketFactory = await ethers.getContractFactory('Market');
     const RoyaltyHelper = await ethers.getContractFactory('UniqueRoyaltyHelper');
 
-    const contract = await upgrades.deployProxy(MarketFactory, [0], {
+    const fee = marketFee ?? 0;
+
+    const contract = await upgrades.deployProxy(MarketFactory, [fee], {
       initializer: 'initialize',
       txOverrides: {
         gasLimit: 7_000_000,
@@ -125,11 +127,11 @@ export default class TestHelper {
   }
 
   async createNft(collectionId: number, owner: string) {
-    return this.sdk.createNft(collectionId, { owner }).catch(e => {
-      console.log('WHATAFAK')
-      console.log(e)
-      throw Error()
-    });
+    return this.sdk.createNft(collectionId, { owner });
+  }
+
+  async sponsorCollection(collectionId: number) {
+    return this.sdk.sponsorCollection(collectionId);
   }
 
   async transferNft(token: TokenId, to: string, signer: MarketAccount) {

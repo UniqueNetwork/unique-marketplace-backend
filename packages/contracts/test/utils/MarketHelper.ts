@@ -1,7 +1,6 @@
 import { Address } from '@unique-nft/utils';
 import { HDNodeWallet, ContractTransactionResponse } from 'ethers';
-import { Market } from './../../typechain-types/src/Market.sol/Market';
-import { Market__factory } from '../../typechain-types';
+import { Market, Market__factory } from '../../typechain-types';
 import { Account, TokenId, ExtrinsicResultResponse, Sdk } from '@unique-nft/sdk/full';
 import { expect } from 'chai';
 import { convertBigintToNumber, crossAddressFromAddress, getFungibleContract, getNftContract, callSdk } from './helpers';
@@ -65,7 +64,15 @@ export class MarketHelper {
     return this.handleTransactionResponse(response);
   }
 
-  async registerCurrency(collectionId: number, marketFee: number, signer?: HDNodeWallet) {
+  async setMarketFee(fee: number, signer?: HDNodeWallet) {
+    const context = signer ? this.contract.connect(signer) : this.contract;
+    const response = await context.setMarketFee(fee, {
+      gasLimit: 300_000,
+    });
+    return this.handleTransactionResponse(response);
+  }
+
+  async registerCurrency(collectionId: number, marketFee: number | bigint, signer?: HDNodeWallet) {
     const context = signer ? this.contract.connect(signer) : this.contract;
     const response = await context.addCurrency(collectionId, marketFee, {
       gasLimit: 300_000,
@@ -356,11 +363,7 @@ export class MarketHelper {
       {
         signer: signer.signer,
       },
-    ).catch(e => {
-      console.log('WHATAFAK');
-      console.log(e);
-      throw Error();
-    }));
+    ))
   }
 
   private async putEthers(putArgs: MarketOrder & { signer: HDNodeWallet }) {

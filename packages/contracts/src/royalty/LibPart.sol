@@ -24,7 +24,9 @@ library LibPartAdapter {
         uint256[] memory encoded = new uint256[](parts.length * 2);
 
         for (uint i = 0; i < parts.length; i++) {
-            encoded[i * 2] = 0x0100000000000000000000000000000000000000000000040000000000000000 | uint256(parts[i].value);
+            encoded[i * 2] =
+                0x0100000000000000000000000000000000000000000000040000000000000000 |
+                uint256(parts[i].value);
             encoded[i * 2 + 1] = uint256(uint160(address(parts[i].account)));
         }
 
@@ -54,10 +56,7 @@ library LibPartAdapter {
             uint96 value = uint96(encoded[i * 2] & 0xFFFFFFFFFFFFFFFF);
             address account = address(uint160(encoded[i * 2 + 1]));
 
-            parts[i] = LibPart.Part({
-                account: payable(account),
-                value: value
-            });
+            parts[i] = LibPart.Part({account: payable(account), value: value});
         }
 
         return parts;
@@ -78,8 +77,8 @@ library LibPartAdapterComplex {
 
         for (uint i = 0; i < royalties.length; i++) {
             uint96 value = royalties[i].decimals >= 4
-            ? uint96(royalties[i].value * (10 ** (royalties[i].decimals - 4)))
-            : uint96(royalties[i].value / (10 ** (4 - royalties[i].decimals)));
+                ? uint96(royalties[i].value * (10 ** (royalties[i].decimals - 4)))
+                : uint96(royalties[i].value / (10 ** (4 - royalties[i].decimals)));
 
             parts[i] = LibPart.Part({
                 account: payable(CrossAddressLib.toAddress(royalties[i].crossAddress)),
@@ -98,10 +97,7 @@ library LibPartAdapterComplex {
                 version: 1,
                 value: uint64(parts[i].value),
                 decimals: 4,
-                crossAddress: CrossAddress({
-                    sub: 0,
-                    eth: parts[i].account
-                }),
+                crossAddress: CrossAddress({sub: 0, eth: parts[i].account}),
                 isPrimarySaleOnly: false
             });
         }

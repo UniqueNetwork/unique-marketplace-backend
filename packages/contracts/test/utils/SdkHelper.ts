@@ -7,6 +7,7 @@ import { TestFungibleCollection, TestNftCollection } from './types';
 import { ethers } from 'hardhat';
 import { TKN } from './currency';
 import { CreateFungibleCollectionRequest } from '@unique-nft/sdk';
+import { hasSubscribers } from 'diagnostics_channel';
 
 export default class SdkHelper {
   readonly sdk: Sdk;
@@ -63,6 +64,17 @@ export default class SdkHelper {
       collectionId,
       contract: await getNftContract(collectionId),
     };
+  }
+
+  async sponsorCollection(collectionId: number) {
+    if (!this.donor.address) throw Error('no donor');
+    const donorAddress = this.donor.address;
+    const setSponsorship = await callSdk(() => this.sdk.collection.setSponsorship({collectionId, newSponsor: donorAddress}))
+    await handleSdkResponse(setSponsorship);
+    const confirmSponsoring = await callSdk(() => this.sdk.collection.confirmSponsorship({collectionId}));
+    await handleSdkResponse(confirmSponsoring);
+    const setLimits = await this.sdk.collection.setLimits({collectionId, limits: {sponsorTransferTimeout: 0}})
+    await handleSdkResponse(setLimits);
   }
 
   async createNft(collectionId: number, token?: Partial<CreateTokenV2ArgsDto>) {

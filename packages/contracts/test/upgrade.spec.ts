@@ -15,4 +15,6 @@ describe("Upgrade", () => {
     await expect((await marketplace.contract.initialize(1, {gasLimit: 300_000})).wait())
       .rejectedWith(/transaction execution reverted/);
   });
+
+  // TODO
 });

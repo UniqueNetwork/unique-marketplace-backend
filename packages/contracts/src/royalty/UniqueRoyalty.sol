@@ -20,8 +20,8 @@ library CrossAddressLib {
 
 library UniqueRoyalty {
     uint private constant DECIMALS_OFFSET = 4 * 16;
-    uint private constant ADDRESS_TYPE_OFFSET = 4 * (16 + 2);           // 0 - eth, 1 - sub
-    uint private constant ROYALTY_TYPE_OFFSET = 4 * (16 + 2 + 1);       // 0 - default, 1 - primary sale only
+    uint private constant ADDRESS_TYPE_OFFSET = 4 * (16 + 2); // 0 - eth, 1 - sub
+    uint private constant ROYALTY_TYPE_OFFSET = 4 * (16 + 2 + 1); // 0 - default, 1 - primary sale only
     uint private constant VERSION_OFFSET = 4 * (16 + 2 + 1 + 1 + 42);
 
     uint private constant PART_LENGTH = 32 * 2;
@@ -75,19 +75,16 @@ library UniqueRoyalty {
         return decodePart(encoded[0], encoded[1]);
     }
 
-    function decodePart(
-        uint256 _meta,
-        uint256 _address
-    ) internal pure returns (UniqueRoyaltyPart memory) {
+    function decodePart(uint256 _meta, uint256 _address) internal pure returns (UniqueRoyaltyPart memory) {
         uint256 version = _meta >> VERSION_OFFSET;
         bool isPrimarySaleOnly = (_meta & (1 << ROYALTY_TYPE_OFFSET)) > 0;
         bool isEthereumAddress = (_meta & (1 << ADDRESS_TYPE_OFFSET)) == 0;
-        uint256 decimals = (_meta >> 4 * 16) & 0xFF;
+        uint256 decimals = (_meta >> (4 * 16)) & 0xFF;
         uint256 value = _meta & 0xFFFFFFFFFFFFFFFF;
 
         CrossAddress memory crossAddress = isEthereumAddress
-            ? CrossAddress({ sub: 0, eth: address(uint160(_address)) })
-            : CrossAddress({ sub: _address, eth: address(0) });
+            ? CrossAddress({sub: 0, eth: address(uint160(_address))})
+            : CrossAddress({sub: _address, eth: address(0)});
 
         UniqueRoyaltyPart memory royaltyPart = UniqueRoyaltyPart({
             version: uint8(version),

@@ -72,7 +72,11 @@ contract UniqueRoyaltyHelper {
         }
     }
 
-    function calculateRoyalties(UniqueRoyaltyPart[] memory royalties, bool isPrimarySale, uint sellPrice) internal pure returns (RoyaltyAmount[] memory) {
+    function calculateRoyalties(
+        UniqueRoyaltyPart[] memory royalties,
+        bool isPrimarySale,
+        uint sellPrice
+    ) internal pure returns (RoyaltyAmount[] memory) {
         RoyaltyAmount[] memory royaltyAmounts = new RoyaltyAmount[](royalties.length);
         uint amountsCount = 0;
 
@@ -80,28 +84,35 @@ contract UniqueRoyaltyHelper {
             if (isPrimarySale == royalties[i].isPrimarySaleOnly) {
                 uint amount = (sellPrice * royalties[i].value) / (10 ** (royalties[i].decimals));
 
-                royaltyAmounts[amountsCount] = RoyaltyAmount({
-                    crossAddress: royalties[i].crossAddress,
-                    amount: amount
-                });
+                royaltyAmounts[amountsCount] = RoyaltyAmount({crossAddress: royalties[i].crossAddress, amount: amount});
 
                 amountsCount += 1;
             }
         }
 
         // shrink royaltyAmounts to amountsCount length
-        assembly { mstore(royaltyAmounts, amountsCount) }
+        assembly {
+            mstore(royaltyAmounts, amountsCount)
+        }
 
         return royaltyAmounts;
     }
 
-    function calculateForPrimarySale(address collection, uint tokenId, uint sellPrice) internal view returns (RoyaltyAmount[] memory) {
+    function calculateForPrimarySale(
+        address collection,
+        uint tokenId,
+        uint sellPrice
+    ) internal view returns (RoyaltyAmount[] memory) {
         UniqueRoyaltyPart[] memory royalties = getRoyalty(collection, tokenId);
 
         return calculateRoyalties(royalties, true, sellPrice);
     }
 
-    function calculate(address collection, uint tokenId, uint sellPrice) external view returns (RoyaltyAmount[] memory) {
+    function calculate(
+        address collection,
+        uint tokenId,
+        uint sellPrice
+    ) external view returns (RoyaltyAmount[] memory) {
         UniqueRoyaltyPart[] memory royalties = getRoyalty(collection, tokenId);
 
         return calculateRoyalties(royalties, false, sellPrice);
