@@ -3,6 +3,7 @@ import TestHelper from './utils/TestHelper';
 import { expect } from 'chai';
 import { MarketHelper } from './utils/MarketHelper';
 import { TEST_CASE_MODES, TestFungibleCollection } from './utils/types';
+import { canPutOnSale } from './utils/steps';
 
 let helper: TestHelper;
 let marketplace: MarketHelper;
@@ -104,6 +105,35 @@ describe('Admin', () => {
     // newAdmin removes currency
     await marketplace.removeCurrency(newCurrency.collectionId, newAdmin);
     await marketplace.expectCurrencyNotRegistered(newCurrency.collectionId);
+  });
+
+  it('market owner can add/remove from blacklist', async () => {
+    const PRICE = 10000n;
+    const [seller] = await helper.createAccounts([INITIAL_BALANCE], 'SDK');
+    const newCollection = await helper.createNftCollectionV2();
+    const newToken = await helper.createNft(newCollection.collectionId, seller.address);
+
+    await marketplace.addToBlackList(newCollection.collectionId);
+    await expect(marketplace.put({...newToken, currency: 0, price: PRICE, signer: seller}))
+      .rejectedWith('CollectionInBlacklist');
+    await marketplace.removeFromBlacklist(newCollection.collectionId);
+    await canPutOnSale(seller, newToken, PRICE, 0, marketplace)
+  });
+
+  it('admin can add/remove from blacklist', async () => {
+    const [newAdmin] = await helper.createEthAccounts([INITIAL_BALANCE]);
+    const [seller] = await helper.createAccounts([INITIAL_BALANCE], 'SDK');
+    await marketplace.addAdmin(newAdmin.address);
+
+    const PRICE = 10000n;
+    const newCollection = await helper.createNftCollectionV2();
+    const newToken = await helper.createNft(newCollection.collectionId, seller.address);
+
+    await marketplace.addToBlackList(newCollection.collectionId, newAdmin);
+    await expect(marketplace.put({...newToken, currency: 0, price: PRICE, signer: seller}))
+      .rejectedWith('CollectionInBlacklist');
+    await marketplace.removeFromBlacklist(newCollection.collectionId, newAdmin);
+    await canPutOnSale(seller, newToken, PRICE, 0, marketplace)
   });
 });
 

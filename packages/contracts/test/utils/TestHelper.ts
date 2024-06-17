@@ -7,8 +7,8 @@ import SdkHelper from './SdkHelper';
 import testConfig from './testConfig';
 import { Wallet, HDNodeWallet } from 'ethers';
 import { MarketAccount, MarketHelper } from './MarketHelper';
-import { convertBigintToNumber, getNftContract } from './helpers';
-import { TokenId } from '@unique-nft/sdk';
+import { convertBigintToNumber, getNftContract, callSdk } from './helpers';
+import { Royalty, TokenId } from '@unique-nft/sdk';
 import { TestCaseMode } from './types';
 
 export default class TestHelper {
@@ -83,11 +83,11 @@ export default class TestHelper {
     });
 
     const oneMillion = 1000_000;
-    const { error } = await this.sdk.sdk.fungible.addTokens({
+    const { error } = await callSdk(() => this.sdk.sdk.fungible.addTokens({
       amount: oneMillion,
       collectionId: funCollection.collectionId,
       recipient: this.sdk.donor.address,
-    });
+    }));
 
     if (error) {
       console.error(error);
@@ -100,16 +100,16 @@ export default class TestHelper {
   async topUpFungibleBalance(collectionId: number, amount: bigint, recipient: string) {
     // for native token
     if (collectionId === 0) {
-      const { error } = await this.sdk.sdk.balance.transfer({
+      const { error } = await callSdk(() => this.sdk.sdk.balance.transfer({
         amount: convertBigintToNumber(amount, 18),
         destination: recipient,
-      });
+      }));
       if (error) throw Error('Cannot top up native balance');
     } else {
       // for fungible
-      const { decimals } = await this.sdk.sdk.fungible.getCollection({ collectionId });
+      const { decimals } = await callSdk(() => this.sdk.sdk.fungible.getCollection({ collectionId }));
       const amountToNumber = convertBigintToNumber(amount, decimals);
-      const { error } = await this.sdk.sdk.fungible.transferTokens({ collectionId, recipient, amount: amountToNumber });
+      const { error } = await callSdk(() => this.sdk.sdk.fungible.transferTokens({ collectionId, recipient, amount: amountToNumber }));
       if (error) throw Error('Cannot top up fungible balance');
     }
   }
@@ -118,12 +118,18 @@ export default class TestHelper {
     return this.sdk.getBalanceOf(address, collectionId);
   }
 
-  async createNftCollectionV2() {
-    return this.sdk.createNftCollection();
+  async createNftCollectionV2(royalties?: Royalty[]) {
+    return this.sdk.createNftCollection({
+      royalties
+    });
   }
 
   async createNft(collectionId: number, owner: string) {
-    return this.sdk.createNft(collectionId, { owner });
+    return this.sdk.createNft(collectionId, { owner }).catch(e => {
+      console.log('WHATAFAK')
+      console.log(e)
+      throw Error()
+    });
   }
 
   async transferNft(token: TokenId, to: string, signer: MarketAccount) {
@@ -134,7 +140,7 @@ export default class TestHelper {
         .transfer(to, token.tokenId, { gasLimit: 300_000 })
         .then((tx) => tx.wait());
     }
-    return this.sdk.sdk.token.transfer({ ...token, to, address: signer.address }, { signer: signer.signer });
+    return callSdk(() => this.sdk.sdk.token.transfer({ ...token, to, address: signer.address }, { signer: signer.signer }));
   }
 
   async getOwnerOf(token: TokenId) {

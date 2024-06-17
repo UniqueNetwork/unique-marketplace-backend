@@ -68,17 +68,6 @@ for (const TEST_CASE of TEST_CASE_MODES) {
       // FIXME: new owner can put on sale
       await canPutOnSale(newOwner, nft, NEW_PRICE, UNQ_CURRENCY, marketplace);
     });
-
-    it('token owner can put on sale nft if it was removed from black list', async () => {
-      const [account] = await helper.createAccounts([INITIAL_BALANCE], TEST_CASE);
-      const blackListedCollection = await helper.createNftCollectionV2();
-      const blackListedNft = await helper.createNft(blackListedCollection.collectionId, account.address);
-
-      await marketplace.addToBlackList(blackListedCollection.collectionId);
-      await marketplace.removeFromBlacklist(blackListedCollection.collectionId);
-
-      await canPutOnSale(account, blackListedNft, INITIAL_PRICE, UNQ_CURRENCY, marketplace);
-    });
   });
 
   describe(`[Negative] Put on sale from ${TEST_CASE}`, () => {

@@ -1,6 +1,7 @@
 import { Address } from '@unique-nft/utils';
 import { UniqueFungible__factory, UniqueNFT__factory } from '../../typechain-types';
 import { CrossAddress } from './MarketHelper';
+import { isAxiosError } from 'axios';
 
 export const getNftContract = async (collectionId: number) => {
   const collectionAddress = Address.collection.idToAddress(collectionId);
@@ -37,3 +38,32 @@ export const crossAddressFromAddress = (address: string): CrossAddress => {
     ? { eth: address, sub: 0n }
     : { eth: '0x0000000000000000000000000000000000000000', sub: BigInt(Address.extract.substratePublicKey(address)) };
 };
+
+/**
+ * Call SDK and retry on ECONNRESET
+ * @param sdkCall 
+ * @returns 
+ */
+export const callSdk = async <T>(sdkCall: (...args: unknown[]) => Promise<T>) => {
+  let retry = 0;
+  let result: T | undefined;
+
+  while (retry <= 3) {
+    try {
+      result = await sdkCall();
+      return result;
+    } catch (error) {
+      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+      console.log((error as any).code);
+      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+      if (isAxiosError(error) && error.code! === 'ECONNRESET') {
+        retry++;
+        console.log('ECONNRESET retry', retry);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error('Maximum retry attempts exceeded');
+} 
