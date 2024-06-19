@@ -20,8 +20,6 @@
     "lint": "nx run-many --target=lint --all",
     "lint:fix": "nx run-many --target=lint --all --fix --skip-nx-cache",
     "start": "node -r source-map-support/register ./dist/packages/market/main.js",
-    "legacy-postinstall": "npm run husky:install",
-    "prepare": "husky install",
     "changelog": "git cliff --prepend ./CHANGELOG.md -u -c ./cliff.toml -r ./ --include-path 'packages/escrow/*' --include-path 'packages/market/*' ",
     "tools:generate:docs": "ts-node tools/generate-docs.ts",
     "generate:client:api": "npx ts-node --project tools/tsconfig.tools.json tools/generate-client-api.ts",
