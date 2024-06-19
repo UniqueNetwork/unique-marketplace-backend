@@ -6,7 +6,6 @@ import { Repository } from 'typeorm';
 import { Helpers } from 'graphile-worker';
 import { CollectionEntity } from '@app/common/modules/database';
 import { CollectionActive, CollectionMode, CollectionSchemaAndChain, DecodedCollection } from '@app/common/modules/types';
-import { CollectionInfoWithSchemaResponse } from '@unique-nft/sdk';
 
 @Injectable()
 @Task('collectCollection')
@@ -28,14 +27,14 @@ export class CollectionTask {
   @TaskHandler()
   async handler(collectionDto: CollectionSchemaAndChain, helpers: Helpers): Promise<void> {
     const { collection, chain, tokensCount } = collectionDto;
-    const { id, description, name, owner, mode, tokenPrefix } = collection;
+    const { collectionId, description, name, owner, mode, tokenPrefix } = collection;
     const { token } = chain;
     const decodedCollection: DecodedCollection = {
       decimalPoints: collection['decimals'] || 0,
       tokensTotal: tokensCount,
       tokensCount: 0,
       tokensOnMarket: 0,
-      collectionId: id,
+      collectionId,
       owner,
       mode: mode as CollectionMode,
       tokenPrefix,
@@ -47,22 +46,22 @@ export class CollectionTask {
     };
     try {
       const collectionExist = await this.collectionRepository.findOne({
-        where: { collectionId: id },
+        where: { collectionId },
       });
 
       if (collectionExist) {
         await this.collectionRepository.update({ id: collectionExist.id }, decodedCollection);
-        this.logger.log(`Collection id ${id} updated!`);
+        this.logger.log(`Collection id ${collectionId} updated!`);
       } else {
         const entity = this.collectionRepository.create(decodedCollection);
         entity.metadata = entity.metadata || '{}';
         await this.collectionRepository.save({
           ...entity,
         });
-        this.logger.log(`Collection id ${id} saved!`);
+        this.logger.log(`Collection id ${collectionId} saved!`);
       }
     } catch (e) {
-      this.logger.error(`E1000 collectionId: ${id} ${e.message}`);
+      this.logger.error(`E1000 collectionId: ${collectionId} ${e.message}`);
     }
   }
 }

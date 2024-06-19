@@ -6,9 +6,10 @@ import { TokensEntity } from '@app/common/modules/database/entities/tokens.entit
 import { Repository } from 'typeorm';
 import { Helpers } from 'graphile-worker';
 import { PropertiesEntity } from '@app/common/modules/database/entities/properties.entity';
-import { BundleType, CollectionToken, Market, SerializeTokenType, TokenInfo, TypeAttributToken } from './task.types';
+import { BundleType, CollectionToken, Market, SerializeTokenType, TokenInfo } from './task.types';
 import { WorkerService } from 'nestjs-graphile-worker/dist/services/worker.service';
-import { NestedToken } from '@unique-nft/sdk/full';
+import { CollectionWithInfoV2Dto, NestedToken, TokenWithInfoV2Dto } from '@unique-nft/sdk/full';
+import { TypeAttributToken } from '@app/common/modules/types';
 
 @Injectable()
 @Task('collectProperties')
@@ -35,7 +36,7 @@ export class PropertiesTask {
     await this.addSearchIndexIfNotExists(payload);
   }
 
-  async getTokenInfoItems({ collectionId, tokenId }: CollectionToken): Promise<SerializeTokenType> {
+  async getTokenInfoItems({ collectionId, tokenId }: CollectionToken): Promise<SerializeTokenType | null> {
     return this.preparePropertiesData(tokenId, collectionId);
   }
 
@@ -55,11 +56,11 @@ export class PropertiesTask {
     tokenId: number,
     collectionId: number,
   ): Promise<{
-    token: any;
-    collection: any;
+    token: TokenWithInfoV2Dto;
+    collection: CollectionWithInfoV2Dto;
     isBundle: boolean;
     serializeBundle: Array<BundleType>;
-  }> | null {
+  } | null> {
     const { isBundle } = await this.sdkService.isBundle(tokenId, collectionId);
     let token = null;
     let serializeBundle = [];
@@ -141,7 +142,7 @@ export class PropertiesTask {
       this.propertiesRepository.create({
         collection_id: collectionToken.collectionId,
         token_id: collectionToken.tokenId,
-        network: collectionToken?.network,
+        network: collectionToken?.network || '',
         locale: item.locale,
         items: item.items,
         key: item.key,
@@ -164,9 +165,7 @@ export class PropertiesTask {
 
   async preparePropertiesData(tokenId: number, collectionId: number): Promise<SerializeTokenType | null> {
     const tokenData = await this.tokenWithCollection(tokenId, collectionId);
-    if (!tokenData) {
-      return null;
-    }
+    if (!tokenData) return null;
 
     const source: Set<TokenInfo> = new Set();
     // Collection
@@ -194,7 +193,7 @@ export class PropertiesTask {
       })
       .add({
         locale: null,
-        items: [tokenData.collection?.schema?.coverPicture?.fullUrl],
+        items: [tokenData.collection?.info?.cover_image?.url],
         key: 'collectionCover',
         type: TypeAttributToken.ImageURL,
         is_trait: false,
@@ -212,29 +211,42 @@ export class PropertiesTask {
     if (tokenData.token?.image) {
       source.add({
         locale: null,
-        items: [tokenData.token.image?.fullUrl],
+        items: [tokenData.token.image],
         key: 'image',
         type: TypeAttributToken.ImageURL, //
         is_trait: false,
       });
     }
 
-    if (tokenData.token?.video) {
+    if (tokenData.token?.animation_url) {
       source.add({
         locale: null,
-        items: [tokenData.token.video?.fullUrl],
+        items: [tokenData.token.animation_url],
         key: 'video',
         type: TypeAttributToken.VideoURL,
       });
     }
 
-    for (const [key, val] of Object.entries(tokenData.token?.attributes) as [string, any]) {
-      source.add({
-        locale: this.getLocation(val),
-        items: this.getValueToken(val),
-        key: val.name?._,
-        type: val.isEnum ? TypeAttributToken.Enum : TypeAttributToken.String,
-        is_trait: val.isEnum,
+    if (tokenData.token.media) {
+      tokenData.token.media.map((media) => {
+        source.add({
+          locale: null,
+          items: [media.url],
+          key: media.type,
+          type: TypeAttributToken.MediaURL,
+        });
+      });
+    }
+
+    if (tokenData.token?.attributes) {
+      tokenData.token?.attributes.forEach((attribute) => {
+        source.add({
+          locale: null,
+          items: [`${attribute.value}`],
+          key: attribute.trait_type,
+          type: typeof attribute.value === 'number' ? TypeAttributToken.Number : TypeAttributToken.String,
+          is_trait: false,
+        });
       });
     }
 

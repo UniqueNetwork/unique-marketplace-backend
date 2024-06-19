@@ -28,7 +28,7 @@ export class ContractEventsService implements OnModuleInit {
     this.client.on(SubscriptionEvents.COLLECTIONS, this.collectionEventsHandler.onEvent.bind(this.collectionEventsHandler));
     this.client.on(SubscriptionEvents.CONTRACT_LOGS, this.contractEventsHandler.onEvent.bind(this.contractEventsHandler));
     this.client.socket.on('connect_error', async (err) => {
-      this.logger.error(`connect error`, err);
+      this.logger.error(`error connect to ${this.sdk.options.baseUrl}`, err);
     });
     this.client.on(SubscriptionEvents.HAS_NEXT, this.onHasNext.bind(this));
     // todo type it after update sdk
@@ -36,7 +36,7 @@ export class ContractEventsService implements OnModuleInit {
 
     this.client.socket.on('connect', async () => {
       this.isClientConnected = true;
-      this.logger.log('connect');
+      this.logger.log(`connected to ${this.sdk.options.baseUrl}`);
 
       if (this.isModuleInit) {
         await this.initContracts();
