@@ -1,6 +1,6 @@
 {
   "name": "unique-marketplace-backend",
-  "version": "3.0.250",
+  "version": "3.0.251",
   "description": "Backend project for unique marketplace",
   "author": "Unique Network",
   "private": true,
@@ -63,7 +63,6 @@
     "cli-color": "^2.0.3",
     "eslint-plugin-regex": "^1.10.0",
     "helmet": "^6.1.2",
-    "husky": "^8.0.3",
     "minio": "^7.1.1",
     "nestjs-graphile-worker": "^0.7.0",
     "nestjs-typeorm-paginate": "^4.0.3",
