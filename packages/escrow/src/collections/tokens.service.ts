@@ -48,9 +48,8 @@ export class TokensService {
     if (collection) {
       const chain = await this.sdk.getChainProperties();
       //Check token lives in the chain
-      try {
-        await this.sdk.getTokenSchema(collectionId, tokenId);
-      } catch (e) {
+      const token = await this.sdk.getTokenSchema(collectionId, tokenId);
+      if (token == null) {
         await this.cleanTokenAndProperties(collectionId, tokenId, chain.token);
         this.logger.error('Token not found or burned!');
         return;
@@ -70,9 +69,7 @@ export class TokensService {
         await Promise.all([address, addressTo].map((a) => this.findAllParents(a, tokenMap, chain.token)));
 
         // Add the tokenId, collectionId, network chain to the list for update
-        if (event.method === EventMethod.ITEM_CREATED || event.method === EventMethod.TRANSFER) {
-          this.addTokenToMap(tokenMap, collectionId, tokenId, chain.token);
-        }
+        this.addTokenToMap(tokenMap, collectionId, tokenId, chain.token);
       } else {
         this.addTokenToMap(tokenMap, collectionId, tokenId, chain.token);
       }

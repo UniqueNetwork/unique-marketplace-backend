@@ -605,6 +605,29 @@
         "internalType": "uint32",
         "name": "tokenId",
         "type": "uint32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "changePrice",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "tokenId",
+        "type": "uint32"
       }
     ],
     "name": "checkApproved",
