@@ -165,9 +165,7 @@ export class PropertiesTask {
 
   async preparePropertiesData(tokenId: number, collectionId: number): Promise<SerializeTokenType | null> {
     const tokenData = await this.tokenWithCollection(tokenId, collectionId);
-    if (!tokenData) {
-      return null;
-    }
+    if (!tokenData) return null;
 
     const source: Set<TokenInfo> = new Set();
     // Collection
