@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { CollectionActive, CollectionMode, CollectionStatus } from '../../types';
+import { CollectionWithInfoV2Dto } from '@unique-nft/sdk/full';
 
 @Entity('collections', { schema: 'public' })
 @Index(['collectionId'])
@@ -93,5 +94,5 @@ export class CollectionEntity {
   updatedAt: Date;
 
   @Column('jsonb', { name: 'data', default: {} })
-  data: string;
+  data: CollectionWithInfoV2Dto;
 }

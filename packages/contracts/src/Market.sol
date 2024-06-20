@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import { UniqueNFT, CrossAddress } from "@unique-nft/solidity-interfaces/contracts/UniqueNFT.sol";
 import { UniqueFungible, CrossAddress as CrossAddressF } from "@unique-nft/solidity-interfaces/contracts/UniqueFungible.sol";
-import "@unique-nft/solidity-interfaces/contracts/CollectionHelpers.sol";
+import { CollectionHelpers } from "@unique-nft/solidity-interfaces/contracts/CollectionHelpers.sol";
 import "./royalty/UniqueRoyaltyHelper.sol";
 
 contract Market is Ownable, ReentrancyGuard {
@@ -95,7 +95,7 @@ contract Market is Ownable, ReentrancyGuard {
       }
     }
 
-    constructor(uint32 fee, uint64 timestamp) {
+    constructor(uint32 fee, uint64 timestamp) Ownable() {
         marketFee = fee;
         ctime = timestamp;
 

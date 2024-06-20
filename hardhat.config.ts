@@ -1,7 +1,8 @@
-import { HardhatUserConfig, task } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox';
+import { HardhatUserConfig, task } from 'hardhat/config';
 import { loadConfig } from './packages/contracts/scripts';
 import { buildVersion } from './packages/contracts/tasks';
+import testConfig from './packages/contracts/test/utils/testConfig';
 
 const appConfig = loadConfig();
 
@@ -24,6 +25,10 @@ const config: HardhatUserConfig = {
       url: appConfig.opal.rpcUrl,
       accounts: appConfig.accounts,
     },
+    test: {
+      url: testConfig.ethRpcUrl,
+      accounts: testConfig.ethPrivateKeys,
+    }
   },
   mocha: {
     timeout: 100000000,
