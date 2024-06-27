@@ -22,7 +22,7 @@ jobs:
     uses: UniqueNetwork/unique-marketplace-backend/.github/workflows/build-docker-image.yml@master
     secrets: inherit
     with:
-      tag: unique-marketplace-backend
+      tag: ${{ github.event.inputs.tag }}
       dockerfile: ./Dockerfile
       is_latest: ${{ github.event.inputs.is_latest }}
 

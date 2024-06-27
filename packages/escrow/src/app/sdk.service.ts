@@ -76,8 +76,19 @@ export class SdkService {
     return [...new Set(recurseBundle(bundle))];
   }
 
-  async getTokenSchema(collectionId: number, tokenId: number): Promise<TokenWithInfoV2Dto> {
-    return await this.sdk.token.getV2({ collectionId: collectionId, tokenId: tokenId });
+  async getTokenSchema(collectionId: number, tokenId: number): Promise<TokenWithInfoV2Dto | null> {
+    let token: TokenWithInfoV2Dto;
+    try {
+      token = await this.sdk.token.getV2({ collectionId: collectionId, tokenId: tokenId });
+    } catch (error) {
+      if (error.message === 'Token not found') {
+        return null;
+      }
+
+      throw error;
+    }
+
+    return token;
   }
 
   /**
@@ -148,9 +159,14 @@ export class SdkService {
     let token: TokenWithInfoV2Dto;
     try {
       token = await this.sdk.token.getV2({ collectionId, tokenId });
-    } catch (e) {
-      this.logger.error(e);
+    } catch (error) {
+      if (error.message === 'Token not found') {
+        return null;
+      }
+
+      throw error;
     }
+
     if (!token) {
       return null;
     }
