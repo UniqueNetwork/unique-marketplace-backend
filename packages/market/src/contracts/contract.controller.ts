@@ -1,10 +1,11 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BaseController } from '@app/common/src/lib/base.controller';
 import { readApiDocs } from '../utils/utils';
 import { ContractsService } from './contracts.service';
 import { CheckApprovedDto } from './dto/check-approved.dto';
 import { ApiBearerAuthMetamaskAndSubstrate } from '../admin/decorators/login.decorator';
+import { RemoveCurrencyDto, SetCurrenciesDto } from './dto/set-currencies.dto';
 
 @ApiTags('Contracts')
 @Controller('contracts')
@@ -31,5 +32,23 @@ export class ContractsController extends BaseController<ContractsService> {
   })
   getAllAbi() {
     return this.contractsService.getAllAbi();
+  }
+
+  @Post('/currencies/add')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Add available currency',
+  })
+  addCurrency(@Query('secretKey') secretKey: string, @Body() dto: SetCurrenciesDto) {
+    return this.contractsService.addCurrency(secretKey, dto);
+  }
+
+  @Post('/currencies/del')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Remove currency from available list',
+  })
+  delCurrency(@Query('secretKey') secretKey: string, @Body() dto: RemoveCurrencyDto) {
+    return this.contractsService.delCurrency(secretKey, dto);
   }
 }

@@ -159,6 +159,7 @@ export class ViewOffersService {
     queryFilter = this.prepareQuery(queryFilter);
     const itemQuery = this.pagination(queryFilter, { page: 1, pageSize: 1 });
     const items = await itemQuery.query.getRawMany();
+    console.log('items', items);
     return items;
   }
 
@@ -379,6 +380,7 @@ export class ViewOffersService {
         'view_offers_contract_address as contract_address',
         'view_offers_offer_price_parsed as offer_price_parsed',
         'view_offers_offer_price_raw as offer_price_raw',
+        'view_offers_offer_currency as offer_currency',
         'view_offers_offer_seller as offer_seller',
         'view_offers_offer_created_at as offer_created_at',
       ])

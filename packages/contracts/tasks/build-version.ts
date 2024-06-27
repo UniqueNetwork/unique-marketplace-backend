@@ -1,16 +1,15 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import * as fs from 'fs';
 
-const baseBuildPath = './packages/contracts/assemblies';
+const contractsSrcPath = './packages/contracts';
 
-const marketArtifactPath = 'packages/contracts/src/Market.sol/Market.json';
+const baseBuildPath = `${contractsSrcPath}/assemblies`;
 
-const marketTypesPath = 'typechain-types/packages/contracts/src/Market.ts';
+const marketArtifactPath = 'src/Market.sol/Market.json';
 
-export async function buildVersion(
-  taskArguments: Record<string, string>,
-  hre: HardhatRuntimeEnvironment
-) {
+const marketTypesPath = `${contractsSrcPath}/typechain-types/src/Market.sol/Market.ts`;
+
+export async function buildVersion(taskArguments: Record<string, string>, hre: HardhatRuntimeEnvironment) {
   const { build } = taskArguments;
 
   const targetDir = `${baseBuildPath}/${build}`;
@@ -23,25 +22,20 @@ export async function buildVersion(
   }
   fs.mkdirSync(targetDir);
 
-  const marketStr = fs
-    .readFileSync(`${hre.config.paths.artifacts}/${marketArtifactPath}`)
-    .toString();
+  const marketStr = fs.readFileSync(`${hre.config.paths.artifacts}/${marketArtifactPath}`).toString();
 
   const market = JSON.parse(marketStr);
 
-  fs.writeFileSync(
-    `${targetDir}/abi.json`,
-    JSON.stringify(market.abi, null, 2)
-  );
+  fs.writeFileSync(`${targetDir}/abi.json`, JSON.stringify(market.abi, null, 2));
 
   fs.writeFileSync(`${targetDir}/bytecode.txt`, market.bytecode);
 
   let marketTypes = fs
     .readFileSync(marketTypesPath)
     .toString()
-    .replace('from "../../../common"', `from '../../scripts/common-types'`);
+    .replace('from "../../common"', `from '../../scripts/common-types'`);
 
-  const eventReg = /getEvent\(\w+: "(?<name>\w+)"\)/g;
+  const eventReg = /getEvent\([^)]+key: "(?<name>\w+)"[^)]*\)/g;
   const eventsRes = marketTypes.matchAll(eventReg);
   const events = [];
   for (const event of eventsRes) {
@@ -52,7 +46,7 @@ export async function buildVersion(
   }
   marketTypes = `${marketTypes}
 
-export type MarketEventNames = ${events.join(' | ')};
+export type MarketEventNames = ${events.length ? events.join(' | ') : '"none"'};
 `;
 
   fs.writeFileSync(`${targetDir}/market.ts`, marketTypes);
