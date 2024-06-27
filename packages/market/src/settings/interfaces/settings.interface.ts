@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ContractEntity } from '@app/common/modules/database';
+import { CurrencyDto } from '../../contracts/dto/set-currencies.dto';
 
 export interface CollectionData {
   [key: string]: string | any;
@@ -23,6 +24,9 @@ export class SettingBlockchainUnique {
 
   @ApiProperty({ example: [ContractExample] })
   contracts: ContractEntity[];
+
+  @ApiProperty({ type: CurrencyDto, isArray: true })
+  currencies: CurrencyDto[];
 }
 
 export class SettingBlockchain {

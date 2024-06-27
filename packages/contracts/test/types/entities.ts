@@ -1,4 +1,4 @@
-import { UniqueNFT } from "@unique-nft/solidity-interfaces";
+import { UniqueNFT } from '@unique-nft/solidity-interfaces';
 
 export interface CollectionRepresentation {
   collectionId: number;

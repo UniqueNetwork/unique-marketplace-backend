@@ -1,0 +1,1156 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "CollectionInBlacklist",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CollectionNotFound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CollectionNotSupportedERC721",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "FailTransferToken",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "info",
+        "type": "string"
+      }
+    ],
+    "name": "InvalidArgument",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidInitialization",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidMarketFee",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalRoyalty",
+        "type": "uint256"
+      }
+    ],
+    "name": "InvalidRoyaltiesError",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotEnoughMoneyError",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotInitializing",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OrderNotFound",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SellerIsNotOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TokenIsAlreadyOnSale",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TokenIsNotApproved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TooManyAmountRequested",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "version",
+        "type": "uint64"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "version",
+        "type": "uint32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "id",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "collectionId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "tokenId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "amount",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "currency",
+            "type": "uint32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "eth",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "sub",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CrossAddress",
+            "name": "seller",
+            "type": "tuple"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Market.Order",
+        "name": "item",
+        "type": "tuple"
+      }
+    ],
+    "name": "TokenIsApproved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "version",
+        "type": "uint32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "id",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "collectionId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "tokenId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "amount",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "currency",
+            "type": "uint32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "eth",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "sub",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CrossAddress",
+            "name": "seller",
+            "type": "tuple"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Market.Order",
+        "name": "item",
+        "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "salesAmount",
+        "type": "uint32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "eth",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sub",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct CrossAddress",
+        "name": "buyer",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "eth",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "sub",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CrossAddress",
+            "name": "crossAddress",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RoyaltyAmount[]",
+        "name": "royalties",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "TokenIsPurchased",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "version",
+        "type": "uint32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "id",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "collectionId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "tokenId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "amount",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "currency",
+            "type": "uint32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "eth",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "sub",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CrossAddress",
+            "name": "seller",
+            "type": "tuple"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Market.Order",
+        "name": "item",
+        "type": "tuple"
+      }
+    ],
+    "name": "TokenIsUpForSale",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "version",
+        "type": "uint32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "id",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "collectionId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "tokenId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "amount",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "currency",
+            "type": "uint32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "eth",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "sub",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CrossAddress",
+            "name": "seller",
+            "type": "tuple"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Market.Order",
+        "name": "item",
+        "type": "tuple"
+      }
+    ],
+    "name": "TokenPriceChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "version",
+        "type": "uint32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "id",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "collectionId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "tokenId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "amount",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "currency",
+            "type": "uint32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "eth",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "sub",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CrossAddress",
+            "name": "seller",
+            "type": "tuple"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Market.Order",
+        "name": "item",
+        "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "amount",
+        "type": "uint32"
+      }
+    ],
+    "name": "TokenRevoke",
+    "type": "event"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "admin",
+        "type": "address"
+      }
+    ],
+    "name": "addAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "fee",
+        "type": "uint32"
+      }
+    ],
+    "name": "addCurrency",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      }
+    ],
+    "name": "addToBlacklist",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "admins",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "availableCurrencies",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isAvailable",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "fee",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "buildVersion",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "tokenId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "amount",
+        "type": "uint32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "eth",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sub",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct CrossAddress",
+        "name": "buyer",
+        "type": "tuple"
+      }
+    ],
+    "name": "buy",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "tokenId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint32",
+        "name": "currency",
+        "type": "uint32"
+      }
+    ],
+    "name": "changePrice",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "tokenId",
+        "type": "uint32"
+      }
+    ],
+    "name": "checkApproved",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ctime",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      }
+    ],
+    "name": "getCurrency",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "isAvailable",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint32",
+            "name": "collectionId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "fee",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct Market.Currency",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "tokenId",
+        "type": "uint32"
+      }
+    ],
+    "name": "getOrder",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "id",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "collectionId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "tokenId",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "amount",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "currency",
+            "type": "uint32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "eth",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "sub",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CrossAddress",
+            "name": "seller",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct Market.Order",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "fee",
+        "type": "uint32"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "marketFee",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ownerAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "tokenId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint32",
+        "name": "currency",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "amount",
+        "type": "uint32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "eth",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sub",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct CrossAddress",
+        "name": "seller",
+        "type": "tuple"
+      }
+    ],
+    "name": "put",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "admin",
+        "type": "address"
+      }
+    ],
+    "name": "removeAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      }
+    ],
+    "name": "removeCurrency",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      }
+    ],
+    "name": "removeFromBlacklist",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "tokenId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "amount",
+        "type": "uint32"
+      }
+    ],
+    "name": "revoke",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "tokenId",
+        "type": "uint32"
+      }
+    ],
+    "name": "revokeAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "collectionId",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32[]",
+        "name": "tokenIdList",
+        "type": "uint32[]"
+      }
+    ],
+    "name": "revokeListAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "royaltyHelpersAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setRoyaltyHelpers",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "eth",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sub",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct CrossAddress",
+        "name": "to",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint32",
+        "name": "currency",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "balance",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
+  }
+]

@@ -197,6 +197,10 @@ export class OfferPriceDto {
   @ApiProperty({ description: 'Raw price', example: '4000000000000' })
   @Expose()
   raw: string;
+
+  @ApiProperty({ description: 'Currency, fungible collectionId or 0(native money)' })
+  @Expose()
+  currency: number;
 }
 
 export class OfferEntityDto {

@@ -7,9 +7,9 @@ import { Address } from '@unique-nft/utils';
 
 const assembliesBasePath = './packages/contracts/assemblies';
 
-export function getContractAbi(version: number): Array<any> {
+export function getContractAbi(version: number): Array<any> | null {
   if (version === -1) {
-    return;
+    return null;
   }
   const versionDir = `${assembliesBasePath}/${version}`;
   const abiFilename = `${versionDir}/abi.json`;
@@ -17,9 +17,6 @@ export function getContractAbi(version: number): Array<any> {
 }
 
 export async function getContractSource(version: number) {
-  if (version === -1) {
-    return;
-  }
   const versionDir = `${assembliesBasePath}/${version}`;
 
   const abiFilename = `${versionDir}/abi.json`;
@@ -37,10 +34,10 @@ export async function getContractSource(version: number) {
 export async function deploy(version: number, feeValue: number, rpcUrl: string, metamaskSeed: string, substrateSeed: string) {
   const { abi, bytecode } = await getContractSource(version);
 
-  const wallet = ethers.Wallet.fromMnemonic(metamaskSeed);
+  const wallet = ethers.Wallet.fromPhrase(metamaskSeed);
 
   const balance = await ethers.getDefaultProvider(rpcUrl).getBalance(wallet.address);
-  console.log(`deploy with a account: ${wallet.address}, with a balance: ${ethers.utils.formatEther(balance)}`);
+  console.log(`deploy with a account: ${wallet.address}, with a balance: ${ethers.formatEther(balance)}`);
 
   const privateKey = wallet.privateKey;
 
@@ -108,9 +105,9 @@ async function addToAdmin(
   const signer = provider.addSeed(substrateSeed);
   const adminEthereumAddress = Address.mirror.substrateToEthereum(signer.address);
 
-  const metamaskProvider = new ethers.providers.JsonRpcBatchProvider(rpcUrl);
+  const metamaskProvider = new ethers.JsonRpcProvider(rpcUrl);
 
-  const ownerWallet = ethers.Wallet.fromMnemonic(metamaskSeed).connect(metamaskProvider);
+  const ownerWallet = ethers.Wallet.fromPhrase(metamaskSeed).connect(metamaskProvider);
 
   const contract = new ethers.Contract(contractAddress, contractAbi, ownerWallet);
 

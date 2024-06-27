@@ -76,10 +76,10 @@ export const abiVerifyMessage: AbiItem[] = [
 ];
 
 export async function verifyMessageDeploy(rpcUrl: string, metamaskSeed: string, substrateSeed: string) {
-  const wallet = ethers.Wallet.fromMnemonic(metamaskSeed);
+  const wallet = ethers.Wallet.fromPhrase(metamaskSeed);
 
   const balance = await ethers.getDefaultProvider(rpcUrl).getBalance(wallet.address);
-  console.log(`Deploy verifyMessage with a account: ${wallet.address}, with a balance: ${ethers.utils.formatEther(balance)}`);
+  console.log(`Deploy verifyMessage with a account: ${wallet.address}, with a balance: ${ethers.formatEther(balance)}`);
 
   const privateKey = wallet.privateKey;
 

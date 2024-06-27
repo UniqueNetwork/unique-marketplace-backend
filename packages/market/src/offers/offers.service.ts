@@ -118,7 +118,12 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
         const token = searchIndex.find((index) => index.collection_id === item.collection_id && index.token_id === item.token_id);
         const collection = collections.find((collection) => collection.collectionId === item.collection_id);
         const schemaData = collection?.data['schema'];
-        const price = { parsed: +item.offer_price_parsed, raw: item.offer_price_raw } as OfferPrice;
+        const price: OfferPrice = {
+          parsed: +item.offer_price_parsed,
+          raw: item.offer_price_raw,
+          currency: item.offer_currency,
+        };
+
         const schema = {
           attributesSchemaVersion: isEmpty(schemaData?.attributesSchemaVersion),
           coverPicture: isEmpty(schemaData?.coverPicture),

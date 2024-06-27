@@ -29,6 +29,7 @@ import { PropertiesEntity } from './properties.entity';
       'properties_filter.count_item',
       'properties_filter.total_items',
       'properties_filter.list_items',
+      'offer.currency AS offer_currency',
     ]);
 
     queryBuilder.leftJoin(
@@ -73,6 +74,9 @@ export class ViewOffers {
 
   @ViewColumn({ name: 'offer_price_raw' })
   offer_price_raw: string;
+
+  @ViewColumn({ name: 'offer_currency' })
+  offer_currency: number;
 
   @ViewColumn({ name: 'offer_seller' })
   offer_seller: string; // address from

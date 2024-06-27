@@ -37,6 +37,9 @@ export class OfferEntity {
   @Column({ name: 'price_raw', type: 'varchar', length: '128' })
   priceRaw: string;
 
+  @Column({ name: 'currency', type: 'integer' })
+  currency: number;
+
   @JoinColumn({
     name: 'contract_address',
   })

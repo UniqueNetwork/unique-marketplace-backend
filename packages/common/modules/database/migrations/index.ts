@@ -17,3 +17,5 @@ export * from './1688973356000-NormalizeAddress';
 export * from './1689929097000-BannersEntity';
 export * from './1690877576943-DeployContractV1';
 export * from './1711532661239-DeployContractV2';
+export * from './1714106695524-DeployContractV3';
+export * from './1716368384726-AddCurrencyToOffer';

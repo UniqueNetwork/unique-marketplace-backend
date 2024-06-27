@@ -2,7 +2,13 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SettingsDto } from './dto/setting.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BannersService, CollectionEntity, ContractEntity, OfferEntity } from '@app/common/modules/database';
+import {
+  BannersService,
+  CollectionEntity,
+  ContractEntity,
+  OfferEntity,
+  SettingsService as SettingsDbService,
+} from '@app/common/modules/database';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { AddressService } from '@app/common/src/lib/address.service';
 import { CollectionStatus, CustomObject, OfferStatus } from '@app/common/modules/types';
@@ -39,6 +45,7 @@ export class SettingsService {
     @InjectRepository(OfferEntity)
     private offerRepository: Repository<OfferEntity>,
     private bannersService: BannersService,
+    private settingsService: SettingsDbService,
   ) {}
 
   async prepareSettings() {
@@ -47,6 +54,8 @@ export class SettingsService {
         version: MoreThanOrEqual(0),
       },
     });
+
+    const currencies = await this.settingsService.getContractCurrencies();
 
     const settings: SettingsDto = {
       marketType: 'marketType',
@@ -59,6 +68,7 @@ export class SettingsService {
           contracts: contracts.sort((c1, c2) => {
             return c2.version - c1.version;
           }),
+          currencies,
         },
       },
     };
