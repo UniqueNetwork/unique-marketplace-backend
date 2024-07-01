@@ -56,7 +56,7 @@ export class OfferService {
     const priceDir = parseFloat(priceOrder.toString()) / 10 ** 18;
     offer.priceParsed = parseFloat(priceDir.toFixed(18));
     offer.priceRaw = order.price.toString();
-    offer.currency = Number(order.currency);
+    offer.currency = order.currency ? Number(order.currency) : 0;
     offer.amount = Number(order.amount);
     offer.contract = contract;
     offer.status = status;
