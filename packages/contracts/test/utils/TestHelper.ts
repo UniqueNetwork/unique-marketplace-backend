@@ -2,10 +2,10 @@ import { Sr25519Account } from '@unique-nft/sr25519';
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { TKN } from './currency';
 import { upgrades, ethers } from 'hardhat';
-import { ContractHelpers, ContractHelpers__factory, Market__factory } from '../../typechain-types';
+import { ContractHelpers, ContractHelpers__factory, Market__factory, TestUpgradedMarket__factory } from '../../typechain-types';
 import SdkHelper from './SdkHelper';
 import testConfig from './testConfig';
-import { Wallet, HDNodeWallet } from 'ethers';
+import { Wallet, HDNodeWallet, ContractFactory, BaseContract } from 'ethers';
 import { MarketAccount, MarketHelper } from './MarketHelper';
 import { convertBigintToNumber, getNftContract, callSdk } from './helpers';
 import { Royalty, TokenId } from '@unique-nft/sdk';
@@ -76,6 +76,14 @@ export default class TestHelper {
     return MarketHelper.create(this.sdk.sdk, market);
   }
 
+  async upgradeMarket(marketAddress: string) {
+    const marketFactory = await ethers.getContractFactory('TestUpgradedMarket');
+    const contract = await upgrades.upgradeProxy(marketAddress, marketFactory);
+    await contract.waitForDeployment();
+
+    return TestUpgradedMarket__factory.connect(marketAddress, this.donor);
+  }
+
   async createFungibleCollection(decimals: number) {
     const funCollection = await this.sdk.createFungibleCollection({
       decimals,
@@ -85,11 +93,13 @@ export default class TestHelper {
     });
 
     const oneMillion = 1000_000;
-    const { error } = await callSdk(() => this.sdk.sdk.fungible.addTokens({
-      amount: oneMillion,
-      collectionId: funCollection.collectionId,
-      recipient: this.sdk.donor.address,
-    }));
+    const { error } = await callSdk(() =>
+      this.sdk.sdk.fungible.addTokens({
+        amount: oneMillion,
+        collectionId: funCollection.collectionId,
+        recipient: this.sdk.donor.address,
+      }),
+    );
 
     if (error) {
       console.error(error);
@@ -102,16 +112,20 @@ export default class TestHelper {
   async topUpFungibleBalance(collectionId: number, amount: bigint, recipient: string) {
     // for native token
     if (collectionId === 0) {
-      const { error } = await callSdk(() => this.sdk.sdk.balance.transfer({
-        amount: convertBigintToNumber(amount, 18),
-        destination: recipient,
-      }));
+      const { error } = await callSdk(() =>
+        this.sdk.sdk.balance.transfer({
+          amount: convertBigintToNumber(amount, 18),
+          destination: recipient,
+        }),
+      );
       if (error) throw Error('Cannot top up native balance');
     } else {
       // for fungible
       const { decimals } = await callSdk(() => this.sdk.sdk.fungible.getCollection({ collectionId }));
       const amountToNumber = convertBigintToNumber(amount, decimals);
-      const { error } = await callSdk(() => this.sdk.sdk.fungible.transferTokens({ collectionId, recipient, amount: amountToNumber }));
+      const { error } = await callSdk(() =>
+        this.sdk.sdk.fungible.transferTokens({ collectionId, recipient, amount: amountToNumber }),
+      );
       if (error) throw Error('Cannot top up fungible balance');
     }
   }
@@ -122,12 +136,12 @@ export default class TestHelper {
 
   async createNftCollectionV2(royalties?: Royalty[]) {
     return this.sdk.createNftCollection({
-      royalties
+      royalties,
     });
   }
 
-  async createNft(collectionId: number, owner: string) {
-    return this.sdk.createNft(collectionId, { owner });
+  async createNft(collectionId: number, owner: string, royalties?: Royalty[]) {
+    return this.sdk.createNft(collectionId, { owner, royalties });
   }
 
   async sponsorCollection(collectionId: number) {
