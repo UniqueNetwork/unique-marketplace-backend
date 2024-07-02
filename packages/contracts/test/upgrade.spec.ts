@@ -19,7 +19,7 @@ describe('Upgrade', () => {
     );
   });
 
-  it.only('can upgrade market with new features', async () => {
+  it('can upgrade market with new features', async () => {
     const PRICE = TKN(10, 18);
     const PRICE2 = TKN(11, 18);
     const CURRENCY = 0;
