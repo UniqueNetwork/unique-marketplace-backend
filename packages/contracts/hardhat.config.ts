@@ -24,10 +24,17 @@ const config: HardhatUserConfig = {
     unq: {
       url: appConfig.unq.rpcUrl,
       accounts: appConfig.accounts,
+      chainId: 8880,
+    },
+    qtz: {
+      url: appConfig.qtz.rpcUrl,
+      accounts: appConfig.accounts,
+      chainId: 8881,
     },
     opal: {
       url: appConfig.opal.rpcUrl,
       accounts: appConfig.accounts,
+      chainId: 8882,
     },
   },
   mocha: {

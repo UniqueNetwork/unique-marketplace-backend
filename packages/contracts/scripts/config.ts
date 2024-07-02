@@ -13,6 +13,7 @@ export interface Config {
 
   unq: NetworkConfig;
   opal: NetworkConfig;
+  qtz: NetworkConfig;
 }
 
 const env: Record<string, any> = process.env;
@@ -28,6 +29,7 @@ function loadNetwork(prefix: string): NetworkConfig {
 export function loadConfig(): Config {
   return {
     unq: loadNetwork('SOL_UNQ'),
+    qtz: loadNetwork('SOL_QTZ'),
     opal: loadNetwork('SOL_OPAL'),
     accounts: env['SOL_ACCOUNTS'] ? env['SOL_ACCOUNTS'].split(',') : [],
     sdkBaseUrl: env['SOL_SDK_BASE_URL'],
