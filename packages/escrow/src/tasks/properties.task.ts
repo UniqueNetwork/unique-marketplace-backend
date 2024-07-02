@@ -228,14 +228,25 @@ export class PropertiesTask {
     }
 
     if (tokenData.token.media) {
-      tokenData.token.media.map((media) => {
-        source.add({
-          locale: null,
-          items: [media.url],
-          key: media.type,
-          type: TypeAttributToken.MediaURL,
+      if (Array.isArray(tokenData.token.media)) {
+        tokenData.token.media.map((media) => {
+          source.add({
+            locale: null,
+            items: [media.url],
+            key: media.type,
+            type: TypeAttributToken.ImageURL,
+          });
         });
-      });
+      } else {
+        Object.values(tokenData.token.media).map((media: TokenWithInfoV2Dto['media'][0]) => {
+          source.add({
+            locale: null,
+            items: [media.url],
+            key: media.type,
+            type: TypeAttributToken.ImageURL,
+          });
+        });
+      }
     }
 
     if (tokenData.token?.attributes) {
