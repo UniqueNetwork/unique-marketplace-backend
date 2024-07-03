@@ -41,3 +41,7 @@ Thumbs.db
 typechain-types
 
 .nx
+
+# Test contracts info
+.openzeppelin/*
+!.openzeppelin/production/
