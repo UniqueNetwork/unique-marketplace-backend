@@ -9,9 +9,12 @@ export abstract class DeployContractBase implements MigrationInterface {
   public abstract readonly ignore: boolean;
 
   public async up(queryRunner: QueryRunner): Promise<any> {
-    if (this.ignore) {
+    if (this.ignore || process.env.SKIP_CONTRACT_DEPLOY === 'true') {
+      console.log(`skipping contract ${this.version} deploy`);
+
       return;
     }
+
     console.log(`deploy contract, version: ${this.version}, feeValue: ${this.feeValue}`);
 
     const config = loadConfig();

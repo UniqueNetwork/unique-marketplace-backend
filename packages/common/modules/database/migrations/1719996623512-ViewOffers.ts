@@ -2,8 +2,8 @@ import { MigrationInterface, QueryRunner, SelectQueryBuilder } from 'typeorm';
 import { ViewOffers } from '../entities';
 import { DataSource } from 'typeorm/data-source/DataSource';
 
-export class ViewOffers1682699159580 implements MigrationInterface {
-  name: 'ViewOffers1682699159580';
+export class ViewOffers1719996623512 implements MigrationInterface {
+  name: 'ViewOffers1719996623512';
   public async up(queryRunner: QueryRunner): Promise<any> {
     await queryRunner.query(`
     CREATE OR REPLACE VIEW
