@@ -149,6 +149,7 @@
     "typescript": "^4.9.5"
   },
   "optionalDependencies": {
+    "@nrwl/nx-darwin-arm64": "^15.9.3",
     "@nrwl/nx-linux-x64-gnu": "^15.9.3"
   }
 }
