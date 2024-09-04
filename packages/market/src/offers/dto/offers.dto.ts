@@ -4,6 +4,7 @@ import { ContractDto } from './contract.dto';
 import { Exclude, Expose, plainToInstance, Type } from 'class-transformer';
 import { IsOptional } from 'class-validator';
 import { PaginationResult, SortingParameter, TokenDescription } from '../interfaces/offers.interface';
+import { TraitDto } from './trait.dto';
 
 export class OffersDto {
   @ApiProperty({ example: 200 })
@@ -140,10 +141,6 @@ export class OffersResultDto {
   itemsCount: number;
   @ApiProperty({ required: false })
   items: OfferEntityDto[];
-  @ApiProperty({ required: false, type: 'array' })
-  attributes?: Array<any>;
-  @ApiProperty({ required: false, type: 'array' })
-  attributesCount?: Array<any>;
 }
 
 export class OfferAttributes {
@@ -153,6 +150,13 @@ export class OfferAttributes {
   @ApiProperty({ description: 'Amount' })
   @Expose()
   amount: number;
+}
+
+export class OffersAttributesResultDto {
+  @ApiProperty({ required: false, isArray: true, type: TraitDto })
+  attributes?: Array<TraitDto>;
+  @ApiProperty({ required: false, isArray: true, type: OfferAttributes })
+  attributesCount?: Array<OfferAttributes>;
 }
 
 export class OfferSortingRequest {
