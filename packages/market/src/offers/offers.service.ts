@@ -42,10 +42,9 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     let collections = [];
 
     try {
-      offers = await this.viewOffersService.filter(searchOptions, pagination, sort);
+      offers = await this.viewOffersService.filterItems(searchOptions, pagination, sort);
       propertiesFilter = await this.searchInProperties(this.parserCollectionIdTokenId(offers.items));
       collections = await this.collections(this.getCollectionIds(offers.items));
-
       items = this.parseItems(offers.items, propertiesFilter, collections) as any as Array<ViewOffers>;
     } catch (e) {
       this.logger.error(e.message);
@@ -60,8 +59,27 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     return {
       ...offers.meta,
       items: items.map(OfferEntityDto.fromOffersEntity),
-      attributes: offers.attributes as Array<TraitDto>,
-      attributesCount: offers.attributesCount,
+    };
+  }
+
+  async getOffersAttributes(searchOptions: OffersFilter): Promise<any> {
+    let attributes;
+
+    try {
+      attributes = await this.viewOffersService.fetchAttributes(searchOptions);
+    } catch (e) {
+      this.logger.error(e.message);
+
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Something went wrong!',
+        error: e.message,
+      });
+    }
+
+    return {
+      attributes: attributes.attributes as Array<TraitDto>,
+      attributesCount: attributes.attributesCount,
     };
   }
 
