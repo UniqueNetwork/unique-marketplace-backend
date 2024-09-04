@@ -2,7 +2,7 @@ import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/com
 import { InjectRepository } from '@nestjs/typeorm';
 import { CollectionEntity, OfferEntity } from '@app/common/modules/database';
 import { DataSource, In, Repository } from 'typeorm';
-import { OfferEntityDto, OffersDto, OffersFilter } from './dto/offers.dto';
+import { OfferEntityDto, OffersAttributesResultDto, OffersDto, OffersFilter } from './dto/offers.dto';
 import { BaseService } from '@app/common/src/lib/base.service';
 import { ViewOffers } from '@app/common/modules/database/entities/offers-view.entity';
 import { TraitDto } from './dto/trait.dto';
@@ -42,10 +42,9 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     let collections = [];
 
     try {
-      offers = await this.viewOffersService.filter(searchOptions, pagination, sort);
+      offers = await this.viewOffersService.filterItems(searchOptions, pagination, sort);
       propertiesFilter = await this.searchInProperties(this.parserCollectionIdTokenId(offers.items));
       collections = await this.collections(this.getCollectionIds(offers.items));
-
       items = this.parseItems(offers.items, propertiesFilter, collections) as any as Array<ViewOffers>;
     } catch (e) {
       this.logger.error(e.message);
@@ -60,9 +59,21 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     return {
       ...offers.meta,
       items: items.map(OfferEntityDto.fromOffersEntity),
-      attributes: offers.attributes as Array<TraitDto>,
-      attributesCount: offers.attributesCount,
     };
+  }
+
+  async getOffersAttributes(searchOptions: OffersFilter): Promise<OffersAttributesResultDto> {
+    try {
+      return await this.viewOffersService.fetchAttributes(searchOptions);
+    } catch (e) {
+      this.logger.error(e.message);
+
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Something went wrong!',
+        error: e.message,
+      });
+    }
   }
 
   /**

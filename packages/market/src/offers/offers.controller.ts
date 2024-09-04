@@ -3,7 +3,7 @@ import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { OffersService } from './offers.service';
 import { readApiDocs } from '../utils/utils';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
-import { OfferEntityDto, OffersFilter, OffersResultDto } from './dto/offers.dto';
+import { OfferEntityDto, OffersAttributesResultDto, OffersFilter, OffersResultDto } from './dto/offers.dto';
 import { ParseOffersFilterPipe } from './pipes/offer-filter.pipe';
 import { SortingOfferRequest } from '@app/common/modules/types/requests';
 import { ParseSortFilterPipe } from './pipes/sort-order.pipe';
@@ -30,6 +30,18 @@ export class OffersController {
     const limit = pageSize > 100 ? 100 : pageSize;
     const pagination = { page, limit } as PaginationRouting;
     return await this.offersService.getOffers(offerFilter, pagination, sortFilter);
+  }
+
+  @Get('/offers-attributes')
+  @ApiOperation({
+    summary: 'Get attributes info',
+    description: readApiDocs('offers-get.md'),
+  })
+  @ApiResponse({ type: OffersAttributesResultDto, status: HttpStatus.OK })
+  async getOffersAttributes(
+    @Query(ParseOffersFilterPipe) offerFilter: OffersFilter,
+  ) {
+    return await this.offersService.getOffersAttributes(offerFilter);
   }
 
   @Get(':id')

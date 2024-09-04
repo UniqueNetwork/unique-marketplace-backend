@@ -2,8 +2,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 import { CollectionEntity, OfferEntity, TokensEntity } from '../entities';
 import { Address } from '@unique-nft/utils';
 
-export abstract class NormalizeAddress1688973356000 implements MigrationInterface {
-  name: `NormalizeAddress1688973356000`;
+export abstract class NormalizeAddress1719996623513 implements MigrationInterface {
+  name: `NormalizeAddress1719996623513`;
 
   public async up(queryRunner: QueryRunner): Promise<any> {
     await this.replaceAddress(queryRunner, TokensEntity, 'id', 'owner_token');

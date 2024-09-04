@@ -167,6 +167,7 @@ export class ViewOffersService {
     return this.bundleService.bundle(collectionId, tokenId);
   }
 
+  //Method for simultaneously fetching filtered items and attributes
   public async filter(offersFilter: OffersFilter, pagination: PaginationRouting, sort: SortingOfferRequest): Promise<any> {
     let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
     // Filert by collection id
@@ -200,6 +201,42 @@ export class ViewOffersService {
       items: itemQuery.items,
       attributes: this.parseAttributes(attributes),
       attributesCount,
+    };
+  }
+
+  public applyCommonFilters(queryFilter: SelectQueryBuilder<ViewOffers>, offersFilter: OffersFilter): any {
+    queryFilter = this.byCollectionId(queryFilter, offersFilter.collectionId);
+    queryFilter = this.byMaxPrice(queryFilter, offersFilter.maxPrice);
+    queryFilter = this.byMinPrice(queryFilter, offersFilter.minPrice);
+    queryFilter = this.bySeller(queryFilter, offersFilter.seller);
+    queryFilter = this.bySearch(queryFilter, offersFilter.searchText, offersFilter.searchLocale);
+    queryFilter = this.byFindAttributes(queryFilter, offersFilter.collectionId, offersFilter.attributes);
+    queryFilter = this.byNumberOfAttributes(queryFilter, offersFilter.numberOfAttributes);
+    return queryFilter;
+  }
+
+  public async fetchAttributes(offersFilter: OffersFilter) {
+    let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
+    queryFilter = this.applyCommonFilters(queryFilter, offersFilter);
+    const attributes = await this.byAttributes(queryFilter).getRawMany();
+    const attributesCount = await this.byAttributesCount(queryFilter);
+
+    return {
+      attributes: this.parseAttributes(attributes),
+      attributesCount,
+    };
+  }
+
+  public async filterItems(offersFilter: OffersFilter, pagination: PaginationRouting, sort: SortingOfferRequest): Promise<any> {
+    let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
+    queryFilter = this.applyCommonFilters(queryFilter, offersFilter);
+    queryFilter = this.prepareQuery(queryFilter);
+    queryFilter = this.sortBy(queryFilter, sort);
+    const itemQuery = await paginateRaw(queryFilter, pagination);
+
+    return {
+      meta: itemQuery.meta,
+      items: itemQuery.items,
     };
   }
 
