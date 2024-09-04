@@ -214,26 +214,26 @@ export class ViewOffersService {
     queryFilter = this.byNumberOfAttributes(queryFilter, offersFilter.numberOfAttributes);
     return queryFilter;
   }
-  
-  public async fetchAttributes(offersFilter: OffersFilter): Promise<any> {
+
+  public async fetchAttributes(offersFilter: OffersFilter) {
     let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
     queryFilter = this.applyCommonFilters(queryFilter, offersFilter);
     const attributes = await this.byAttributes(queryFilter).getRawMany();
     const attributesCount = await this.byAttributesCount(queryFilter);
-    
+
     return {
       attributes: this.parseAttributes(attributes),
       attributesCount,
     };
   }
-  
+
   public async filterItems(offersFilter: OffersFilter, pagination: PaginationRouting, sort: SortingOfferRequest): Promise<any> {
     let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
     queryFilter = this.applyCommonFilters(queryFilter, offersFilter);
     queryFilter = this.prepareQuery(queryFilter);
     queryFilter = this.sortBy(queryFilter, sort);
     const itemQuery = await paginateRaw(queryFilter, pagination);
-    
+
     return {
       meta: itemQuery.meta,
       items: itemQuery.items,

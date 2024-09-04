@@ -2,7 +2,7 @@ import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/com
 import { InjectRepository } from '@nestjs/typeorm';
 import { CollectionEntity, OfferEntity } from '@app/common/modules/database';
 import { DataSource, In, Repository } from 'typeorm';
-import { OfferEntityDto, OffersDto, OffersFilter } from './dto/offers.dto';
+import { OfferEntityDto, OffersAttributesResultDto, OffersDto, OffersFilter } from './dto/offers.dto';
 import { BaseService } from '@app/common/src/lib/base.service';
 import { ViewOffers } from '@app/common/modules/database/entities/offers-view.entity';
 import { TraitDto } from './dto/trait.dto';
@@ -62,11 +62,9 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     };
   }
 
-  async getOffersAttributes(searchOptions: OffersFilter): Promise<any> {
-    let attributes;
-
+  async getOffersAttributes(searchOptions: OffersFilter): Promise<OffersAttributesResultDto> {
     try {
-      attributes = await this.viewOffersService.fetchAttributes(searchOptions);
+      return await this.viewOffersService.fetchAttributes(searchOptions);
     } catch (e) {
       this.logger.error(e.message);
 
@@ -76,11 +74,6 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
         error: e.message,
       });
     }
-
-    return {
-      attributes: attributes.attributes as Array<TraitDto>,
-      attributesCount: attributes.attributesCount,
-    };
   }
 
   /**
