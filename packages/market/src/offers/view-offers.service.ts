@@ -211,15 +211,16 @@ export class ViewOffersService {
     queryFilter = this.bySeller(queryFilter, offersFilter.seller);
     queryFilter = this.bySearch(queryFilter, offersFilter.searchText, offersFilter.searchLocale);
     queryFilter = this.byFindAttributes(queryFilter, offersFilter.collectionId, offersFilter.attributes);
-    queryFilter = this.byNumberOfAttributes(queryFilter, offersFilter.numberOfAttributes);
     return queryFilter;
   }
 
   public async fetchAttributes(offersFilter: OffersFilter) {
     let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
     queryFilter = this.applyCommonFilters(queryFilter, offersFilter);
-    const attributes = await this.byAttributes(queryFilter).getRawMany();
     const attributesCount = await this.byAttributesCount(queryFilter);
+    queryFilter = this.byNumberOfAttributes(queryFilter, offersFilter.numberOfAttributes);
+  
+    const attributes = await this.byAttributes(queryFilter).getRawMany();
 
     return {
       attributes: this.parseAttributes(attributes),
@@ -230,6 +231,7 @@ export class ViewOffersService {
   public async filterItems(offersFilter: OffersFilter, pagination: PaginationRouting, sort: SortingOfferRequest): Promise<any> {
     let queryFilter = this.viewOffersRepository.createQueryBuilder('view_offers');
     queryFilter = this.applyCommonFilters(queryFilter, offersFilter);
+    queryFilter = this.byNumberOfAttributes(queryFilter, offersFilter.numberOfAttributes);
     queryFilter = this.prepareQuery(queryFilter);
     queryFilter = this.sortBy(queryFilter, sort);
     const itemQuery = await paginateRaw(queryFilter, pagination);
