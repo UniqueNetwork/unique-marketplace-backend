@@ -23,6 +23,15 @@ struct Currency {
     uint32 fee;
 }
 
+struct TokenCreate {
+    uint32 collectionId;
+    uint32 tokenId;
+    uint32 amount;
+    uint256 price;
+    uint32 currency;
+    CrossAddress seller;
+}
+
 contract Market is Initializable, OwnableUpgradeable {
     using ERC165Checker for address;
 
@@ -187,23 +196,14 @@ contract Market is Initializable, OwnableUpgradeable {
         marketFee = fee;
     }
 
-    /**
-     * Place an NFT or RFT token for sale. It must be pre-approved for transfers by this contract address.
-     *
-     * @param collectionId: ID of the token collection
-     * @param tokenId: ID of the token
-     * @param price: Price (with proper network currency decimals)
-     * @param amount: Number of token fractions to list (must always be 1 for NFT)
-     * @param seller: The seller cross-address (the beneficiary account to receive payment, may be different from transaction sender)
-     */
-    function put(
+    function _put(
         uint32 collectionId,
         uint32 tokenId,
         uint256 price,
         uint32 currency,
         uint32 amount,
         CrossAddress memory seller
-    ) external validCrossAddress(seller.eth, seller.sub) {
+    ) internal validCrossAddress(seller.eth, seller.sub) {
         validOwner(collectionId, tokenId, seller);
 
         if (price == 0) revert InvalidArgument("price must not be zero");
@@ -226,6 +226,51 @@ contract Market is Initializable, OwnableUpgradeable {
         orders[collectionId][tokenId] = order;
 
         emit TokenIsUpForSale(version, order);
+    }
+
+    /**
+     * Place an NFT or RFT token for sale. It must be pre-approved for transfers by this contract address.
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenId: ID of the token
+     * @param price: Price (with proper network currency decimals)
+     * @param amount: Number of token fractions to list (must always be 1 for NFT)
+     * @param seller: The seller cross-address (the beneficiary account to receive payment, may be different from transaction sender)
+     */
+    function put(
+        uint32 collectionId,
+        uint32 tokenId,
+        uint256 price,
+        uint32 currency,
+        uint32 amount,
+        CrossAddress memory seller
+    ) external validCrossAddress(seller.eth, seller.sub) {
+        _put(collectionId, tokenId, price, currency, amount, seller);
+    }
+    
+    /**
+     * Place multiple NFTs or RFT tokens for sale. Each must be pre-approved for transfers by this contract address.
+     *
+     * @param ordersData: Array of order data for multiple tokens, including collectionId, tokenId, price, amount, currency, and seller.
+     */
+    function putBatch(TokenCreate[] memory ordersData) external {
+        // MAX limit 50 tokens
+        if (ordersData.length > 50) {
+            revert InvalidArgument("Cannot process more than 50 tokens in a single batch");
+        }
+
+        for (uint256 i = 0; i < ordersData.length; i++) {
+            TokenCreate memory order = ordersData[i];
+
+            _put(
+                order.collectionId,
+                order.tokenId,
+                order.price,
+                order.currency,
+                order.amount,
+                order.seller
+            );
+        }
     }
 
     /**

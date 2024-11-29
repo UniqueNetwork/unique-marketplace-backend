@@ -10,7 +10,7 @@ export interface MarketOrder {
   collectionId: bigint | number;
   tokenId: bigint | number;
   price: bigint | number;
-  amount?: bigint | number;
+  amount: bigint | number;
   currency: bigint | number;
 }
 
@@ -28,6 +28,7 @@ export class MarketHelper {
   private lastOrderId = 0n;
 
   private sdk: Sdk;
+
 
   private constructor(sdk: Sdk, marketAddress: string, market: Market, marketSdk: IContract, abi: any) {
     this.contract = market;
@@ -92,6 +93,10 @@ export class MarketHelper {
     return this._approveNFT({ token, signer, isApprove: true });
   }
 
+  async approveAllNFTs(tokens: TokenId[], signer: MarketAccount) {
+    return this._approveAllNFTs({ tokens, signer, isApprove: true });
+  }
+
   async removeAllowanceNFT(token: TokenId, signer: MarketAccount) {
     return this._approveNFT({ token, signer, isApprove: false });
   }
@@ -120,6 +125,19 @@ export class MarketHelper {
 
     const handleResult = await this.handleTransactionResponse(response);
     this.lastOrderId++;
+
+    return handleResult;
+  }
+
+  async putBatch(putArgs: MarketOrder[], signer: MarketAccount) {
+    const response =
+      signer instanceof HDNodeWallet
+        ? await this.putBatchEthers(putArgs, signer)
+        : await this.putBatchSdk(putArgs, signer);
+
+    const handleResult = await this.handleTransactionResponse(response);
+  
+    this.lastOrderId += BigInt(putArgs.length);
 
     return handleResult;
   }
@@ -301,12 +319,37 @@ export class MarketHelper {
     return this.handleTransactionResponse(response);
   }
 
+  private async _approveAllNFTs(args: { tokens: TokenId[]; isApprove?: boolean; signer: MarketAccount }) {
+    const { tokens, signer } = args;
+    const isApprove = args.isApprove ?? true;
+  
+    let response;
+  
+    if (signer instanceof HDNodeWallet) {
+      response = await this.approveAllNftsEthers(tokens, signer, isApprove);
+    } else {
+      let index = 0;
+      for (const token of tokens) {
+        const approveRes = await this.approveNftSdk(token, signer, isApprove);
+        if (index === tokens.length - 1) {
+          //TO DO update
+          response = approveRes;
+        }
+      
+        index++;
+      }
+    }
+    if (!response) throw Error('Approve failed');
+  
+    return this.handleTransactionResponse(response);
+  }
+  
+
   private async approveNftEthers(token: TokenId, signer: HDNodeWallet, isApprove: boolean) {
     const collectionContract = await getNftContract(token.collectionId);
     const approvedAddress = isApprove ? this.address : signer.address;
     return collectionContract.connect(signer).approve(approvedAddress, token.tokenId, { gasLimit: 300_000 });
   }
-
   private async approveNftSdk(token: TokenId, signer: Account, isApprove: boolean) {
     return callSdk(() => this.sdk.token.approve(
       {
@@ -320,6 +363,12 @@ export class MarketHelper {
         signer: signer.signer,
       },
     ));
+  }
+
+  private async approveAllNftsEthers(token: TokenId[], signer: HDNodeWallet, isApprove: boolean) {
+    const collectionContract = await getNftContract(token[0].collectionId);
+    const approvedAddress = isApprove ? this.address : signer.address;
+    return collectionContract.connect(signer).setApprovalForAll(approvedAddress, true, { gasLimit: 1000_000 });
   }
 
   private async buyEthers(
@@ -401,6 +450,50 @@ export class MarketHelper {
         signer: signer.signer,
       },
     ));
+  }
+
+
+  private async putBatchEthers(putArgs: MarketOrder[], signer: HDNodeWallet) {
+    const ordersData = putArgs.map((order) => ({
+      collectionId: order.collectionId,
+      tokenId: order.tokenId,
+      amount: order.amount,
+      price: order.price,
+      currency: order.currency,
+      seller: { eth: signer.address, sub: 0 },
+    }));
+  
+    return this.contract.connect(signer).putBatch(ordersData, { gasLimit: 1_000_000 });
+  }
+
+  private async putBatchSdk(putArgs: MarketOrder[], signer: Account) {
+    if (!signer.address) throw Error('Signer has no address');
+
+    const publicAddress = Address.extract.substratePublicKey(signer.address);
+
+    const ordersData = putArgs.map((order) => [
+      order.collectionId,
+      order.tokenId,
+      order.amount,
+      order.price.toString(),
+      order.currency,
+      ['0x0000000000000000000000000000000000000000', publicAddress],
+    ]);
+  
+    return callSdk(
+      () =>
+        this.contractSdk.send(
+          {
+            funcName: 'putBatch',
+            args: [ordersData],
+            gasLimit: 1_000_000,
+            address: signer.address,
+          },
+          {
+            signer: signer.signer,
+          },
+        ),
+    );
   }
 
   private async handleTransactionResponse<T>(response: TransactionResponse<T>): Promise<{ hash: string; fee: bigint }> {
