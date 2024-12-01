@@ -106,6 +106,21 @@ contract Market is Initializable, OwnableUpgradeable {
         }
     }
 
+    function validApprove(uint32 collectionId, uint32 tokenId, CrossAddress memory seller) private view {
+        IERC721 erc721 = getErc721(collectionId);
+
+        address ethAddress;
+        if (seller.eth != address(0)) {
+            ethAddress = seller.eth;
+        } else {
+            ethAddress = payable(address(uint160(seller.sub >> 96)));
+        }
+
+        if ((erc721.getApproved(tokenId) != address(this)) && !erc721.isApprovedForAll(ethAddress, address(this))) {
+            revert TokenIsNotApproved();
+        }
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -219,7 +234,7 @@ contract Market is Initializable, OwnableUpgradeable {
         IERC721 erc721 = getErc721(collectionId);
 
         if (erc721.ownerOf(tokenId) != msg.sender) revert SellerIsNotOwner();
-        if (erc721.getApproved(tokenId) != address(this)) revert TokenIsNotApproved();
+        validApprove(collectionId, tokenId, seller);
 
         Order memory order = Order(idCount++, collectionId, tokenId, amount, price, currency, seller);
 

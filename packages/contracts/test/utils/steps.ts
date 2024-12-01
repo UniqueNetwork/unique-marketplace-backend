@@ -1,4 +1,5 @@
 import { TokenId } from '@unique-nft/sdk';
+import { HDNodeWallet } from 'ethers';
 import { MarketAccount, MarketHelper } from './MarketHelper';
 import { expect } from 'chai';
 
@@ -63,19 +64,14 @@ export const canPutOnSaleBatch = async (
 ) => {
   if (!seller.address) throw Error('Cannot get account address');
 
-  //1. Approve all tokens if not approved
-  // for (const { token } of tokens) {
-  //   const approved = await marketplace.isApproved(token, seller.address);
-  //   if (!approved) {
-  //     const approveTx = await marketplace.approveNFT(token, seller);
- 
-  //     expect(await marketplace.isApproved(token, seller.address)).to.be.true;
-  //   }
-  // }
-  const approved = await marketplace.approveAllNFTs(tokens.map(({token}) => ({...token})), seller);
+  await marketplace.approveAllNFTs(tokens.map(({token}) => ({...token})), seller);
 
-  for (const { token } of tokens) {
-    expect(await marketplace.isApproved(token, seller.address)).to.be.true;
+  if (seller instanceof HDNodeWallet) {
+    expect(await marketplace.getApproveForAllEthers(tokens[0].token.collectionId, seller)).to.be.true;
+  } else {
+    for (const { token } of tokens) {
+      expect(await marketplace.isApproved(token, seller.address)).to.be.true;
+    }
   }
 
   // 2. Prepare batch data

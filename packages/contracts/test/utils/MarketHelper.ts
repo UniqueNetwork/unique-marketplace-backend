@@ -326,7 +326,7 @@ export class MarketHelper {
     let response;
   
     if (signer instanceof HDNodeWallet) {
-      response = await this.approveAllNftsEthers(tokens, signer, isApprove);
+      response = await this.approveAllNftsEthers(tokens[0].collectionId, signer, isApprove);
     } else {
       let index = 0;
       for (const token of tokens) {
@@ -365,10 +365,15 @@ export class MarketHelper {
     ));
   }
 
-  private async approveAllNftsEthers(token: TokenId[], signer: HDNodeWallet, isApprove: boolean) {
-    const collectionContract = await getNftContract(token[0].collectionId);
+  private async approveAllNftsEthers(collectionId: number, signer: HDNodeWallet, isApprove: boolean) {
+    const collectionContract = await getNftContract(collectionId);
     const approvedAddress = isApprove ? this.address : signer.address;
     return collectionContract.connect(signer).setApprovalForAll(approvedAddress, true, { gasLimit: 1000_000 });
+  }
+
+  public async getApproveForAllEthers(collectionId: number, signer: HDNodeWallet) {
+    const collectionContract = await getNftContract(collectionId);
+    return collectionContract.connect(signer).isApprovedForAll(signer.address, this.address);
   }
 
   private async buyEthers(
