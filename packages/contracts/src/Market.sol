@@ -23,12 +23,12 @@ struct Currency {
     uint32 fee;
 }
 
-struct TokenCreate {
+struct TokenForOrder {
     uint32 collectionId;
     uint32 tokenId;
     uint32 amount;
-    uint256 price;
     uint32 currency;
+    uint256 price;
     CrossAddress seller;
 }
 
@@ -211,34 +211,35 @@ contract Market is Initializable, OwnableUpgradeable {
         marketFee = fee;
     }
 
-    function _put(
-        uint32 collectionId,
-        uint32 tokenId,
-        uint256 price,
-        uint32 currency,
-        uint32 amount,
-        CrossAddress memory seller
-    ) internal validCrossAddress(seller.eth, seller.sub) {
-        validOwner(collectionId, tokenId, seller);
+    function _put(TokenForOrder memory orderData) internal validCrossAddress(orderData.seller.eth, orderData.seller.sub) {
+        validOwner(orderData.collectionId, orderData.tokenId, orderData.seller);
 
-        if (price == 0) revert InvalidArgument("price must not be zero");
+        if (orderData.price == 0) revert InvalidArgument("price must not be zero");
 
-        if (!availableCurrencies[currency].isAvailable) revert InvalidArgument("currency in not available");
+        if (!availableCurrencies[orderData.currency].isAvailable) revert InvalidArgument("currency is not available");
 
-        if (amount == 0) revert InvalidArgument("amount must not be zero");
+        if (orderData.amount == 0) revert InvalidArgument("amount must not be zero");
 
-        if (blacklist[collectionId]) revert CollectionInBlacklist();
+        if (blacklist[orderData.collectionId]) revert CollectionInBlacklist();
 
-        if (orders[collectionId][tokenId].price > 0) revert TokenIsAlreadyOnSale();
+        if (orders[orderData.collectionId][orderData.tokenId].price > 0) revert TokenIsAlreadyOnSale();
 
-        IERC721 erc721 = getErc721(collectionId);
+        IERC721 erc721 = getErc721(orderData.collectionId);
 
-        if (erc721.ownerOf(tokenId) != msg.sender) revert SellerIsNotOwner();
-        validApprove(collectionId, tokenId, seller);
+        validApprove(orderData.collectionId, orderData.tokenId, orderData.seller);
 
-        Order memory order = Order(idCount++, collectionId, tokenId, amount, price, currency, seller);
 
-        orders[collectionId][tokenId] = order;
+        Order memory order = Order(
+            idCount++,
+            orderData.collectionId,
+            orderData.tokenId,
+            orderData.amount,
+            orderData.price,
+            orderData.currency,
+            orderData.seller
+        );
+
+        orders[orderData.collectionId][orderData.tokenId] = order;
 
         emit TokenIsUpForSale(version, order);
     }
@@ -246,21 +247,10 @@ contract Market is Initializable, OwnableUpgradeable {
     /**
      * Place an NFT or RFT token for sale. It must be pre-approved for transfers by this contract address.
      *
-     * @param collectionId: ID of the token collection
-     * @param tokenId: ID of the token
-     * @param price: Price (with proper network currency decimals)
-     * @param amount: Number of token fractions to list (must always be 1 for NFT)
-     * @param seller: The seller cross-address (the beneficiary account to receive payment, may be different from transaction sender)
+     * @param orderData: data for create single token, including collectionId, tokenId, price, amount, currency, and seller.
      */
-    function put(
-        uint32 collectionId,
-        uint32 tokenId,
-        uint256 price,
-        uint32 currency,
-        uint32 amount,
-        CrossAddress memory seller
-    ) external validCrossAddress(seller.eth, seller.sub) {
-        _put(collectionId, tokenId, price, currency, amount, seller);
+    function put(TokenForOrder memory orderData) external {
+        _put(orderData);
     }
     
     /**
@@ -268,23 +258,22 @@ contract Market is Initializable, OwnableUpgradeable {
      *
      * @param ordersData: Array of order data for multiple tokens, including collectionId, tokenId, price, amount, currency, and seller.
      */
-    function putBatch(TokenCreate[] memory ordersData) external {
+    function putBatch(TokenForOrder[] memory ordersData) external {
         // MAX limit 50 tokens
         if (ordersData.length > 50) {
             revert InvalidArgument("Cannot process more than 50 tokens in a single batch");
         }
 
-        for (uint256 i = 0; i < ordersData.length; i++) {
-            TokenCreate memory order = ordersData[i];
+        uint256 ordersDataLength = ordersData.length;
 
-            _put(
-                order.collectionId,
-                order.tokenId,
-                order.price,
-                order.currency,
-                order.amount,
-                order.seller
-            );
+        for (uint256 i = 0; i < ordersDataLength; ) {
+            TokenForOrder memory order = ordersData[i];
+
+            _put(order);
+
+            unchecked {
+                i++;
+            }
         }
     }
 

@@ -426,7 +426,7 @@ export class MarketHelper {
 
     return this.contract
       .connect(signer)
-      .put(collectionId, tokenId, price, currency, amount, { eth: signer.address, sub: 0 }, { gasLimit: 1_000_000 });
+      .put({collectionId, tokenId, price, currency, amount, seller: { eth: signer.address, sub: 0 }}, { gasLimit: 1_000_000 });
   }
 
   private async putSdk(putArgs: MarketOrder & { signer: Account }) {
@@ -441,12 +441,14 @@ export class MarketHelper {
       {
         funcName: 'put',
         args: [
-          collectionId,
-          tokenId,
-          price.toString(),
-          currency,
-          amount,
-          ['0x0000000000000000000000000000000000000000', publicAddress],
+          {
+            collectionId,
+            tokenId,
+            price: price.toString(),
+            currency,
+            amount,
+            seller: ['0x0000000000000000000000000000000000000000', publicAddress],
+          }
         ],
         gasLimit: 300_000,
         address: signer.address,
@@ -480,8 +482,8 @@ export class MarketHelper {
       order.collectionId,
       order.tokenId,
       order.amount,
-      order.price.toString(),
       order.currency,
+      order.price.toString(),
       ['0x0000000000000000000000000000000000000000', publicAddress],
     ]);
   

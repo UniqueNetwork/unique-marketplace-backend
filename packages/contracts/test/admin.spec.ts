@@ -135,7 +135,7 @@ describe('Admin', () => {
     const newToken = await helper.createNft(newCollection.collectionId, seller.address);
 
     await marketplace.addToBlackList(newCollection.collectionId);
-    await expect(marketplace.put({...newToken, currency: 0, price: PRICE, signer: seller}))
+    await expect(marketplace.put({...newToken, currency: 0, price: PRICE, signer: seller, amount: 1}))
       .rejectedWith('CollectionInBlacklist');
     await marketplace.removeFromBlacklist(newCollection.collectionId);
     await canPutOnSale(seller, newToken, PRICE, 0, marketplace)
@@ -151,7 +151,7 @@ describe('Admin', () => {
     const newToken = await helper.createNft(newCollection.collectionId, seller.address);
 
     await marketplace.addToBlackList(newCollection.collectionId, newAdmin);
-    await expect(marketplace.put({...newToken, currency: 0, price: PRICE, signer: seller}))
+    await expect(marketplace.put({...newToken, currency: 0, price: PRICE, signer: seller, amount: 1}))
       .rejectedWith('CollectionInBlacklist');
     await marketplace.removeFromBlacklist(newCollection.collectionId, newAdmin);
     await canPutOnSale(seller, newToken, PRICE, 0, marketplace)

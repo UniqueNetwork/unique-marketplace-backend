@@ -78,6 +78,7 @@ async function canPutOnSaleAndBuy(seller: MarketAccount, buyer: MarketAccount, p
     currency: currencyId,
     price: price,
     signer: seller,
+    amount: 1,
   });
 
   // 3. Check the order

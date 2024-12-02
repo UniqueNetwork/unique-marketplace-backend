@@ -24,8 +24,6 @@
     "tools:generate:docs": "ts-node tools/generate-docs.ts",
     "generate:client:api": "npx ts-node --project tools/tsconfig.tools.json tools/generate-client-api.ts",
     "sol:test": "npx hardhat test --config ./packages/contracts/hardhat-test.config.ts",
-    "sol:test:put": "npx hardhat test packages/contracts/test/put.spec.ts --config ./packages/contracts/hardhat-test.config.ts",
-    "sol:test:put-batch": "npx hardhat test packages/contracts/test/put-batch.spec.ts --config ./packages/contracts/hardhat-test.config.ts",
     "sol:test:debug": "yarn hardhat test --no-compile --network test --config ./packages/contracts/hardhat-test.config.ts",
     "sol:script:debug": "yarn hardhat run --no-compile --config ./packages/contracts/hardhat.config.ts",
     "sol:compile": "npx hardhat compile --config ./packages/contracts/hardhat.config.ts --force",
@@ -153,6 +151,5 @@
   "optionalDependencies": {
     "@nrwl/nx-darwin-arm64": "^15.9.3",
     "@nrwl/nx-linux-x64-gnu": "^15.9.3"
-  },
-  "packageManager": "yarn@1.22.22+sha256.c17d3797fb9a9115bf375e31bfd30058cac6bc9c3b8807a3d8cb2094794b51ca"
+  }
 }
