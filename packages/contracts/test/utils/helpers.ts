@@ -40,30 +40,34 @@ export const crossAddressFromAddress = (address: string): CrossAddress => {
 };
 
 /**
- * Call SDK and retry on ECONNRESET
- * @param sdkCall 
- * @returns 
+ * Call SDK and retry on ECONNRESET with optional retry limit and backoff
+ * @param sdkCall The SDK call to be executed
+ * @param maxRetries Maximum retry attempts (default: 3)
+ * @returns The result of the SDK call
  */
-export const callSdk = async <T>(sdkCall: (...args: unknown[]) => Promise<T>) => {
+export const callSdk = async <T>(sdkCall: (...args: unknown[]) => Promise<T>, maxRetries = 3): Promise<T> => {
   let retry = 0;
-  let result: T | undefined;
 
-  while (retry <= 3) {
+  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  while (retry <= maxRetries) {
     try {
-      result = await sdkCall();
-      return result;
+      const result = await sdkCall();
+      return result; // Return if successful
     } catch (error) {
-      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-      console.log((error as any).code);
-      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-      if (isAxiosError(error) && error.code! === 'ECONNRESET') {
+      console.error('Error encountered:', error);
+
+      if (isAxiosError(error) && error.code === 'ECONNRESET') {
         retry++;
-        console.log('ECONNRESET retry', retry);
-      } else {
-        throw error;
+        console.log(`ECONNRESET retry ${retry}/${maxRetries}`);
+        if (retry <= maxRetries) {
+          await delay(100 * retry); // Optional backoff
+          continue; // Retry
+        }
       }
+      throw error; // Rethrow non-ECONNRESET errors or after max retries
     }
   }
 
   throw new Error('Maximum retry attempts exceeded');
-} 
+};

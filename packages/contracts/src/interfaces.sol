@@ -6,9 +6,36 @@ struct CrossAddress {
     uint256 sub;
 }
 
+struct Order {
+    uint32 id;
+    uint32 collectionId;
+    uint32 tokenId;
+    uint32 amount;
+    uint256 price;
+    uint32 currency;
+    CrossAddress seller;
+}
+
+struct Currency {
+    bool isAvailable;
+    uint32 collectionId;
+    uint32 fee;
+}
+
+struct TokenForOrder {
+    uint32 collectionId;
+    uint32 tokenId;
+    uint32 amount;
+    uint32 currency;
+    uint256 price;
+    CrossAddress seller;
+}
+
 interface IERC721 {
     function ownerOf(uint256 tokenId) external view returns (address owner);
+
     function getApproved(uint256 tokenId) external view returns (address operator);
+
     function isApprovedForAll(address owner, address operator) external view returns (bool);
 }
 
