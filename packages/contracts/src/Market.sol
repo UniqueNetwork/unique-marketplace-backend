@@ -5,34 +5,10 @@ import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {IUniqueRoyaltyHelper, RoyaltyAmount} from "./royalty/interfaces.sol";
-import {ICollectionHelpers, IUniqueNFT, IUniqueFungible, IERC721, CrossAddress} from "./interfaces.sol";
+import {ICollectionHelpers, IUniqueNFT, IUniqueFungible, IERC721, CrossAddress, Order, Currency, TokenForOrder} from "./interfaces.sol";
+import {IMarket} from "./IMarket.sol";
 
-struct Order {
-    uint32 id;
-    uint32 collectionId;
-    uint32 tokenId;
-    uint32 amount;
-    uint256 price;
-    uint32 currency;
-    CrossAddress seller;
-}
-
-struct Currency {
-    bool isAvailable;
-    uint32 collectionId;
-    uint32 fee;
-}
-
-struct TokenForOrder {
-    uint32 collectionId;
-    uint32 tokenId;
-    uint32 amount;
-    uint32 currency;
-    uint256 price;
-    CrossAddress seller;
-}
-
-contract Market is Initializable, OwnableUpgradeable {
+contract Market is IMarket, Initializable, OwnableUpgradeable {
     using ERC165Checker for address;
 
     uint32 public constant version = 0;
@@ -49,31 +25,6 @@ contract Market is Initializable, OwnableUpgradeable {
     mapping(address => bool) public admins;
     mapping(uint256 => Currency) private availableCurrencies;
     IUniqueRoyaltyHelper private royaltyHelpers;
-
-    event TokenIsUpForSale(uint32 version, Order item);
-    event TokenPriceChanged(uint32 version, Order item);
-    event TokenRevoke(uint32 version, Order item, uint32 amount);
-    event TokenIsApproved(uint32 version, Order item);
-    event TokenIsPurchased(
-        uint32 version,
-        Order item,
-        uint32 salesAmount,
-        CrossAddress buyer,
-        RoyaltyAmount[] royalties
-    );
-
-    error InvalidArgument(string info);
-    error InvalidMarketFee();
-    error SellerIsNotOwner();
-    error TokenIsAlreadyOnSale();
-    error TokenIsNotApproved();
-    error CollectionNotFound();
-    error CollectionNotSupportedERC721();
-    error OrderNotFound();
-    error TooManyAmountRequested();
-    error NotEnoughMoneyError();
-    error InvalidRoyaltiesError(uint256 totalRoyalty);
-    error CollectionInBlacklist();
 
     modifier onlyAdmin() {
         require(msg.sender == this.owner() || admins[msg.sender], "Only admin can");
@@ -211,7 +162,9 @@ contract Market is Initializable, OwnableUpgradeable {
         marketFee = fee;
     }
 
-    function _put(TokenForOrder memory orderData) internal validCrossAddress(orderData.seller.eth, orderData.seller.sub) {
+    function _put(
+        TokenForOrder memory orderData
+    ) internal validCrossAddress(orderData.seller.eth, orderData.seller.sub) {
         validOwner(orderData.collectionId, orderData.tokenId, orderData.seller);
 
         if (orderData.price == 0) revert InvalidArgument("price must not be zero");
@@ -224,10 +177,7 @@ contract Market is Initializable, OwnableUpgradeable {
 
         if (orders[orderData.collectionId][orderData.tokenId].price > 0) revert TokenIsAlreadyOnSale();
 
-        IERC721 erc721 = getErc721(orderData.collectionId);
-
         validApprove(orderData.collectionId, orderData.tokenId, orderData.seller);
-
 
         Order memory order = Order(
             idCount++,
@@ -252,7 +202,7 @@ contract Market is Initializable, OwnableUpgradeable {
     function put(TokenForOrder memory orderData) external {
         _put(orderData);
     }
-    
+
     /**
      * Place multiple NFTs or RFT tokens for sale. Each must be pre-approved for transfers by this contract address.
      *
