@@ -78,6 +78,7 @@ async function canPutOnSaleAndBuy(seller: MarketAccount, buyer: MarketAccount, p
     currency: currencyId,
     price: price,
     signer: seller,
+    amount: 1,
   });
 
   // 3. Check the order
@@ -92,6 +93,7 @@ async function canPutOnSaleAndBuy(seller: MarketAccount, buyer: MarketAccount, p
   const buyTx = await marketplace.buy({
     collectionId: token.collectionId,
     tokenId: token.tokenId,
+    amount: 1,
     price: price,
     signer: buyer,
   });

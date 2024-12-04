@@ -45,7 +45,7 @@ describe('Market commission', () => {
 
     const marketBalanceBefore = await helper.getBalance(marketplace.address);
     // Buy:
-    const { fee: sponsoredFee } = await marketplace.buy({ ...nft, signer: buyer, price: TOKEN_PRICE });
+    const { fee: sponsoredFee } = await marketplace.buy({ ...nft, signer: buyer, price: TOKEN_PRICE, amount: 1 });
 
     const marketBalanceAfter = await helper.getBalance(marketplace.address);
     const sellerBalanceAfter = await helper.getBalance(seller.address, UNQ_CURRENCY);
@@ -74,7 +74,7 @@ describe('Market commission', () => {
 
     // Approve fungible and buy
     await marketplace.approveFungible(CURRENCY_WITH_FEE, TOKEN_PRICE, buyer);
-    await marketplace.buy({ ...nft, signer: buyer, price: TOKEN_PRICE });
+    await marketplace.buy({ ...nft, signer: buyer, price: TOKEN_PRICE, amount: 1 });
 
     const marketBalanceAfter = await helper.getBalance(marketplace.address, CURRENCY_WITH_FEE);
     const sellerBalanceAfter = await helper.getBalance(seller.address, CURRENCY_WITH_FEE);
@@ -109,7 +109,7 @@ describe('Market commission', () => {
       ]);
       await canPutOnSale(seller, nftWithRoyalties, TOKEN_PRICE, NATIVE_CURRENCY, marketplaceWithoutFee);
 
-      await marketplaceWithoutFee.buy({ ...nftWithRoyalties, signer: buyer, price: TOKEN_PRICE });
+      await marketplaceWithoutFee.buy({ ...nftWithRoyalties, signer: buyer, price: TOKEN_PRICE, amount: 1 });
 
       const sellerBalanceAfter = await helper.getBalance(seller.address, NATIVE_CURRENCY);
       const buyerBalanceAfter = await helper.getBalance(buyer.address, NATIVE_CURRENCY);
@@ -142,7 +142,7 @@ describe('Market commission', () => {
       await canPutOnSale(seller, nftWithRoyalties, TOKEN_PRICE, CURRENCY, marketplaceWithoutFee);
 
       await marketplaceWithoutFee.approveFungible(CURRENCY, TOKEN_PRICE, buyer);
-      await marketplaceWithoutFee.buy({ ...nftWithRoyalties, signer: buyer, price: TOKEN_PRICE });
+      await marketplaceWithoutFee.buy({ ...nftWithRoyalties, signer: buyer, price: TOKEN_PRICE, amount: 1 });
 
       const sellerBalanceAfter = await helper.getBalance(seller.address, CURRENCY);
       const buyerBalanceAfter = await helper.getBalance(buyer.address, CURRENCY);
@@ -176,7 +176,12 @@ describe('Market commission', () => {
 
       const marketBalanceBefore = await helper.getBalance(marketWithRoyalties.address);
       // Buy:
-      const { fee: sponsoredFee } = await marketWithRoyalties.buy({ ...nftWithRoyalties, signer: buyer, price: TOKEN_PRICE });
+      const { fee: sponsoredFee } = await marketWithRoyalties.buy({
+        ...nftWithRoyalties,
+        signer: buyer,
+        price: TOKEN_PRICE,
+        amount: 1,
+      });
 
       const marketBalanceAfter = await helper.getBalance(marketWithRoyalties.address);
       const sellerBalanceAfter = await helper.getBalance(seller.address, UNQ_CURRENCY);

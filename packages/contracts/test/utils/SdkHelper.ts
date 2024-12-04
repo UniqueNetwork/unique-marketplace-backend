@@ -69,11 +69,11 @@ export default class SdkHelper {
   async sponsorCollection(collectionId: number) {
     if (!this.donor.address) throw Error('no donor');
     const donorAddress = this.donor.address;
-    const setSponsorship = await callSdk(() => this.sdk.collection.setSponsorship({collectionId, newSponsor: donorAddress}))
+    const setSponsorship = await callSdk(() => this.sdk.collection.setSponsorship({ collectionId, newSponsor: donorAddress }));
     await handleSdkResponse(setSponsorship);
-    const confirmSponsoring = await callSdk(() => this.sdk.collection.confirmSponsorship({collectionId}));
+    const confirmSponsoring = await callSdk(() => this.sdk.collection.confirmSponsorship({ collectionId }));
     await handleSdkResponse(confirmSponsoring);
-    const setLimits = await this.sdk.collection.setLimits({collectionId, limits: {sponsorTransferTimeout: 0}})
+    const setLimits = await this.sdk.collection.setLimits({ collectionId, limits: { sponsorTransferTimeout: 0 } });
     await handleSdkResponse(setLimits);
   }
 
@@ -83,10 +83,13 @@ export default class SdkHelper {
   }
 
   async createMultipleNfts(collectionId: number, tokens: Omit<CreateTokenV2ArgsDto, 'address'>[]) {
-    await callSdk(() => this.sdk.token.createMultiple({
-      collectionId,
-      tokens,
-    }));
+    const result = await callSdk(() =>
+      this.sdk.token.createMultiple({
+        collectionId,
+        tokens,
+      }),
+    );
+    return handleSdkResponse(result);
   }
 
   async getBalanceOf(address: string, collectionId = 0): Promise<bigint> {

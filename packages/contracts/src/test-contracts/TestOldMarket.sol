@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-// NOTICE: contract to test upgrades
-// upgraded stuff prefixed with TEST
-
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -18,7 +15,6 @@ struct Order {
     uint256 price;
     uint32 currency;
     CrossAddress seller;
-    uint256 TEST_CAN_ADD_NEW_PROP_TO_STRUCT;
 }
 
 struct Currency {
@@ -27,14 +23,13 @@ struct Currency {
     uint32 fee;
 }
 
-contract TestUpgradedMarket is Initializable, OwnableUpgradeable {
+contract TestOldMarket is Initializable, OwnableUpgradeable {
     using ERC165Checker for address;
 
     uint32 public constant version = 0;
     uint32 public constant buildVersion = 8;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
-    uint256 public constant TEST_CAN_ADD_NEW_MAGIC_CONSTANT = 42;
     ICollectionHelpers private constant collectionHelpers =
         ICollectionHelpers(0x6C4E9fE1AE37a41E93CEE429e8E1881aBdcbb54F);
 
@@ -57,7 +52,6 @@ contract TestUpgradedMarket is Initializable, OwnableUpgradeable {
         CrossAddress buyer,
         RoyaltyAmount[] royalties
     );
-    event TEST_CAN_ADD_NEW_EVENT_AND_CHANGE_METHOD();
 
     error InvalidArgument(string info);
     error InvalidMarketFee();
@@ -227,24 +221,41 @@ contract TestUpgradedMarket is Initializable, OwnableUpgradeable {
         if (erc721.ownerOf(tokenId) != msg.sender) revert SellerIsNotOwner();
         if (erc721.getApproved(tokenId) != address(this)) revert TokenIsNotApproved();
 
-        Order memory order = Order(
-            idCount++,
-            collectionId,
-            tokenId,
-            amount,
-            price,
-            currency,
-            seller,
-            TEST_CAN_ADD_NEW_MAGIC_CONSTANT
-        );
+        Order memory order = Order(idCount++, collectionId, tokenId, amount, price, currency, seller);
 
         orders[collectionId][tokenId] = order;
 
         emit TokenIsUpForSale(version, order);
     }
 
-    function changePrice() external {
-        emit TEST_CAN_ADD_NEW_EVENT_AND_CHANGE_METHOD();
+    /**
+     * Change NFT price
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenId: ID of the token
+     * @param price: New Price (with proper network currency decimals)
+     */
+    function changePrice(uint32 collectionId, uint32 tokenId, uint256 price, uint32 currency) external {
+        if (price == 0) {
+            revert InvalidArgument("price must not be zero");
+        }
+
+        Order storage order = orders[collectionId][tokenId];
+
+        if (order.price == 0) {
+            revert OrderNotFound();
+        }
+
+        if (!availableCurrencies[currency].isAvailable) {
+            revert InvalidArgument("currency in not available");
+        }
+
+        validOwner(collectionId, tokenId, order.seller);
+
+        order.price = price;
+        order.currency = currency;
+
+        emit TokenPriceChanged(version, order);
     }
 
     // /**
