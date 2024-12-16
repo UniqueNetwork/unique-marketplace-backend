@@ -1,6 +1,6 @@
 import { Address } from '@unique-nft/utils';
 import { HDNodeWallet, ContractTransactionResponse } from 'ethers';
-import { Market, Market__factory } from '../../typechain-types';
+import { MarketV2, MarketV2__factory } from '../../typechain-types';
 import { Account, TokenId, ExtrinsicResultResponse, Sdk } from '@unique-nft/sdk/full';
 import { expect } from 'chai';
 import { convertBigintToNumber, crossAddressFromAddress, getFungibleContract, getNftContract, callSdk } from './helpers';
@@ -21,7 +21,7 @@ export type MarketAccount = HDNodeWallet | Account;
 export type CrossAddress = { eth: string; sub: bigint };
 
 export class MarketHelper {
-  readonly contract: Market;
+  readonly contract: MarketV2;
   readonly contractSdk: IContract;
   readonly address: string;
   readonly abi: any;
@@ -29,7 +29,7 @@ export class MarketHelper {
 
   private sdk: Sdk;
 
-  private constructor(sdk: Sdk, marketAddress: string, market: Market, marketSdk: IContract, lastOrderId: bigint, abi: any) {
+  private constructor(sdk: Sdk, marketAddress: string, market: MarketV2, marketSdk: IContract, lastOrderId: bigint, abi: any) {
     this.contract = market;
     this.address = marketAddress;
     this.sdk = sdk;
@@ -38,9 +38,9 @@ export class MarketHelper {
     this.lastOrderId = lastOrderId;
   }
 
-  static async create(sdk: Sdk, market: Market) {
+  static async create(sdk: Sdk, market: MarketV2) {
     const marketAddress = await market.getAddress();
-    const abi = JSON.parse(JSON.stringify(Market__factory.abi)).map((o: any) => {
+    const abi = JSON.parse(JSON.stringify(MarketV2__factory.abi)).map((o: any) => {
       if (!o.outputs) o.outputs = [];
       return o;
     });

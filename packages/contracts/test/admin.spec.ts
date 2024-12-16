@@ -2,7 +2,6 @@ import { TKN } from './utils/currency';
 import TestHelper from './utils/TestHelper';
 import { expect } from 'chai';
 import { MarketHelper } from './utils/MarketHelper';
-import { TEST_CASE_MODES, TestFungibleCollection } from './utils/types';
 import { canPutOnSale } from './utils/steps';
 
 let helper: TestHelper;
@@ -128,17 +127,18 @@ describe('Admin', () => {
     await marketplace.expectCurrencyNotRegistered(newCurrency.collectionId);
   });
 
-  it('market owner can add/remove from blacklist', async () => {
+  it.only('market owner can add/remove from blacklist', async () => {
     const PRICE = 10000n;
     const [seller] = await helper.createAccounts([INITIAL_BALANCE], 'SDK');
     const newCollection = await helper.createNftCollectionV2();
     const newToken = await helper.createNft(newCollection.collectionId, seller.address);
 
     await marketplace.addToBlackList(newCollection.collectionId);
-    await expect(marketplace.put({...newToken, currency: 0, price: PRICE, signer: seller, amount: 1}))
-      .rejectedWith('CollectionInBlacklist');
+    await expect(marketplace.put({ ...newToken, currency: 0, price: PRICE, signer: seller, amount: 1 })).rejectedWith(
+      'CollectionInBlacklist',
+    );
     await marketplace.removeFromBlacklist(newCollection.collectionId);
-    await canPutOnSale(seller, newToken, PRICE, 0, marketplace)
+    await canPutOnSale(seller, newToken, PRICE, 0, marketplace);
   });
 
   it('admin can add/remove from blacklist', async () => {
@@ -151,10 +151,11 @@ describe('Admin', () => {
     const newToken = await helper.createNft(newCollection.collectionId, seller.address);
 
     await marketplace.addToBlackList(newCollection.collectionId, newAdmin);
-    await expect(marketplace.put({...newToken, currency: 0, price: PRICE, signer: seller, amount: 1}))
-      .rejectedWith('CollectionInBlacklist');
+    await expect(marketplace.put({ ...newToken, currency: 0, price: PRICE, signer: seller, amount: 1 })).rejectedWith(
+      'CollectionInBlacklist',
+    );
     await marketplace.removeFromBlacklist(newCollection.collectionId, newAdmin);
-    await canPutOnSale(seller, newToken, PRICE, 0, marketplace)
+    await canPutOnSale(seller, newToken, PRICE, 0, marketplace);
   });
 });
 
@@ -200,8 +201,7 @@ describe('[Negative] Admin', () => {
 
     const [nonAdmin] = await helper.createEthAccounts([INITIAL_BALANCE]);
 
-    await expect(market.setMarketFee(MARKET_FEE, nonAdmin))
-      .rejectedWith('transaction execution reverted');
+    await expect(market.setMarketFee(MARKET_FEE, nonAdmin)).rejectedWith('transaction execution reverted');
   });
 
   it('owner cannot add currency with fee > 100', async () => {

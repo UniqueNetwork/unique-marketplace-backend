@@ -2,7 +2,7 @@ import { Sr25519Account } from '@unique-nft/sr25519';
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { TKN } from './currency';
 import { upgrades, ethers } from 'hardhat';
-import { ContractHelpers, ContractHelpers__factory, Market__factory } from '../../typechain-types';
+import { ContractHelpers, ContractHelpers__factory, Market__factory, MarketV2__factory } from '../../typechain-types';
 import SdkHelper from './SdkHelper';
 import testConfig from './testConfig';
 import { Wallet, HDNodeWallet } from 'ethers';
@@ -10,7 +10,6 @@ import { MarketAccount, MarketHelper } from './MarketHelper';
 import { convertBigintToNumber, getNftContract, callSdk } from './helpers';
 import { Royalty, TokenId } from '@unique-nft/sdk';
 import { TestCaseMode } from './types';
-import { TestOldMarket__factory } from '../../typechain-types/factories/src/test-contracts/TestOldMarket__factory';
 import { CreateTokenV2ArgsDto } from '@unique-nft/sdk/full';
 
 export default class TestHelper {
@@ -39,46 +38,6 @@ export default class TestHelper {
   }
 
   async deployOldMarket(marketFee?: bigint | number) {
-    const MarketFactory = await ethers.getContractFactory('TestOldMarket');
-    const RoyaltyHelper = await ethers.getContractFactory('UniqueRoyaltyHelper');
-
-    const fee = marketFee ?? 0;
-
-    const contract = await upgrades.deployProxy(MarketFactory, [fee], {
-      initializer: 'initialize',
-      txOverrides: {
-        gasLimit: 7_000_000,
-      },
-    });
-
-    await contract.waitForDeployment();
-    const marketAddress = await contract.getAddress();
-
-    const market = TestOldMarket__factory.connect(marketAddress, this.donor);
-
-    // Setting royalty helper. Only for tests! In production this lib has static address
-    const royaltyHelper = await RoyaltyHelper.deploy({
-      gasLimit: 7_000_000,
-    });
-    await royaltyHelper.waitForDeployment();
-    await market.setRoyaltyHelpers(royaltyHelper.getAddress(), { gasLimit: 300000 });
-
-    // Set self-sponsoring, and deposit 100 tokens
-    await Promise.all([
-      // sponsor transactions from contract itself:
-      (await this.contractHelpers.selfSponsoredEnable(marketAddress, { gasLimit: 300000 })).wait(),
-      // sponsor every transaction:
-      (await this.contractHelpers.setSponsoringRateLimit(marketAddress, 0, { gasLimit: 300000 })).wait(),
-      // set generous mode:
-      (await this.contractHelpers.setSponsoringMode(marketAddress, 2, { gasLimit: 300000 })).wait(),
-      // top up contract's balance for sponsoring:
-      await this.sdk.transfer(TKN(1000, 18), marketAddress),
-    ]);
-
-    return market;
-  }
-
-  async deployMarket(marketFee?: bigint | number) {
     const MarketFactory = await ethers.getContractFactory('Market');
     const RoyaltyHelper = await ethers.getContractFactory('UniqueRoyaltyHelper');
 
@@ -115,15 +74,55 @@ export default class TestHelper {
       await this.sdk.transfer(TKN(1000, 18), marketAddress),
     ]);
 
+    return market;
+  }
+
+  async deployMarket(marketFee?: bigint | number) {
+    const MarketFactory = await ethers.getContractFactory('MarketV2');
+    const RoyaltyHelper = await ethers.getContractFactory('UniqueRoyaltyHelper');
+
+    const fee = marketFee ?? 0;
+
+    const contract = await upgrades.deployProxy(MarketFactory, [fee], {
+      initializer: 'initialize',
+      txOverrides: {
+        gasLimit: 7_000_000,
+      },
+    });
+
+    await contract.waitForDeployment();
+    const marketAddress = await contract.getAddress();
+
+    const market = MarketV2__factory.connect(marketAddress, this.donor);
+
+    // Setting royalty helper. Only for tests! In production this lib has static address
+    const royaltyHelper = await RoyaltyHelper.deploy({
+      gasLimit: 7_000_000,
+    });
+    await royaltyHelper.waitForDeployment();
+    await market.setRoyaltyHelpers(royaltyHelper.getAddress(), { gasLimit: 300000 });
+
+    // Set self-sponsoring, and deposit 100 tokens
+    await Promise.all([
+      // sponsor transactions from contract itself:
+      (await this.contractHelpers.selfSponsoredEnable(marketAddress, { gasLimit: 300000 })).wait(),
+      // sponsor every transaction:
+      (await this.contractHelpers.setSponsoringRateLimit(marketAddress, 0, { gasLimit: 300000 })).wait(),
+      // set generous mode:
+      (await this.contractHelpers.setSponsoringMode(marketAddress, 2, { gasLimit: 300000 })).wait(),
+      // top up contract's balance for sponsoring:
+      await this.sdk.transfer(TKN(1000, 18), marketAddress),
+    ]);
+
     return MarketHelper.create(this.sdk.sdk, market);
   }
 
   async upgradeMarket(marketAddress: string) {
-    const marketFactory = await ethers.getContractFactory('Market');
+    const marketFactory = await ethers.getContractFactory('MarketV2');
     const contract = await upgrades.upgradeProxy(marketAddress, marketFactory, { txOverrides: { gasLimit: 6000_000 } });
     await contract.waitForDeployment();
 
-    return Market__factory.connect(marketAddress, this.donor);
+    return MarketV2__factory.connect(marketAddress, this.donor);
   }
 
   async createFungibleCollection(decimals: number) {

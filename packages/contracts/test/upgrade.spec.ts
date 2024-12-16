@@ -3,11 +3,11 @@ import TestHelper from './utils/TestHelper';
 import { expect } from 'chai';
 import { TKN } from './utils/currency';
 import { canBuy, canPutOnSale, canPutOnSaleBatch } from './utils/steps';
-import { TestOldMarket } from '../typechain-types/src/test-contracts/TestOldMarket';
 import { getNftContract } from './utils/helpers';
+import { Market } from '../typechain-types';
 
 let helper: TestHelper;
-let marketplace: TestOldMarket;
+let marketplace: Market;
 
 before(async () => {
   helper = await TestHelper.init();
@@ -47,6 +47,12 @@ describe('Upgrade', () => {
       .then((tx) => tx.wait());
 
     const orderBefore = await marketplace.getOrder(nft1.collectionId, nft1.tokenId);
+    let oldOrder = await marketplace.getOrder(nftCollection.collectionId, nft1.tokenId);
+    expect(oldOrder.collectionId).to.eq(nft1.collectionId);
+    expect(oldOrder.tokenId).to.eq(nft1.tokenId);
+    expect(oldOrder.price).to.eq(PRICE);
+    expect(oldOrder.seller.eth).to.deep.eq(seller.address);
+    expect(oldOrder.id).to.eq(orderBefore.id);
 
     // ACT: upgrade market
     const upgradedMarket = await helper.upgradeMarket(await marketplace.getAddress());
@@ -54,7 +60,7 @@ describe('Upgrade', () => {
     // ASSERT
     expect(await upgradedMarket.getAddress()).to.eq(await marketplace.getAddress());
     // 1. old order exist
-    const oldOrder = await upgradedMarket.getOrder(nftCollection.collectionId, nft1.tokenId);
+    oldOrder = await upgradedMarket.getOrder(nftCollection.collectionId, nft1.tokenId);
 
     expect(oldOrder.collectionId).to.eq(nft1.collectionId);
     expect(oldOrder.tokenId).to.eq(nft1.tokenId);
