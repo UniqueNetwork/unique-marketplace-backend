@@ -268,6 +268,267 @@
           ]
         }
       }
+    },
+    "84da8a652f80978164ad8fcad8c5aba11770f817b963a5470e81f938bf787c26": {
+      "address": "0xd88972F94baF2E5e3085D393B9B7A49B63dF8be9",
+      "txHash": "0xafa312595361ac382cf54795a5222da0c87789d72221b106512318bc7e587059",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "blacklist",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_uint32,t_bool)",
+            "contract": "MarketV2",
+            "src": "src/MarketV2.sol:21"
+          },
+          {
+            "label": "orders",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_uint32,t_mapping(t_uint32,t_struct(Order)4118_storage))",
+            "contract": "MarketV2",
+            "src": "src/MarketV2.sol:22"
+          },
+          {
+            "label": "idCount",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint32",
+            "contract": "MarketV2",
+            "src": "src/MarketV2.sol:23"
+          },
+          {
+            "label": "marketFee",
+            "offset": 4,
+            "slot": "2",
+            "type": "t_uint32",
+            "contract": "MarketV2",
+            "src": "src/MarketV2.sol:24"
+          },
+          {
+            "label": "admins",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "MarketV2",
+            "src": "src/MarketV2.sol:25"
+          },
+          {
+            "label": "availableCurrencies",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_uint256,t_struct(Currency)4125_storage)",
+            "contract": "MarketV2",
+            "src": "src/MarketV2.sol:26"
+          },
+          {
+            "label": "royaltyHelpers",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_contract(IUniqueRoyaltyHelper)5627",
+            "contract": "MarketV2",
+            "src": "src/MarketV2.sol:27"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)73_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)13_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_contract(IUniqueRoyaltyHelper)5627": {
+            "label": "contract IUniqueRoyaltyHelper",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Currency)4125_storage)": {
+            "label": "mapping(uint256 => struct Currency)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint32,t_bool)": {
+            "label": "mapping(uint32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint32,t_mapping(t_uint32,t_struct(Order)4118_storage))": {
+            "label": "mapping(uint32 => mapping(uint32 => struct Order))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint32,t_struct(Order)4118_storage)": {
+            "label": "mapping(uint32 => struct Order)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(CrossAddress)4102_storage": {
+            "label": "struct CrossAddress",
+            "members": [
+              {
+                "label": "eth",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "sub",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Currency)4125_storage": {
+            "label": "struct Currency",
+            "members": [
+              {
+                "label": "isAvailable",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "collectionId",
+                "type": "t_uint32",
+                "offset": 1,
+                "slot": "0"
+              },
+              {
+                "label": "fee",
+                "type": "t_uint32",
+                "offset": 5,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(Order)4118_storage": {
+            "label": "struct Order",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_uint32",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "collectionId",
+                "type": "t_uint32",
+                "offset": 4,
+                "slot": "0"
+              },
+              {
+                "label": "tokenId",
+                "type": "t_uint32",
+                "offset": 8,
+                "slot": "0"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint32",
+                "offset": 12,
+                "slot": "0"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "currency",
+                "type": "t_uint32",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "seller",
+                "type": "t_struct(CrossAddress)4102_storage",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
     }
   }
 }

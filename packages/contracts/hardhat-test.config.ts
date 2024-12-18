@@ -10,7 +10,15 @@ import testConfig from './test/utils/testConfig';
 const appConfig = loadConfig();
 
 const config: HardhatUserConfig = {
-  solidity: '0.8.20',
+  solidity: {
+    version: '0.8.20',
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    },
+  },
   paths: {
     sources: './src',
     tests: './test',
@@ -33,7 +41,7 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 100000000,
-    retries: 1,
+    // retries: 1,
   },
 };
 

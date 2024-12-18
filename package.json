@@ -1,6 +1,6 @@
 {
   "name": "unique-marketplace-backend",
-  "version": "3.0.289",
+  "version": "3.2.0",
   "description": "Backend project for unique marketplace",
   "author": "Unique Network",
   "private": true,
@@ -151,5 +151,6 @@
   "optionalDependencies": {
     "@nrwl/nx-darwin-arm64": "^15.9.3",
     "@nrwl/nx-linux-x64-gnu": "^15.9.3"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha256.c17d3797fb9a9115bf375e31bfd30058cac6bc9c3b8807a3d8cb2094794b51ca"
 }

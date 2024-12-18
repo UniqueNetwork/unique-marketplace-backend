@@ -103,6 +103,7 @@ for (const TEST_CASE of TEST_CASE_MODES) {
           ...nft,
           currency: UNQ_CURRENCY,
           price: INITIAL_PRICE,
+          amount: 1,
           signer: ethOwner,
         }),
       ).rejectedWith(/transaction execution reverted|TokenIsNotApproved/);
@@ -146,6 +147,7 @@ for (const TEST_CASE of TEST_CASE_MODES) {
           tokenId: 0,
           currency: UNQ_CURRENCY,
           price: 100,
+          amount: 1,
           signer: ethAccount,
         }),
       ).rejectedWith(/transaction execution reverted|CollectionNotSupportedERC721/);
@@ -161,6 +163,7 @@ for (const TEST_CASE of TEST_CASE_MODES) {
           currency: UNQ_CURRENCY,
           price: INITIAL_PRICE,
           signer: ethNonOwner,
+          amount: 1,
         }),
       ).rejectedWith(/transaction execution reverted|SellerIsNotOwner/);
 

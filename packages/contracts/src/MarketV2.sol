@@ -1,40 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-// NOTICE: contract to test upgrades
-// upgraded stuff prefixed with TEST
-
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {IUniqueRoyaltyHelper, RoyaltyAmount} from "../royalty/interfaces.sol";
-import {ICollectionHelpers, IUniqueNFT, IUniqueFungible, IERC721, CrossAddress} from "../interfaces.sol";
+import {IUniqueRoyaltyHelper, RoyaltyAmount} from "./royalty/interfaces.sol";
+import {ICollectionHelpers, IUniqueNFT, IUniqueFungible, IERC721, CrossAddress, Order, Currency, TokenForOrder} from "./interfaces.sol";
+import {IMarket} from "./IMarket.sol";
 
-struct Order {
-    uint32 id;
-    uint32 collectionId;
-    uint32 tokenId;
-    uint32 amount;
-    uint256 price;
-    uint32 currency;
-    CrossAddress seller;
-    uint256 TEST_CAN_ADD_NEW_PROP_TO_STRUCT;
-}
-
-struct Currency {
-    bool isAvailable;
-    uint32 collectionId;
-    uint32 fee;
-}
-
-contract TestUpgradedMarket is Initializable, OwnableUpgradeable {
+contract MarketV2 is IMarket, Initializable, OwnableUpgradeable {
     using ERC165Checker for address;
 
     uint32 public constant version = 0;
     uint32 public constant buildVersion = 8;
     bytes4 private constant InterfaceId_ERC721 = 0x80ac58cd;
     bytes4 private constant InterfaceId_ERC165 = 0x5755c3f2;
-    uint256 public constant TEST_CAN_ADD_NEW_MAGIC_CONSTANT = 42;
     ICollectionHelpers private constant collectionHelpers =
         ICollectionHelpers(0x6C4E9fE1AE37a41E93CEE429e8E1881aBdcbb54F);
 
@@ -45,32 +25,6 @@ contract TestUpgradedMarket is Initializable, OwnableUpgradeable {
     mapping(address => bool) public admins;
     mapping(uint256 => Currency) private availableCurrencies;
     IUniqueRoyaltyHelper private royaltyHelpers;
-
-    event TokenIsUpForSale(uint32 version, Order item);
-    event TokenPriceChanged(uint32 version, Order item);
-    event TokenRevoke(uint32 version, Order item, uint32 amount);
-    event TokenIsApproved(uint32 version, Order item);
-    event TokenIsPurchased(
-        uint32 version,
-        Order item,
-        uint32 salesAmount,
-        CrossAddress buyer,
-        RoyaltyAmount[] royalties
-    );
-    event TEST_CAN_ADD_NEW_EVENT_AND_CHANGE_METHOD();
-
-    error InvalidArgument(string info);
-    error InvalidMarketFee();
-    error SellerIsNotOwner();
-    error TokenIsAlreadyOnSale();
-    error TokenIsNotApproved();
-    error CollectionNotFound();
-    error CollectionNotSupportedERC721();
-    error OrderNotFound();
-    error TooManyAmountRequested();
-    error NotEnoughMoneyError();
-    error InvalidRoyaltiesError(uint256 totalRoyalty);
-    error CollectionInBlacklist();
 
     modifier onlyAdmin() {
         require(msg.sender == this.owner() || admins[msg.sender], "Only admin can");
@@ -100,6 +54,21 @@ contract TestUpgradedMarket is Initializable, OwnableUpgradeable {
 
         if (erc721.ownerOf(tokenId) != ethAddress || ethAddress != msg.sender) {
             revert SellerIsNotOwner();
+        }
+    }
+
+    function validApprove(uint32 collectionId, uint32 tokenId, CrossAddress memory seller) private view {
+        IERC721 erc721 = getErc721(collectionId);
+
+        address ethAddress;
+        if (seller.eth != address(0)) {
+            ethAddress = seller.eth;
+        } else {
+            ethAddress = payable(address(uint160(seller.sub >> 96)));
+        }
+
+        if ((erc721.getApproved(tokenId) != address(this)) && !erc721.isApprovedForAll(ethAddress, address(this))) {
+            revert TokenIsNotApproved();
         }
     }
 
@@ -193,58 +162,99 @@ contract TestUpgradedMarket is Initializable, OwnableUpgradeable {
         marketFee = fee;
     }
 
-    /**
-     * Place an NFT or RFT token for sale. It must be pre-approved for transfers by this contract address.
-     *
-     * @param collectionId: ID of the token collection
-     * @param tokenId: ID of the token
-     * @param price: Price (with proper network currency decimals)
-     * @param amount: Number of token fractions to list (must always be 1 for NFT)
-     * @param seller: The seller cross-address (the beneficiary account to receive payment, may be different from transaction sender)
-     */
-    function put(
-        uint32 collectionId,
-        uint32 tokenId,
-        uint256 price,
-        uint32 currency,
-        uint32 amount,
-        CrossAddress memory seller
-    ) external validCrossAddress(seller.eth, seller.sub) {
-        validOwner(collectionId, tokenId, seller);
+    function _put(
+        TokenForOrder memory orderData
+    ) internal validCrossAddress(orderData.seller.eth, orderData.seller.sub) {
+        validOwner(orderData.collectionId, orderData.tokenId, orderData.seller);
 
-        if (price == 0) revert InvalidArgument("price must not be zero");
+        if (orderData.price == 0) revert InvalidArgument("price must not be zero");
 
-        if (!availableCurrencies[currency].isAvailable) revert InvalidArgument("currency in not available");
+        if (!availableCurrencies[orderData.currency].isAvailable) revert InvalidArgument("currency is not available");
 
-        if (amount == 0) revert InvalidArgument("amount must not be zero");
+        if (orderData.amount == 0) revert InvalidArgument("amount must not be zero");
 
-        if (blacklist[collectionId]) revert CollectionInBlacklist();
+        if (blacklist[orderData.collectionId]) revert CollectionInBlacklist();
 
-        if (orders[collectionId][tokenId].price > 0) revert TokenIsAlreadyOnSale();
+        if (orders[orderData.collectionId][orderData.tokenId].price > 0) revert TokenIsAlreadyOnSale();
 
-        IERC721 erc721 = getErc721(collectionId);
-
-        if (erc721.ownerOf(tokenId) != msg.sender) revert SellerIsNotOwner();
-        if (erc721.getApproved(tokenId) != address(this)) revert TokenIsNotApproved();
+        validApprove(orderData.collectionId, orderData.tokenId, orderData.seller);
 
         Order memory order = Order(
             idCount++,
-            collectionId,
-            tokenId,
-            amount,
-            price,
-            currency,
-            seller,
-            TEST_CAN_ADD_NEW_MAGIC_CONSTANT
+            orderData.collectionId,
+            orderData.tokenId,
+            orderData.amount,
+            orderData.price,
+            orderData.currency,
+            orderData.seller
         );
 
-        orders[collectionId][tokenId] = order;
+        orders[orderData.collectionId][orderData.tokenId] = order;
 
         emit TokenIsUpForSale(version, order);
     }
 
-    function changePrice() external {
-        emit TEST_CAN_ADD_NEW_EVENT_AND_CHANGE_METHOD();
+    /**
+     * Place an NFT or RFT token for sale. It must be pre-approved for transfers by this contract address.
+     *
+     * @param orderData: data for create single token, including collectionId, tokenId, price, amount, currency, and seller.
+     */
+    function put(TokenForOrder memory orderData) external {
+        _put(orderData);
+    }
+
+    /**
+     * Place multiple NFTs or RFT tokens for sale. Each must be pre-approved for transfers by this contract address.
+     *
+     * @param ordersData: Array of order data for multiple tokens, including collectionId, tokenId, price, amount, currency, and seller.
+     */
+    function putBatch(TokenForOrder[] memory ordersData) external {
+        // MAX limit 50 tokens
+        if (ordersData.length > 50) {
+            revert InvalidArgument("Cannot process more than 50 tokens in a single batch");
+        }
+
+        uint256 ordersDataLength = ordersData.length;
+
+        for (uint256 i = 0; i < ordersDataLength; ) {
+            TokenForOrder memory order = ordersData[i];
+
+            _put(order);
+
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    /**
+     * Change NFT price
+     *
+     * @param collectionId: ID of the token collection
+     * @param tokenId: ID of the token
+     * @param price: New Price (with proper network currency decimals)
+     */
+    function changePrice(uint32 collectionId, uint32 tokenId, uint256 price, uint32 currency) external {
+        if (price == 0) {
+            revert InvalidArgument("price must not be zero");
+        }
+
+        Order storage order = orders[collectionId][tokenId];
+
+        if (order.price == 0) {
+            revert OrderNotFound();
+        }
+
+        if (!availableCurrencies[currency].isAvailable) {
+            revert InvalidArgument("currency in not available");
+        }
+
+        validOwner(collectionId, tokenId, order.seller);
+
+        order.price = price;
+        order.currency = currency;
+
+        emit TokenPriceChanged(version, order);
     }
 
     // /**
