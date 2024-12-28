@@ -291,9 +291,7 @@ contract MarketV2 is IMarket, Initializable, OwnableUpgradeable {
 
         if (order.currency == 0 && msg.value < totalValue) revert NotEnoughMoneyError();
 
-        if (getErc721(order.collectionId).getApproved(tokenId) != address(this)) {
-            revert TokenIsNotApproved();
-        }
+      validApprove(order.collectionId, order.tokenId, order.seller);
 
         order.amount -= amount;
         if (order.amount == 0) {
