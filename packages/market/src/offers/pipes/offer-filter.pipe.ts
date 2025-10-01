@@ -41,6 +41,7 @@ export class ParseOffersFilterPipe implements PipeTransform<any, TransformationR
 
     return {
       collectionId: this.parseCollectionIdRequest(value.collectionId),
+      currencies: this.parseCurrenciesRequest(value.currencies),
       maxPrice: this.parseNumberRequest(value.maxPrice, () => {
         throw this.exceptionFactory(`Failed to parse maxPrice. Expected a big integer value, got ${value.maxPrice}`);
       }),
@@ -61,6 +62,15 @@ export class ParseOffersFilterPipe implements PipeTransform<any, TransformationR
         .filter((id) => id != null) as number[],
       attributes: this.requestArray(value.attributes).filter((id) => id != null) as string[],
     };
+  }
+
+  parseCurrenciesRequest(currencies: QueryParamArray): number[] {
+    return this.parseIntArrayRequest(currencies, (v) => {
+      throw new BadRequestException(
+        {},
+        `Failed to parse currency id from ${JSON.stringify(currencies)}, unable to parse ${v} as integer.`,
+      );
+    });
   }
 
   parseBigIntRequest(request: string | undefined, onError: () => void): bigint | undefined {
