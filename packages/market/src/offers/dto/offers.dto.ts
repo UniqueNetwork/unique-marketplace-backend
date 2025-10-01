@@ -68,6 +68,16 @@ export class OffersFilter {
   @IsOptional()
   public maxPrice?: number;
 
+  @ApiProperty({
+    name: 'currencies',
+    items: { type: 'integer', default: '' },
+    required: false,
+    type: 'array',
+    isArray: true,
+    description: 'Filter by currency IDs (fungible collection IDs or 0 for native currency)'
+  })
+  public currencies?: number[];
+
   @ApiProperty({ required: false })
   public seller?: string;
 

@@ -208,6 +208,7 @@ export class ViewOffersService {
     queryFilter = this.byCollectionId(queryFilter, offersFilter.collectionId);
     queryFilter = this.byMaxPrice(queryFilter, offersFilter.maxPrice);
     queryFilter = this.byMinPrice(queryFilter, offersFilter.minPrice);
+    queryFilter = this.byCurrency(queryFilter, offersFilter.currencies);
     queryFilter = this.bySeller(queryFilter, offersFilter.seller);
     queryFilter = this.bySearch(queryFilter, offersFilter.searchText, offersFilter.searchLocale);
     queryFilter = this.byFindAttributes(queryFilter, offersFilter.collectionId, offersFilter.attributes);
@@ -311,6 +312,13 @@ export class ViewOffersService {
     return query.andWhere('view_offers.offer_price_parsed >= :minPrice', {
       minPrice: priceTransformer.to(minPrice),
     });
+  }
+
+  private byCurrency(query: SelectQueryBuilder<ViewOffers>, currencies?: number[]): SelectQueryBuilder<ViewOffers> {
+    if ((currencies ?? []).length <= 0) {
+      return query;
+    }
+    return query.andWhere('view_offers.offer_currency in (:...currencies)', { currencies });
   }
 
   private bySeller(query: SelectQueryBuilder<ViewOffers>, seller?: string): SelectQueryBuilder<ViewOffers> {
