@@ -341,7 +341,11 @@ export class TokensService {
         const token = searchIndex.find((index) => index.collection_id === item.collection_id && index.token_id === item.token_id);
         const collection = collections.find((collection) => collection.collectionId === item.collection_id);
         const schemaData = collection?.data['schema'];
-        const price = { parsed: +item.offer_price_parsed, raw: item.offer_price_raw } as OfferPrice;
+        const price = { 
+          parsed: +item.offer_price_parsed, 
+          raw: item.offer_price_raw,
+          currency: item.offer_price_currency
+        } as OfferPrice;
         const schema = {
           attributesSchemaVersion: isEmpty(schemaData?.attributesSchemaVersion),
           coverPicture: isEmpty(schemaData?.coverPicture),
@@ -416,6 +420,7 @@ export class TokensService {
         'view_tokens_token_id AS token_id',
         'view_tokens_offer_price_parsed AS offer_price_parsed',
         'view_tokens_offer_price_raw AS offer_price_raw',
+        'view_tokens_offer_price_currency AS offer_price_currency',
         'view_tokens_offer_seller AS offer_seller',
         'view_tokens_offer_created_at AS offer_created_at',
       ])

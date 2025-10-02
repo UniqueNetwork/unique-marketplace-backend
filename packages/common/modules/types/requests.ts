@@ -74,6 +74,7 @@ export type OffersFilterType = {
 export type OfferPrice = {
   raw: string;
   parsed: number;
+  currency?: number;
 };
 
 export type OffersItemType = {
