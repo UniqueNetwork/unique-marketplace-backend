@@ -17,6 +17,7 @@ import { PropertiesEntity } from './properties.entity';
       'offer.status AS offer_status',
       'offer.price_parsed AS offer_price_parsed',
       'offer.price_raw AS offer_price_raw',
+      'offer.currency AS offer_price_currency',
       'token.owner_token AS offer_seller',
       'offer.created_at AS offer_created_at',
       'offer.updated_at AS offer_updated_at',
@@ -40,6 +41,7 @@ import { PropertiesEntity } from './properties.entity';
           'offers.token_id as token_id',
           'offers.price_parsed as price_parsed',
           'offers.price_raw as price_raw',
+          'offers.currency as currency',
           'offers.amount as amount',
           'offers.contract_address as contract_address',
           'offers.status as status',
@@ -106,6 +108,9 @@ export class TokensViewer {
 
   @ViewColumn({ name: 'offer_price_raw' })
   offer_price_raw: number;
+
+  @ViewColumn({ name: 'offer_price_currency' })
+  offer_price_currency: number;
 
   @ViewColumn({ name: 'offer_seller' })
   offer_seller: string;
