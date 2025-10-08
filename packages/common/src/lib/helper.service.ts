@@ -1,7 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { QueryParamArray } from '../types';
-import { CurrencyEntity } from '../../modules/database';
-import { OfferPrice } from '../../modules/types/requests';
 
 @Injectable()
 export class HelperService {
@@ -119,10 +117,9 @@ export class HelperService {
   }
 
   static getPriceInUsdt(
-    usdtCurrency: CurrencyEntity | null,
+    usdtCurrency: { id: number; decimals: number } | null,
     priceInUsdtParsed: string | null,
-  ): OfferPrice | null {
-    console.dir({ usdtCurrency, priceInUsdtParsed }, { depth: null });
+  ): { parsed: number; raw: string; currency: number } | null {
     if (!priceInUsdtParsed || !usdtCurrency) return null;
 
     const parsed = +priceInUsdtParsed;
