@@ -1,10 +1,10 @@
 import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository, SelectQueryBuilder } from 'typeorm';
-import { CollectionEntity, PropertiesEntity, TokensViewer } from '@app/common/modules/database';
+import { CollectionEntity, CurrencyEntity, PropertiesEntity, TokensViewer } from '@app/common/modules/database';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
-import { OfferPrice, OffersFilterType, OffersItemType, SortingRequest } from '@app/common/modules/types/requests';
-import { AccessoryTypes, SaleTypes, TokensViewDto, TokensViewFilterDto } from './dto/tokens.dto';
+import { OfferPrice, SortingRequest } from '@app/common/modules/types/requests';
+import { AccessoryTypes, SaleTypes, TokensEntityDto, TokensViewDto, TokensViewFilterDto } from './dto/tokens.dto';
 import { paginateRaw } from 'nestjs-typeorm-paginate';
 import { HelperService } from '@app/common/src/lib/helper.service';
 import { OfferAttributes } from '../offers/dto/offers.dto';
@@ -21,6 +21,8 @@ export class TokensService {
     private tokenViewRepository: Repository<TokensViewer>,
     @InjectRepository(CollectionEntity)
     private collectionRepository: Repository<CollectionEntity>,
+    @InjectRepository(CurrencyEntity)
+    private currencyRepository: Repository<CurrencyEntity>,
   ) {}
 
   /**
@@ -39,18 +41,22 @@ export class TokensService {
     paginationRequest: PaginationRouting,
     sort: SortingRequest,
   ): Promise<TokensViewDto> {
-    let tokens;
-    let items = [];
-    let propertiesFilter = [];
-    let collections = [];
-
-    tokens = await this.filter(collectionId, tokensFilterDto, paginationRequest, sort);
-
-    propertiesFilter = await this.searchInProperties(this.parserCollectionIdTokenId(tokens.items));
-    collections = await this.collections(this.getCollectionIds(tokens.items));
-
-    items = this.parseItems(tokens.items, propertiesFilter, collections) as any as Array<TokensViewer>;
     try {
+      const tokens = await this.filter(collectionId, tokensFilterDto, paginationRequest, sort);
+
+      const propertiesFilter = await this.searchInProperties(this.parserCollectionIdTokenId(tokens.items));
+      const collections = await this.collections(this.getCollectionIds(tokens.items));
+
+      const items = await this.parseItems(tokens.items, propertiesFilter, collections);
+
+      return {
+        ...tokens.meta,
+        totalItems: tokens.meta.totalItems ?? 0,
+        totalPages: tokens.meta.totalPages ?? 0,
+        items,
+        attributes: tokens.attributes,
+        attributesCount: tokens.attributesCount,
+      };
     } catch (e) {
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
@@ -58,13 +64,22 @@ export class TokensService {
         error: e.message,
       });
     }
+  }
+
+  private getPriceInUsdt(
+    usdtCurrency: CurrencyEntity | null,
+    priceInUsdtParsed: string | null,
+  ): OfferPrice | null {
+    if (!priceInUsdtParsed || !usdtCurrency) return null;
+
+    const parsed = +priceInUsdtParsed;
+    const raw = HelperService.getRawAmount(priceInUsdtParsed, usdtCurrency.decimals);
 
     return {
-      ...tokens.meta,
-      items,
-      attributes: tokens.attributes,
-      attributesCount: tokens.attributesCount,
-    };
+      parsed,
+      raw,
+      currency: usdtCurrency.id
+    }
   }
 
   /**
@@ -77,7 +92,6 @@ export class TokensService {
    * @param {SortingRequest} sort - The sorting parameters for the token search.
    */
   async filter(collectionId: number, tokensFilterDto: TokensViewFilterDto, pagination: PaginationRouting, sort: SortingRequest) {
-    let paginationResult;
     let queryFilter: SelectQueryBuilder<TokensViewer> = this.tokenViewRepository.createQueryBuilder('view_tokens');
 
     queryFilter = this.byTokenId(queryFilter, tokensFilterDto.tokenId);
@@ -85,6 +99,10 @@ export class TokensService {
     queryFilter = this.byMaxPrice(queryFilter, tokensFilterDto.maxPrice);
     // Filter by min price
     queryFilter = this.byMinPrice(queryFilter, tokensFilterDto.minPrice);
+
+    queryFilter = this.byMaxUsdPrice(queryFilter, tokensFilterDto.maxUsdPrice);
+    queryFilter = this.byMinUsdPrice(queryFilter, tokensFilterDto.minUsdPrice);
+
     // Filter by accessory type
     queryFilter = this.byAccessoryType(queryFilter, tokensFilterDto.accessoryType, tokensFilterDto.address);
     // Filter by on sale
@@ -105,7 +123,7 @@ export class TokensService {
 
     queryFilter = this.sortBy(queryFilter, sort);
 
-    paginationResult = await paginateRaw<TokensViewer>(queryFilter, pagination);
+    const paginationResult = await paginateRaw<TokensViewer>(queryFilter, pagination);
 
     return {
       meta: paginationResult.meta,
@@ -129,6 +147,7 @@ export class TokensService {
               order: SortingOrder.Asc,
             },
           ];
+
       sortParameters.forEach((sortParameter) => {
         const { column, order } =
           typeof sortParameter === 'string'
@@ -150,7 +169,11 @@ export class TokensService {
           case 'CreationDate':
             query.addOrderBy('view_tokens_offer_created_at', order === SortingOrder.Asc ? 'ASC' : 'DESC');
             break;
+          case 'UsdPrice':
+            query.addOrderBy('view_tokens_price_in_usdt', order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            break;
           default:
+            this.logger.warn(`filter:sortBy, invalid sort column: ${column}`);
             break;
         }
       });
@@ -260,6 +283,24 @@ export class TokensService {
     });
   }
 
+  private byMaxUsdPrice(query: SelectQueryBuilder<TokensViewer>, maxPrice?: number): SelectQueryBuilder<TokensViewer> {
+    if (!maxPrice) {
+      return query;
+    }
+    return query.andWhere('view_tokens.offer_usd_price_parsed <= :maxPrice', {
+      maxPrice: HelperService.priceTransformer(maxPrice, 'to'),
+    });
+  }
+
+  private byMinUsdPrice(query: SelectQueryBuilder<TokensViewer>, minPrice?: number): SelectQueryBuilder<TokensViewer> {
+    if (!minPrice) {
+      return query;
+    }
+    return query.andWhere('view_tokens.offer_usd_price_parsed >= :minPrice', {
+      minPrice: HelperService.priceTransformer(minPrice, 'to'),
+    });
+  }
+
   private byAccessoryType(
     query: SelectQueryBuilder<TokensViewer>,
     accessoryType?: AccessoryTypes,
@@ -320,18 +361,27 @@ export class TokensService {
     return [...new Set(items.map((item) => +item.collection_id))].filter((id) => id !== null && id !== 0);
   }
 
-  private parseItems(
-    items: Array<OffersFilterType>,
+  private async parseItems(
+    items: Array<TokensViewer>,
     searchIndex: Partial<PropertiesEntity>[],
     collections: Array<CollectionEntity>,
-  ): Array<OffersItemType> {
+  ): Promise<Array<TokensEntityDto>> {
     const collectionData = new Map();
+
+    const usdtCurrency = await this.currencyRepository.findOne({
+      where: { name: 'USDT' },
+      cache: true
+    });
 
     function isEmpty(value: string | number): number | string | null {
       if (value === null || value === undefined || value === '') {
         return null;
       }
       return value;
+    }
+
+    const getPriceInUsdt = (priceInUsdtParsed: string | null) => {
+      return this.getPriceInUsdt(usdtCurrency, priceInUsdtParsed);
     }
 
     function convertorFlatToObject(): (previousValue: any, currentValue: any, currentIndex: number, array: any[]) => any {
@@ -341,11 +391,15 @@ export class TokensService {
         const token = searchIndex.find((index) => index.collection_id === item.collection_id && index.token_id === item.token_id);
         const collection = collections.find((collection) => collection.collectionId === item.collection_id);
         const schemaData = collection?.data['schema'];
-        const price = { 
-          parsed: +item.offer_price_parsed, 
+
+        const price = {
+          parsed: +item.offer_price_parsed,
           raw: item.offer_price_raw,
           currency: item.offer_price_currency
         } as OfferPrice;
+
+        const priceInUsdt = getPriceInUsdt(item.price_in_usdt);
+
         const schema = {
           attributesSchemaVersion: isEmpty(schemaData?.attributesSchemaVersion),
           coverPicture: isEmpty(schemaData?.coverPicture),
@@ -354,12 +408,14 @@ export class TokensService {
           schemaVersion: isEmpty(schemaData?.schemaVersion),
           collectionId: isEmpty(schemaData?.collectionId),
         };
+
         const obj = {
           collectionId: +item.collection_id,
           tokenId: +item.token_id,
           orderId: item.offer_id,
           status: item.offer_status,
-          price: price,
+          price,
+          priceInUsdt,
           seller: item.offer_seller,
           created_at: item.offer_created_at,
           updated_at: item.offer_updated_at,
@@ -374,7 +430,9 @@ export class TokensService {
             schema,
           },
         };
+
         acc.push(obj);
+
         return acc;
       };
     }
@@ -403,6 +461,7 @@ export class TokensService {
     const values = items.map((item) => {
       return `(${Number(item.collection_id)}, ${Number(item.token_id)})`;
     });
+
     if (values.length > 0) {
       return `select * from (values ${values.join(',')}) as t (collection_id, token_id)`;
     }
@@ -418,7 +477,7 @@ export class TokensService {
         'view_tokens_offer_status AS offer_status',
         'view_tokens_collection_id AS collection_id',
         'view_tokens_token_id AS token_id',
-        'view_tokens_offer_price_parsed AS offer_price_parsed',
+        'view_tokens_price_in_usdt AS price_in_usdt',
         'view_tokens_offer_price_raw AS offer_price_raw',
         'view_tokens_offer_price_currency AS offer_price_currency',
         'view_tokens_offer_seller AS offer_seller',

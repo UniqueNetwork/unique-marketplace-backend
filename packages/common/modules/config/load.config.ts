@@ -46,4 +46,6 @@ export const loadConfig = (): Config => ({
 
   fileStorage: loadFileStorageConfig(),
   adminSecretKey: process.env.ADMIN_SECRET_KEY,
+
+  coingeckoApiKey: process.env.COIN_GECKO_API_KEY,
 });

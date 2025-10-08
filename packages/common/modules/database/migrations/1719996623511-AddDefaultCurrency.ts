@@ -1,11 +1,14 @@
 import { MigrationInterface, QueryRunner } from "typeorm"
+import { SettingEntity } from '../entities';
 
 export class AddDefaultCurrency1719992748305 implements MigrationInterface {
     name = 'AddDefaultCurrency1719992748305';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+      const settingsTableName = queryRunner.manager.getRepository(SettingEntity).metadata.tableName;
+
       await queryRunner.query(`
-        INSERT INTO new_settings (key, value)
+        INSERT INTO ${settingsTableName} (key, value)
         SELECT 'contract_currencies', '[
             {
                 "collectionId": 0,
@@ -15,13 +18,15 @@ export class AddDefaultCurrency1719992748305 implements MigrationInterface {
                 "name": "UNQ"
             }
         ]'
-        WHERE NOT EXISTS (SELECT 1 FROM new_settings WHERE key = 'contract_currencies');
+        WHERE NOT EXISTS (SELECT 1 FROM ${settingsTableName} WHERE key = 'contract_currencies');
       `);
     }
-  
+
     public async down(queryRunner: QueryRunner): Promise<void> {
+      const settingsTableName = queryRunner.manager.getRepository(SettingEntity).metadata.tableName;
+
       await queryRunner.query(`
-        DELETE FROM new_settings WHERE key = 'contract_currencies';
+        DELETE FROM ${settingsTableName} WHERE key = 'contract_currencies';
       `);
     }
 

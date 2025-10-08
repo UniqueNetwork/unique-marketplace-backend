@@ -51,6 +51,16 @@ export class TokensViewFilterDto {
   @IsOptional()
   public maxPrice?: number;
 
+  @ApiProperty({ required: false, type: String })
+  @Type(() => Number)
+  @IsOptional()
+  public minUsdPrice?: number;
+
+  @ApiProperty({ required: false, type: String })
+  @Type(() => Number)
+  @IsOptional()
+  public maxUsdPrice?: number;
+
   @ApiProperty({
     name: 'numberOfAttributes',
     items: { type: 'integer', default: '' },

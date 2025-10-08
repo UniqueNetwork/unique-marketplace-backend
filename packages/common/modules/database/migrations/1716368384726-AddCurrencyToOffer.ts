@@ -13,8 +13,8 @@ ADD currency integer default 0;`);
     CREATE OR REPLACE VIEW
       "${queryRunner.manager.getRepository(ViewOffers).metadata.tableName}" AS
       ${(
-        queryRunner.manager.getRepository(ViewOffers).metadata.expression as (connection: DataSource) => SelectQueryBuilder<any>
-      )(queryRunner.connection).getQuery()}
+      queryRunner.manager.getRepository(ViewOffers).metadata.expression as (connection: DataSource) => SelectQueryBuilder<any>
+    )(queryRunner.connection).getQuery()}
     `);
   }
 

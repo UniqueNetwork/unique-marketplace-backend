@@ -33,9 +33,12 @@ export const TasksWorkerModule = GraphileWorkerModule.forRootAsync({
       return 'pgPool';
     };
 
+    const crontab = [' 0 * * * * refreshCurrenciesRates ?priority=1 {}']
+
     return {
       pgPool,
       concurrency: 10,
+      crontab: crontab.join('\n')
     };
   },
 });

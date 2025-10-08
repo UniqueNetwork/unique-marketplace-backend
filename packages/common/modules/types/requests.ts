@@ -43,6 +43,8 @@ export class SortingOfferRequest {
       enum: [
         'asc(Price)',
         'desc(Price)',
+        'asc(UsdPrice)',
+        'desc(UsdPrice)',
         'asc(TokenId)',
         'desc(TokenId)',
         'asc(CollectionId)',
@@ -53,7 +55,7 @@ export class SortingOfferRequest {
     },
     default: ['desc(CreationDate)'],
     description:
-      'Possible values: asc(Price), desc(Price), asc(TokenId), desc(TokenId), asc(CollectionId), desc(CollectionId), asc(CreationDate), asc(CreationDate)',
+      'Possible values: asc(Price), desc(Price), asc(UsdPrice), desc(UsdPrice), asc(TokenId), desc(TokenId), asc(CollectionId), desc(CollectionId), asc(CreationDate), asc(CreationDate)',
     required: false,
   })
   public sort: SortingParameter[];

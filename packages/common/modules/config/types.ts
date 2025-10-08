@@ -36,6 +36,8 @@ export type Config = {
 
   fileStorage: FileStorageConfig;
   adminSecretKey: string;
+
+  coingeckoApiKey?: string;
 };
 
 export type MarketSwaggerOptions = {
