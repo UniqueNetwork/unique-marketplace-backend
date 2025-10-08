@@ -92,7 +92,7 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     const properties_filter = await this.searchInProperties(this.parserCollectionIdTokenId(source));
     const collections = await this.collections(this.getCollectionIds(source));
 
-    const offers = await this.parseItems(source, properties_filter, collections).pop() as any as ViewOffers;
+    const offers = (await this.parseItems(source, properties_filter, collections)).pop() as any as ViewOffers;
 
     return offers && OfferEntityDto.fromOffersEntity(offers);
   }
