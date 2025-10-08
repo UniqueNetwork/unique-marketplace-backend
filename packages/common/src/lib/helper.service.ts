@@ -116,6 +116,17 @@ export class HelperService {
     return whole + fractionPadded;
   }
 
+  static getParsedAmount(raw: string, decimals: number): string {
+    const s = raw.trim().replace(/^0+/, '') || '0';
+    if (decimals === 0) return s;
+
+    const padded = s.padStart(decimals + 1, '0');
+    const intPart = padded.slice(0, -decimals) || '0';
+    const fracPart = padded.slice(-decimals).replace(/0+$/, '');
+
+    return fracPart ? `${intPart}.${fracPart}` : intPart;
+  }
+
   static getPriceInUsdt(
     usdtCurrency: { id: number; decimals: number } | null,
     priceInUsdtParsed: string | null,
