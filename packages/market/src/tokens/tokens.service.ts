@@ -362,7 +362,6 @@ export class TokensService {
   }
 
   private async parseItems(
-    // items: Array<TokensEntityDto>,
     items: Array<TokensViewer>,
     searchIndex: Partial<PropertiesEntity>[],
     collections: Array<CollectionEntity>,
@@ -481,7 +480,6 @@ export class TokensService {
         'view_tokens_price_in_usdt AS price_in_usdt',
         'view_tokens_offer_price_raw AS offer_price_raw',
         'view_tokens_offer_price_currency AS offer_price_currency',
-        // 'view_tokens_offer_usd_price_parsed AS offer_usd_price_parsed',
         'view_tokens_offer_seller AS offer_seller',
         'view_tokens_offer_created_at AS offer_created_at',
       ])
