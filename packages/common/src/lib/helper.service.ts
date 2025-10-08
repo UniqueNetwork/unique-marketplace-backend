@@ -108,4 +108,11 @@ export class HelperService {
         return null;
     }
   }
+
+  static getRawAmount(amount: string, decimals: number): string {
+    const [whole, fraction = ''] = amount.split('.');
+    const fractionPadded = fraction.padEnd(decimals, '0').slice(0, decimals);
+
+    return whole + fractionPadded;
+  }
 }

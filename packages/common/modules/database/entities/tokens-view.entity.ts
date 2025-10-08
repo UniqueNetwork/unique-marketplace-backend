@@ -2,13 +2,15 @@ import { DataSource, SelectQueryBuilder, ViewColumn, ViewEntity } from 'typeorm'
 import { TokensEntity } from './tokens.entity';
 import { OfferEntity } from './offer.entity';
 import { PropertiesEntity } from './properties.entity';
+import { CurrencyEntity } from './currency.entity';
 
 @ViewEntity({
   expression: (dataSource: DataSource): SelectQueryBuilder<any> => {
     const queryBuilder = dataSource.createQueryBuilder(TokensEntity, 'token');
-    const { enumName } = dataSource.manager.getRepository(PropertiesEntity).metadata.nonVirtualColumns.find((col) => {
-      return col.propertyName === 'type';
-    });
+    const { enumName } = dataSource.manager
+      .getRepository(PropertiesEntity)
+      .metadata.nonVirtualColumns.find((col) => col.propertyName === 'type');
+
     queryBuilder.select([
       'token.collection_id',
       'token.token_id',
@@ -29,18 +31,26 @@ import { PropertiesEntity } from './properties.entity';
       'properties_filter.count_item',
       'properties_filter.total_items',
       'properties_filter.list_items',
+
+      `CASE
+         WHEN curr.usd_price IS NULL OR offer.price_raw IS NULL
+           THEN NULL
+         ELSE (offer.price_raw::numeric * curr.usd_price)
+       END AS price_in_usdt`,
     ]);
+
     // queryBuilder.leftJoin(OfferEntity, 'offer', 'offer.collection_id = token.collection_id AND offer.token_id = token.token_id');
     queryBuilder.leftJoin(
       (selectQueryBuilder: SelectQueryBuilder<TokensEntity>) => {
-        const offerQuaryBuilder = selectQueryBuilder.subQuery();
-        offerQuaryBuilder.select([
+        const offerQueryBuilder = selectQueryBuilder.subQuery();
+        offerQueryBuilder.select([
           'offers.id as id',
           'offers.order_id as order_id',
           'offers.collection_id as collection_id',
           'offers.token_id as token_id',
           'offers.price_parsed as price_parsed',
           'offers.price_raw as price_raw',
+          'offers.price_usdt as price_usdt',
           'offers.currency as currency',
           'offers.amount as amount',
           'offers.contract_address as contract_address',
@@ -49,13 +59,16 @@ import { PropertiesEntity } from './properties.entity';
           'offers.created_at as created_at',
           'offers.updated_at as updated_at',
         ]);
-        offerQuaryBuilder.from(OfferEntity, 'offers');
-        offerQuaryBuilder.where(`offers.status::text = 'Opened'::text`);
-        return offerQuaryBuilder;
+        offerQueryBuilder.from(OfferEntity, 'offers');
+        offerQueryBuilder.where(`offers.status::text = 'Opened'::text`);
+        return offerQueryBuilder;
       },
       'offer',
       'offer.collection_id = token.collection_id AND offer.token_id = token.token_id',
     );
+
+    queryBuilder.leftJoin(CurrencyEntity, 'curr', 'offer.currency = curr.id');
+
     queryBuilder.leftJoin(
       (selectQueryBuilder: SelectQueryBuilder<TokensEntity>) => {
         const propsQueryBuilder = selectQueryBuilder.subQuery();
@@ -78,11 +91,13 @@ import { PropertiesEntity } from './properties.entity';
       'properties_filter',
       'token.collection_id = properties_filter.collection_id AND token.token_id = properties_filter.token_id',
     );
+
     queryBuilder.orderBy(
       `CASE
             WHEN offer.order_id IS NOT NULL THEN 0
             ELSE 1 END`,
     );
+
     return queryBuilder;
   },
   name: 'view_tokens',
@@ -111,6 +126,9 @@ export class TokensViewer {
 
   @ViewColumn({ name: 'offer_price_currency' })
   offer_price_currency: number;
+
+  @ViewColumn({ name: 'price_in_usdt' })
+  price_in_usdt: string | null;
 
   @ViewColumn({ name: 'offer_seller' })
   offer_seller: string;

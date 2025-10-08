@@ -1,13 +1,16 @@
 import { DataSource, SelectQueryBuilder, ViewColumn, ViewEntity } from 'typeorm';
 import { OfferEntity } from './offer.entity';
 import { PropertiesEntity } from './properties.entity';
+import { CurrencyEntity } from './currency.entity';
 
 @ViewEntity({
   expression: (dataSource: DataSource): SelectQueryBuilder<any> => {
     const queryBuilder = dataSource.createQueryBuilder(OfferEntity, 'offer');
-    const { enumName } = dataSource.manager.getRepository(PropertiesEntity).metadata.nonVirtualColumns.find((col) => {
-      return col.propertyName === 'type';
-    });
+    const { enumName } = dataSource.manager
+      .getRepository(PropertiesEntity)
+      .metadata.nonVirtualColumns.find((col) => {
+        return col.propertyName === 'type';
+      });
 
     queryBuilder.select([
       'DISTINCT offer.id AS offer_id',
@@ -30,6 +33,11 @@ import { PropertiesEntity } from './properties.entity';
       'properties_filter.total_items',
       'properties_filter.list_items',
       'offer.currency AS offer_currency',
+      `CASE
+         WHEN curr.usd_price IS NULL OR offer.price_raw IS NULL
+           THEN NULL
+         ELSE (offer.price_raw::numeric * curr.usd_price)
+       END AS price_in_usdt`,
     ]);
 
     queryBuilder.leftJoin(
@@ -54,6 +62,9 @@ import { PropertiesEntity } from './properties.entity';
       'properties_filter',
       'offer.collection_id = properties_filter.collection_id AND offer.token_id = properties_filter.token_id',
     );
+
+    queryBuilder.leftJoin(CurrencyEntity, 'curr', 'offer.currency = curr.id');
+
     queryBuilder.where(`offer.status::text = 'Opened'::text`);
     return queryBuilder;
   },
@@ -119,4 +130,7 @@ export class ViewOffers {
 
   @ViewColumn({ name: 'list_items' })
   listItems: string[];
+
+  @ViewColumn({ name: 'price_in_usdt' })
+  price_in_usdt: string | null;
 }

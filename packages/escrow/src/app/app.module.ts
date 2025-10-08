@@ -12,6 +12,7 @@ import { ContractEventsModule } from './contract-events/contract-events.module';
 import { CollectionsModule } from '../collections/collections.module';
 import { TasksWorkerModule } from '@app/common/modules/config/worker.module';
 import { SdkService } from './sdk.service';
+import { CurrenciesRatesTask } from '../tasks/currencies-rates-task.service';
 
 @Module({
   imports: [
@@ -25,7 +26,12 @@ import { SdkService } from './sdk.service';
     TasksWorkerModule,
   ],
   controllers: [AppController],
-  providers: [sdkProvider, SdkService, AppService],
+  providers: [
+    sdkProvider,
+    SdkService,
+    AppService,
+    CurrenciesRatesTask,
+  ],
   exports: [SdkService],
 })
 export class AppModule {}

@@ -15,6 +15,7 @@ import {
   TradeViewEntity,
   TokensViewer,
   BannerEntity,
+  CurrencyEntity,
 } from './entities';
 import {
   AdminSessionsTable1683194096000,
@@ -38,6 +39,7 @@ import {
   DeployContractV2_1711532661239,
   DeployContractV3_1714106695524,
   AddCurrencyToOffer1716368384726,
+  Currencies1759785259672,
 } from './migrations';
 import { BannersService, ContractService, OfferService, SettingsService } from './services';
 import { OfferEventService } from './services/offer-event.service';
@@ -55,6 +57,7 @@ const entities = [
   TradeViewEntity,
   TokensViewer,
   BannerEntity,
+  CurrencyEntity,
 ];
 const migrations = [
   SettingsTable1677511684518,
@@ -78,6 +81,7 @@ const migrations = [
   DeployContractV2_1711532661239,
   DeployContractV3_1714106695524,
   AddCurrencyToOffer1716368384726,
+  Currencies1759785259672,
 ];
 
 function typeOrmModulesFactory(

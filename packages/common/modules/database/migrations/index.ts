@@ -21,3 +21,4 @@ export * from './1711532661239-DeployContractV2';
 export * from './1714106695524-DeployContractV3';
 export * from './1716368384726-AddCurrencyToOffer';
 export * from './1719996623511-AddDefaultCurrency';
+export * from './1759785259672-Currencies';
