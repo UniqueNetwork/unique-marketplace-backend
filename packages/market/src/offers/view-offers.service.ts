@@ -11,6 +11,9 @@ import { GetOneFilter, SortingOrder, SortingParameter } from './interfaces/offer
 import { HelperService } from '@app/common/src/lib/helper.service';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
 import { SortingOfferRequest } from '@app/common/modules/types/requests';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject } from '@nestjs/common';
+import { Cache } from 'cache-manager';
 
 const offersMapping = {
   priceRaw: 'price_raw',
@@ -41,6 +44,7 @@ export class ViewOffersService {
     private connection: DataSource,
     @InjectRepository(ViewOffers) private viewOffersRepository: Repository<ViewOffers>,
     private readonly bundleService: BundleService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     this.offersSorts = this.prepareMapping(offersMapping, connection.getMetadata(OfferEntity).columns);
   }
@@ -187,7 +191,7 @@ export class ViewOffersService {
     // Exceptions to the influence of the search by the number of attributes
     queryFilter = this.byNumberOfAttributes(queryFilter, offersFilter.numberOfAttributes);
 
-    const attributes = await this.byAttributes(queryFilter).getRawMany();
+    const attributes = await this.byAttributes(queryFilter);
 
     queryFilter = this.prepareQuery(queryFilter);
     queryFilter = this.sortBy(queryFilter, sort);
@@ -222,7 +226,7 @@ export class ViewOffersService {
     const attributesCount = await this.byAttributesCount(queryFilter);
     queryFilter = this.byNumberOfAttributes(queryFilter, offersFilter.numberOfAttributes);
 
-    const attributes = await this.byAttributes(queryFilter).getRawMany();
+    const attributes = await this.byAttributes(queryFilter);
 
     return {
       attributes: this.parseAttributes(attributes),
@@ -403,9 +407,17 @@ export class ViewOffersService {
           message: 'You must provide a collection id to filter by traits',
         });
       } else {
+        // Use EXISTS for better performance instead of array contains
         query
           .andWhere(`view_offers.collection_id in (:...collectionIds)`, { collectionIds })
-          .andWhere('array [:...traits] <@ view_offers.list_items', { traits: attributes });
+          .andWhere(`
+            EXISTS (
+              SELECT 1 FROM properties p 
+              WHERE p.collection_id = view_offers.collection_id 
+                AND p.token_id = view_offers.token_id 
+                AND p.list_items && :traits
+            )
+          `, { traits: attributes });
       }
     }
     return query;
@@ -472,10 +484,20 @@ export class ViewOffersService {
     return query;
   }
 
-  private byAttributes(query: SelectQueryBuilder<ViewOffers>): SelectQueryBuilder<any> {
-    const attributes = this.connection.manager
+  private async byAttributes(query: SelectQueryBuilder<ViewOffers>): Promise<any[]> {
+    // Create cache key based on query parameters
+    const cacheKey = `attributes_${JSON.stringify(query.getParameters())}`;
+    
+    // Try to get from cache
+    const cached = await this.cacheManager.get<any[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // Use more efficient query with unnest only for needed data
+    const attributes = await this.connection.manager
       .createQueryBuilder()
-      .select(['key', 'traits as trait ', 'count(traits) over (partition by traits, key) as count'])
+      .select(['key', 'unnest(traits) as trait', 'count(unnest(traits)) over (partition by unnest(traits), key) as count'])
       .distinct()
       .from((qb) => {
         return qb
@@ -484,7 +506,12 @@ export class ViewOffersService {
           .setParameters(query.getParameters())
           .where('view_offers_traits is not null')
           .andWhere('view_offers_locale is not null');
-      }, '_filter');
+      }, '_filter')
+      .getRawMany();
+
+    // Cache result for 5 minutes
+    await this.cacheManager.set(cacheKey, attributes, 300000);
+    
     return attributes;
   }
 
@@ -504,6 +531,15 @@ export class ViewOffersService {
   }
 
   private async byAttributesCount(query: SelectQueryBuilder<ViewOffers>): Promise<Array<OfferAttributes>> {
+    // Create cache key based on query parameters
+    const cacheKey = `attributes_count_${JSON.stringify(query.getParameters())}`;
+    
+    // Try to get from cache
+    const cached = await this.cacheManager.get<Array<OfferAttributes>>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const attributesCount = (await this.connection.manager
       .createQueryBuilder()
       .select(['total_items as "numberOfAttributes"', 'count(offer_id) over (partition by total_items) as amount'])
@@ -517,12 +553,18 @@ export class ViewOffersService {
           .where('view_offers_total_items is not null');
       }, '_filter')
       .getRawMany()) as any as Array<OfferAttributes>;
-    return attributesCount.map((item) => {
+    
+    const result = attributesCount.map((item) => {
       return {
         numberOfAttributes: +item.numberOfAttributes,
         amount: +item.amount,
       };
     });
+
+    // Cache result for 5 minutes
+    await this.cacheManager.set(cacheKey, result, 300000);
+    
+    return result;
   }
 
   private byCollectionTokenId(

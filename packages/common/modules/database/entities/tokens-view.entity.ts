@@ -69,6 +69,7 @@ import { CurrencyEntity } from './currency.entity';
 
     queryBuilder.leftJoin(CurrencyEntity, 'curr', 'offer.currency = curr.id');
 
+    // Optimized query without unnest in main JOIN
     queryBuilder.leftJoin(
       (selectQueryBuilder: SelectQueryBuilder<TokensEntity>) => {
         const propsQueryBuilder = selectQueryBuilder.subQuery();
@@ -78,14 +79,15 @@ import { CurrencyEntity } from './currency.entity';
           'token_id',
           'is_trait',
           'locale',
-          'unnest(prop.items) AS traits',
           'key',
           'count_item',
           'total_items',
           'list_items',
+          'array_agg(DISTINCT unnest(prop.items)) AS traits'
         ]);
         propsQueryBuilder.from(PropertiesEntity, 'prop');
         propsQueryBuilder.where(`prop.type <> 'ImageURL'::${enumName}`);
+        propsQueryBuilder.groupBy('collection_id, network, token_id, is_trait, locale, key, count_item, total_items, list_items');
         return propsQueryBuilder;
       },
       'properties_filter',
