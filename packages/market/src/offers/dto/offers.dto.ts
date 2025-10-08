@@ -68,6 +68,18 @@ export class OffersFilter {
   @IsOptional()
   public maxPrice?: number;
 
+  @ApiProperty({ required: false, type: String })
+  @Type(() => Number)
+  @IsOptional()
+  //@Min(0)
+  public minUsdtPrice?: number;
+
+  @ApiProperty({ required: false, type: String })
+  @Type(() => Number)
+  // @Max(9223372036854775807)
+  @IsOptional()
+  public maxUsdtPrice?: number;
+
   @ApiProperty({
     name: 'currencies',
     items: { type: 'integer', default: '' },
@@ -229,6 +241,10 @@ export class OfferEntityDto {
   @ApiProperty({ description: 'Price', example: OfferPriceDto })
   @Expose()
   price: OfferPriceDto;
+
+  @ApiProperty({ description: 'Price', example: OfferPriceDto })
+  @Expose()
+  priceInUsdt: OfferPriceDto;
 
   @ApiProperty({ description: 'Contract ask from', example: '5CfC8HRcV5Rc4jHFHmZsSjADCMYc7zoWbvxdoNG9qwEP7aUB' })
   @Expose()

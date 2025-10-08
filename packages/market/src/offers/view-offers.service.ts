@@ -158,9 +158,8 @@ export class ViewOffersService {
     // queryFilter = this.byCollectionTokenId(queryFilter, bundle.collectionId, bundle.tokenId);
     queryFilter = this.prepareQuery(queryFilter);
     const itemQuery = this.pagination(queryFilter, { page: 1, pageSize: 1 });
-    const items = await itemQuery.query.getRawMany();
-    console.log('items', items);
-    return items;
+
+    return await itemQuery.query.getRawMany();
   }
 
   public async bundle(collectionId: number, tokenId: number): Promise<{ collectionId: number; tokenId: number }> {
@@ -208,6 +207,8 @@ export class ViewOffersService {
     queryFilter = this.byCollectionId(queryFilter, offersFilter.collectionId);
     queryFilter = this.byMaxPrice(queryFilter, offersFilter.maxPrice);
     queryFilter = this.byMinPrice(queryFilter, offersFilter.minPrice);
+    queryFilter = this.byMaxUsdtPrice(queryFilter, offersFilter.maxUsdtPrice);
+    queryFilter = this.byMinUsdtPrice(queryFilter, offersFilter.minUsdtPrice);
     queryFilter = this.byCurrency(queryFilter, offersFilter.currencies);
     queryFilter = this.bySeller(queryFilter, offersFilter.seller);
     queryFilter = this.bySearch(queryFilter, offersFilter.searchText, offersFilter.searchLocale);
@@ -220,7 +221,7 @@ export class ViewOffersService {
     queryFilter = this.applyCommonFilters(queryFilter, offersFilter);
     const attributesCount = await this.byAttributesCount(queryFilter);
     queryFilter = this.byNumberOfAttributes(queryFilter, offersFilter.numberOfAttributes);
-  
+
     const attributes = await this.byAttributes(queryFilter).getRawMany();
 
     return {
@@ -310,6 +311,24 @@ export class ViewOffersService {
       return query;
     }
     return query.andWhere('view_offers.offer_price_parsed >= :minPrice', {
+      minPrice: priceTransformer.to(minPrice),
+    });
+  }
+
+  private byMaxUsdtPrice(query: SelectQueryBuilder<ViewOffers>, maxPrice?: number): SelectQueryBuilder<ViewOffers> {
+    if (!maxPrice) {
+      return query;
+    }
+    return query.andWhere('view_offers.price_in_usdt <= :maxPrice', {
+      maxPrice: priceTransformer.to(maxPrice),
+    });
+  }
+
+  private byMinUsdtPrice(query: SelectQueryBuilder<ViewOffers>, minPrice?: number): SelectQueryBuilder<ViewOffers> {
+    if (!minPrice) {
+      return query;
+    }
+    return query.andWhere('view_offers.price_in_usdt >= :minPrice', {
       minPrice: priceTransformer.to(minPrice),
     });
   }
@@ -426,6 +445,7 @@ export class ViewOffersService {
         'view_offers_token_id as token_id',
         'view_offers_contract_address as contract_address',
         'view_offers_offer_price_parsed as offer_price_parsed',
+        'view_offers_price_in_usdt as offer_price_in_usdt',
         'view_offers_offer_price_raw as offer_price_raw',
         'view_offers_offer_currency as offer_currency',
         'view_offers_offer_seller as offer_seller',

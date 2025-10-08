@@ -33,9 +33,9 @@ import { CurrencyEntity } from './currency.entity';
       'properties_filter.list_items',
 
       `CASE
-         WHEN curr.usd_price IS NULL OR offer.price_raw IS NULL
+         WHEN curr.usd_price IS NULL OR offer.price_parsed IS NULL
            THEN NULL
-         ELSE (offer.price_raw::numeric * curr.usd_price)
+         ELSE (offer.price_parsed::numeric * curr.usd_price)
        END AS price_in_usdt`,
     ]);
 

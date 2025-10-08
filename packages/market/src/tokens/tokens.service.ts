@@ -66,22 +66,6 @@ export class TokensService {
     }
   }
 
-  private getPriceInUsdt(
-    usdtCurrency: CurrencyEntity | null,
-    priceInUsdtParsed: string | null,
-  ): OfferPrice | null {
-    if (!priceInUsdtParsed || !usdtCurrency) return null;
-
-    const parsed = +priceInUsdtParsed;
-    const raw = HelperService.getRawAmount(priceInUsdtParsed, usdtCurrency.decimals);
-
-    return {
-      parsed,
-      raw,
-      currency: usdtCurrency.id
-    }
-  }
-
   /**
    * Asynchronously filters tokens by the given collection ID, filter, pagination, and sorting.
    *
@@ -380,10 +364,6 @@ export class TokensService {
       return value;
     }
 
-    const getPriceInUsdt = (priceInUsdtParsed: string | null) => {
-      return this.getPriceInUsdt(usdtCurrency, priceInUsdtParsed);
-    }
-
     function convertorFlatToObject(): (previousValue: any, currentValue: any, currentIndex: number, array: any[]) => any {
       return (acc, item) => {
         collectionData.set(item.token_id.toString(), item);
@@ -398,7 +378,7 @@ export class TokensService {
           currency: item.offer_price_currency
         } as OfferPrice;
 
-        const priceInUsdt = getPriceInUsdt(item.price_in_usdt);
+        const priceInUsdt = HelperService.getPriceInUsdt(usdtCurrency, item.price_in_usdt);
 
         const schema = {
           attributesSchemaVersion: isEmpty(schemaData?.attributesSchemaVersion),
