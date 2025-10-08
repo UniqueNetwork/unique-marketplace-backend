@@ -1,6 +1,6 @@
 import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CollectionEntity, OfferEntity } from '@app/common/modules/database';
+import { CollectionEntity, CurrencyEntity, OfferEntity } from '@app/common/modules/database';
 import { DataSource, In, Repository } from 'typeorm';
 import { OfferEntityDto, OffersAttributesResultDto, OffersDto, OffersFilter } from './dto/offers.dto';
 import { BaseService } from '@app/common/src/lib/base.service';
@@ -10,6 +10,7 @@ import { ViewOffersService } from './view-offers.service';
 import { PropertiesEntity } from '@app/common/modules/database/entities/properties.entity';
 import { GetOneFilter, OfferPrice, OffersFilterType, OffersItemType } from './interfaces/offers.interface';
 import { PaginationRouting } from '@app/common/src/lib/base.constants';
+import { HelperService } from '@app/common/src/lib/helper.service';
 
 @Injectable()
 export class OffersService extends BaseService<OfferEntity, OffersDto> {
@@ -24,6 +25,8 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     @InjectRepository(ViewOffers)
     private viewOffersRepository: Repository<ViewOffers>,
     private viewOffersService: ViewOffersService,
+    @InjectRepository(CurrencyEntity)
+    private currencyRepository: Repository<CurrencyEntity>,
   ) {
     super({});
   }
@@ -45,7 +48,7 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
       offers = await this.viewOffersService.filterItems(searchOptions, pagination, sort);
       propertiesFilter = await this.searchInProperties(this.parserCollectionIdTokenId(offers.items));
       collections = await this.collections(this.getCollectionIds(offers.items));
-      items = this.parseItems(offers.items, propertiesFilter, collections) as any as Array<ViewOffers>;
+      items = await this.parseItems(offers.items, propertiesFilter, collections) as any as Array<ViewOffers>;
     } catch (e) {
       this.logger.error(e.message);
 
@@ -89,7 +92,7 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     const properties_filter = await this.searchInProperties(this.parserCollectionIdTokenId(source));
     const collections = await this.collections(this.getCollectionIds(source));
 
-    const offers = this.parseItems(source, properties_filter, collections).pop() as any as ViewOffers;
+    const offers = await this.parseItems(source, properties_filter, collections).pop() as any as ViewOffers;
 
     return offers && OfferEntityDto.fromOffersEntity(offers);
   }
@@ -112,17 +115,22 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
     return null;
   }
 
-  private parseItems(
+  private async parseItems(
     items: Array<OffersFilterType>,
     searchIndex: Partial<PropertiesEntity>[],
     collections: Array<CollectionEntity>,
-  ): Array<OffersItemType> {
+  ): Promise<Array<OffersItemType>> {
     function isEmpty(value: string | number): number | string | null {
       if (value === null || value === undefined || value === '') {
         return null;
       }
       return value;
     }
+
+    const usdtCurrency = await this.currencyRepository.findOne({
+      where: { name: 'USDT' },
+      cache: true
+    });
 
     function convertorFlatToObject(): (previousValue: any, currentValue: any, currentIndex: number, array: any[]) => any {
       return (acc, item) => {
@@ -135,6 +143,8 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
           currency: item.offer_currency,
         };
 
+        const priceInUsdt = HelperService.getPriceInUsdt(usdtCurrency, item.offer_price_in_usdt);
+
         const schema = {
           attributesSchemaVersion: isEmpty(schemaData?.attributesSchemaVersion),
           coverPicture: isEmpty(schemaData?.coverPicture),
@@ -143,12 +153,14 @@ export class OffersService extends BaseService<OfferEntity, OffersDto> {
           schemaVersion: isEmpty(schemaData?.schemaVersion),
           collectionId: isEmpty(schemaData?.collectionId),
         };
+
         const obj = {
           collection_id: +item.collection_id,
           token_id: +item.token_id,
           order: item.order_id,
           status: item.offer_status,
-          price: price,
+          price,
+          priceInUsdt,
           seller: item.offer_seller,
           created_at: item.offer_created_at,
           contract_address: item.contract_address,
