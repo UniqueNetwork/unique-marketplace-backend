@@ -28,6 +28,12 @@ export class ParseOffersFilterPipe implements PipeTransform<any, TransformationR
     this.exceptionFactory = exceptionFactory || ((error) => new HttpErrorByCode[errorHttpStatusCode](error));
   }
 
+  private getBigIntExceptionFactory(field: string, body: any) {
+    return  () => {
+      throw this.exceptionFactory(`Failed to parse ${field}. Expected a big integer value, got ${body[field]}`);
+    }
+  }
+
   /**
    * Convert all incoming data to the new format.
    * And also change the string to an array where necessary.
@@ -42,12 +48,10 @@ export class ParseOffersFilterPipe implements PipeTransform<any, TransformationR
     return {
       collectionId: this.parseCollectionIdRequest(value.collectionId),
       currencies: this.parseCurrenciesRequest(value.currencies),
-      maxPrice: this.parseNumberRequest(value.maxPrice, () => {
-        throw this.exceptionFactory(`Failed to parse maxPrice. Expected a big integer value, got ${value.maxPrice}`);
-      }),
-      minPrice: this.parseNumberRequest(value.minPrice, () => {
-        throw this.exceptionFactory(`Failed to parse minPrice. Expected a big integer value, got ${value.minPrice}`);
-      }),
+      maxPrice: this.parseNumberRequest(value.maxPrice, this.getBigIntExceptionFactory('maxPrice', value)),
+      minPrice: this.parseNumberRequest(value.minPrice, this.getBigIntExceptionFactory('minPrice', value)),
+      minUsdtPrice: this.parseNumberRequest(value.minUsdtPrice, this.getBigIntExceptionFactory('minUsdtPrice', value)),
+      maxUsdtPrice: this.parseNumberRequest(value.maxUsdtPrice, this.getBigIntExceptionFactory('maxUsdtPrice', value)),
       searchLocale: value.searchLocale,
       searchText: value.searchText,
       seller: value.seller,

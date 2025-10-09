@@ -17,6 +17,12 @@ export class ParseTokensFilterPipe implements PipeTransform<any, TransformationR
     this.exceptionFactory = exceptionFactory || ((error) => new HttpErrorByCode[errorHttpStatusCode](error));
   }
 
+  private getBigIntExceptionFactory(field: string, body: any) {
+    return  () => {
+      throw this.exceptionFactory(`Failed to parse ${field}. Expected a big integer value, got ${body[field]}`);
+    }
+  }
+
   /**
    * Convert all incoming data to the new format.
    * And also change the string to an array where necessary.
@@ -30,12 +36,10 @@ export class ParseTokensFilterPipe implements PipeTransform<any, TransformationR
 
     return {
       tokenId: HelperService.parseCollectionIdRequest(value.tokenId),
-      maxPrice: HelperService.parseNumberRequest(value.maxPrice, () => {
-        throw this.exceptionFactory(`Failed to parse maxPrice. Expected a big integer value, got ${value.maxPrice}`);
-      }),
-      minPrice: HelperService.parseNumberRequest(value.minPrice, () => {
-        throw this.exceptionFactory(`Failed to parse minPrice. Expected a big integer value, got ${value.minPrice}`);
-      }),
+      maxPrice: HelperService.parseNumberRequest(value.maxPrice, this.getBigIntExceptionFactory('maxPrice', value)),
+      minPrice: HelperService.parseNumberRequest(value.minPrice, this.getBigIntExceptionFactory('minPrice', value)),
+      maxUsdPrice: HelperService.parseNumberRequest(value.maxUsdPrice, this.getBigIntExceptionFactory('maxUsdPrice', value)),
+      minUsdPrice: HelperService.parseNumberRequest(value.minUsdPrice, this.getBigIntExceptionFactory('minUsdPrice', value)),
       searchLocale: value.searchLocale,
       searchText: value.searchText,
       address: Address.extract.addressNormalizedSafe(value.address) || value.address,
