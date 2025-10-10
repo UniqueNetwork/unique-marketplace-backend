@@ -51,9 +51,9 @@ export class ViewOffersService {
 
       return meta
         ? {
-            ...acc,
-            [key.toLowerCase()]: meta.databaseNameWithoutPrefixes,
-          }
+          ...acc,
+          [key.toLowerCase()]: meta.databaseNameWithoutPrefixes,
+        }
         : acc;
     }, {});
   };
@@ -255,6 +255,9 @@ export class ViewOffersService {
         switch (filter.column) {
           case 'Price':
             query.addOrderBy('view_offers_offer_price_parsed', filter.order === SortingOrder.Asc ? 'ASC' : 'DESC');
+            break;
+          case 'UsdtPrice':
+            query.addOrderBy('view_offers_price_in_usdt', filter.order === SortingOrder.Asc ? 'ASC' : 'DESC');
             break;
           case 'TokenId':
             query.addOrderBy('view_offers_token_id', filter.order === SortingOrder.Asc ? 'ASC' : 'DESC');
