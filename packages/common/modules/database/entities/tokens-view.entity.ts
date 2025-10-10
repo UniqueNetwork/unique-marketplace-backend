@@ -50,7 +50,6 @@ import { CurrencyEntity } from './currency.entity';
           'offers.token_id as token_id',
           'offers.price_parsed as price_parsed',
           'offers.price_raw as price_raw',
-          'offers.price_usdt as price_usdt',
           'offers.currency as currency',
           'offers.amount as amount',
           'offers.contract_address as contract_address',
