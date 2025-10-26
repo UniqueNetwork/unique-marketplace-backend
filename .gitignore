@@ -45,3 +45,5 @@ typechain-types
 # Test contracts info
 .openzeppelin/*
 !.openzeppelin/production/
+*.env
+!.env.example
