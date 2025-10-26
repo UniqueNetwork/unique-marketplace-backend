@@ -5,6 +5,7 @@ import { v4 as uuid } from 'uuid';
 import { Address } from '@unique-nft/utils';
 import { ContractEntity, CurrencyEntity, OfferEntity } from '../entities';
 import { OfferStatus } from '../../types';
+// TODO: SDK_UPGRADE - Update ChainPropertiesResponse type after @unique-nft/sdk upgrade
 import { ChainPropertiesResponse } from '@unique-nft/sdk/full';
 import { Market } from '../../../../contracts/assemblies/3/market';
 import { formatCrossAccount } from '../../../src/lib/utils';

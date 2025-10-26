@@ -1,4 +1,5 @@
 import { ethers, upgrades, network } from 'hardhat';
+// TODO: SDK_UPGRADE - Update Sr25519Account import after @unique-nft/sdk upgrade
 import { Sr25519Account } from '@unique-nft/sdk/sr25519';
 import { ContractHelpers__factory, Market } from '../typechain-types';
 import { Address } from '@unique-nft/utils';

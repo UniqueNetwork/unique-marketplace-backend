@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ContractEventsService } from './contract-events.service';
+import { IndexerSubscriptionsService } from './indexer-subscriptions.service';
 import { sdkProvider } from '@app/common/modules/sdk/sdk.provider';
+import { indexerSubscriptionsProvider } from '@app/common/modules/sdk/indexer-subscriptions.provider';
 import { DatabaseModule } from '@app/common/modules/database/database.module';
 import { CollectionEventsHandler, ContractEventsHandler } from './handlers';
 import { CollectionsModule } from '../../collections/collections.module';
@@ -12,7 +14,9 @@ import { AddressService } from '@app/common/src/lib/address.service';
   imports: [DatabaseModule.forFeature(), CollectionsModule],
   providers: [
     sdkProvider,
+    indexerSubscriptionsProvider,
     ContractEventsService,
+    IndexerSubscriptionsService,
     CollectionEventsHandler,
     ContractEventsHandler,
     TokensService,

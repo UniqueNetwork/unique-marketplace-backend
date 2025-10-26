@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ContractEntity, OfferService, SettingsService } from '@app/common/modules/database';
+// TODO: SDK_UPGRADE - Update Sdk import after @unique-nft/sdk upgrade
 import { Sdk } from '@unique-nft/sdk/full';
 import { Address } from '@unique-nft/utils';
 import { CheckApprovedDto } from './dto/check-approved.dto';

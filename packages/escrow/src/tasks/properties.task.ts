@@ -8,6 +8,7 @@ import { Helpers } from 'graphile-worker';
 import { PropertiesEntity } from '@app/common/modules/database/entities/properties.entity';
 import { BundleType, CollectionToken, Market, SerializeTokenType, TokenInfo } from './task.types';
 import { WorkerService } from 'nestjs-graphile-worker/dist/services/worker.service';
+// TODO: SDK_UPGRADE - Update CollectionWithInfoV2Dto, NestedToken, TokenWithInfoV2Dto types after @unique-nft/sdk upgrade
 import { CollectionWithInfoV2Dto, NestedToken, TokenWithInfoV2Dto } from '@unique-nft/sdk/full';
 import { TypeAttributToken } from '@app/common/modules/types';
 

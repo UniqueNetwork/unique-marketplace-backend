@@ -1,9 +1,11 @@
 import { Address } from '@unique-nft/utils';
 import { HDNodeWallet, ContractTransactionResponse } from 'ethers';
 import { Market, Market__factory } from '../../typechain-types';
+// TODO: SDK_UPGRADE - Update SDK imports and types for tests after @unique-nft/sdk upgrade
 import { Account, TokenId, ExtrinsicResultResponse, Sdk } from '@unique-nft/sdk/full';
 import { expect } from 'chai';
 import { convertBigintToNumber, crossAddressFromAddress, getFungibleContract, getNftContract, callSdk } from './helpers';
+// TODO: SDK_UPGRADE - Update IContract interface after @unique-nft/sdk upgrade
 import { IContract } from '@unique-nft/sdk';
 
 export interface MarketOrder {

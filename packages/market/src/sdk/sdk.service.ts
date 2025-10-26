@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+// TODO: SDK_UPGRADE - Update Sdk and types import after @unique-nft/sdk upgrade
 import { CollectionWithInfoV2Dto, Sdk } from '@unique-nft/sdk/full';
 import { abiVerifyMessage } from '@app/contracts/scripts';
 import { InjectRepository } from '@nestjs/typeorm';

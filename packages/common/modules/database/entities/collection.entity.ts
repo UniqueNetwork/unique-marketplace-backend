@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { CollectionActive, CollectionMode, CollectionStatus } from '../../types';
+// TODO: SDK_UPGRADE - Update CollectionWithInfoV2Dto type after @unique-nft/sdk upgrade
 import { CollectionWithInfoV2Dto } from '@unique-nft/sdk/full';
 
 @Entity('collections', { schema: 'public' })

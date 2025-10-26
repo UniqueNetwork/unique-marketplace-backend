@@ -1,5 +1,6 @@
 import { Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+// TODO: SDK_UPGRADE - Update Sdk import and constructor after @unique-nft/sdk upgrade
 import { Sdk } from '@unique-nft/sdk/full';
 import { Config, SignerConfig } from '../config';
 import { KeyringProvider } from '@unique-nft/accounts/keyring';

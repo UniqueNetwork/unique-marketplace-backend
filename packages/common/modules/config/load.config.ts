@@ -44,6 +44,8 @@ export const loadConfig = (): Config => ({
   uniqueSdkRestUrl: process.env.UNIQUE_SDK_REST_URL,
   uniqueRpcUrl: process.env.UNIQUE_RPC_URL,
 
+  uniqueIndexerV2WsUrl: process.env.UNIQUE_INDEXER_V2_WS_URL,
+
   fileStorage: loadFileStorageConfig(),
   adminSecretKey: process.env.ADMIN_SECRET_KEY,
 

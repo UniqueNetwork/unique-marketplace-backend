@@ -1,3 +1,4 @@
+// TODO: SDK_UPGRADE - Update TokenId type after @unique-nft/sdk upgrade
 import { TokenId } from '@unique-nft/sdk';
 import { MarketAccount, MarketHelper } from './MarketHelper';
 import { expect } from 'chai';
