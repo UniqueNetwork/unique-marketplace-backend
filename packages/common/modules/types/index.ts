@@ -1,3 +1,4 @@
+// TODO: SDK_UPGRADE - Update CollectionWithInfoV2Dto type after @unique-nft/sdk upgrade
 import { CollectionWithInfoV2Dto } from '@unique-nft/sdk/full';
 
 export type CustomObject = {

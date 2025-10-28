@@ -1,4 +1,6 @@
+// TODO: SDK_UPGRADE - Update all SDK test imports after @unique-nft/sdk upgrade
 import { Sdk, Account, CreateCollectionV2ArgsDto, CreateTokenV2ArgsDto, TokenIdQuery } from '@unique-nft/sdk/full';
+// TODO: SDK_UPGRADE - Update Sr25519Account import after @unique-nft/sdk upgrade  
 import { Sr25519Account } from '@unique-nft/sr25519';
 import { collectionMetadata } from '../data/collectionMetadata';
 import testConfig from './testConfig';
@@ -6,6 +8,7 @@ import { callSdk, getFungibleContract, getNftContract } from './helpers';
 import { TestFungibleCollection, TestNftCollection } from './types';
 import { ethers } from 'hardhat';
 import { TKN } from './currency';
+// TODO: SDK_UPGRADE - Update CreateFungibleCollectionRequest type after @unique-nft/sdk upgrade
 import { CreateFungibleCollectionRequest } from '@unique-nft/sdk';
 import { hasSubscribers } from 'diagnostics_channel';
 

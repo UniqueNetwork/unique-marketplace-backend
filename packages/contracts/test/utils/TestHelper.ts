@@ -8,6 +8,7 @@ import testConfig from './testConfig';
 import { Wallet, HDNodeWallet, ContractFactory, BaseContract } from 'ethers';
 import { MarketAccount, MarketHelper } from './MarketHelper';
 import { convertBigintToNumber, getNftContract, callSdk } from './helpers';
+// TODO: SDK_UPGRADE - Update Royalty and TokenId types after @unique-nft/sdk upgrade
 import { Royalty, TokenId } from '@unique-nft/sdk';
 import { TestCaseMode } from './types';
 

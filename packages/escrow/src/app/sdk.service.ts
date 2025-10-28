@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+// TODO: SDK_UPGRADE - Update all SDK imports and types after @unique-nft/sdk upgrade
 import { ChainPropertiesResponse, CollectionWithInfoV2Dto, NestedToken, Sdk, TokenWithInfoV2Dto } from '@unique-nft/sdk/full';
 import { BundleType } from '../tasks/task.types';
 import { TokenV2WithCollectionV2 } from '@app/common/src';

@@ -1,5 +1,4 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ContractLogData, Extrinsic } from '@unique-nft/sdk';
 import { ethers } from 'ethers';
 import {
   CrossAddressStructOutput,
@@ -13,14 +12,44 @@ import {
 import { OfferEventType, OfferStatus } from '@app/common/modules/types';
 import { ContractEntity, ContractService, OfferEntity, OfferEventEntity, OfferService } from '@app/common/modules/database';
 import { OfferEventService } from '@app/common/modules/database/services/offer-event.service';
-import { Sdk, SocketClient } from '@unique-nft/sdk/full';
+import { getContractAbi } from '@app/contracts/scripts';
 import { Address } from '@unique-nft/utils';
 import { CollectionsService } from '../../../collections/collections.service';
 import { TokensService } from '../../../collections/tokens.service';
 import { formatCrossAccount } from '@app/common/src/lib/utils';
 
+// Types for new indexer events
+interface IndexerEvent {
+  eventId: string;
+  extrinsicHash: string;
+  blockNumber: string;
+  section: string;
+  method: string;
+  data: {
+    log?: string; // JSON string containing the actual log data
+  };
+  asHex: string;
+  createdAt: string;
+  blockTimestamp: string;
+}
+
+interface ContractLog {
+  address: string;
+  topics: string[];
+  data: string;
+}
+
+interface ParsedContractEvent {
+  address: string;
+  blockNumber: number;
+  data: string;
+  topics: string[];
+  extrinsicHash: string;
+  eventId: string;
+}
+
 type LogEventHandler = (
-  extrinsic: Extrinsic,
+  event: ParsedContractEvent,
   contractEntity: ContractEntity,
   args:
     | TokenIsUpForSaleEvent.OutputObject
@@ -34,14 +63,9 @@ export class ContractEventsHandler {
   private readonly logger = new Logger(ContractEventsHandler.name);
 
   private readonly eventHandlers: Record<string, LogEventHandler>;
-
-  private client: SocketClient;
-  private abiByAddress: Record<string, any>;
-
-  private chain;
+  private readonly abiByAddress: Map<string, ethers.Interface> = new Map();
 
   constructor(
-    private sdk: Sdk,
     @Inject(OfferService)
     private readonly offerService: OfferService,
     @Inject(ContractService)
@@ -60,77 +84,134 @@ export class ContractEventsHandler {
       TokenRevoke: this.tokenRevoke.bind(this),
       TokenIsApproved: this.tokenIsApproved.bind(this),
     };
-
-    // this.chain = Promise.all([this.sdkService.getChainProperties()]);
   }
 
   public getAllContract() {
     return this.contractService.getAll();
   }
 
-  public init(client: SocketClient, abiByAddress: Record<string, any>) {
-    this.client = client;
-    this.abiByAddress = abiByAddress;
+  public async initializeContract(address: string, version: string) {
+    try {
+      // Convert string version to number if needed
+      const versionNumber = parseInt(version, 10);
+      const abi = getContractAbi(versionNumber);
+      const contractInterface = new ethers.Interface(abi);
+      this.abiByAddress.set(address.toLowerCase(), contractInterface);
+      
+      this.logger.log(`✅ Initialized contract ABI for ${address} v${version}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to initialize contract ABI for ${address}:`, error);
+    }
   }
 
-  public async subscribe(contract: ContractEntity) {
-    const fromBlock = await this.contractService.getProcessedBlock(contract.address);
-
-    this.logger.log(`subscribe to contract v${contract.version}:${contract.address}, from block ${fromBlock}`);
-
-    this.loadBlocks(contract.address, fromBlock);
+  /**
+   * Handle raw contract events from the new indexer
+   * @param events Array of indexer events from subscription
+   */
+  async handleContractEvents(contractAddress: string, events: IndexerEvent[]) {
+    for (const event of events) {
+      try {
+        // Only process EVM Log events
+        if (event.section === 'evm' && event.method === 'Log' && event.data?.log) {
+          const parsedEvent = this.parseIndexerEvent(event);
+          if (parsedEvent) {
+            // Use contractAddress from subscription instead of relying on log data
+            await this.processContractEvent(contractAddress, parsedEvent);
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Error processing indexer event ${event.eventId}:`, error);
+      }
+    }
   }
 
-  public loadBlocks(address: string, fromBlock: number) {
-    this.logger.log(`load contract ${address} from block ${fromBlock}`);
+  private parseIndexerEvent(event: IndexerEvent): ParsedContractEvent | null {
+    try {
+      if (!event.data?.log) {
+        this.logger.warn(`No log data in event ${event.eventId}`);
+        return null;
+      }
 
-    this.client.subscribeContract({
-      address,
-      fromBlock,
-    });
+      // Parse the JSON string in data.log
+      const logData: ContractLog = JSON.parse(event.data.log);
+      
+      if (!logData.address) {
+        this.logger.warn(`No address in log data for event ${event.eventId}`);
+        return null;
+      }
+      
+      return {
+        address: logData.address,
+        blockNumber: parseInt(event.blockNumber, 10),
+        data: logData.data,
+        topics: logData.topics,
+        extrinsicHash: event.extrinsicHash,
+        eventId: event.eventId,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to parse indexer event ${event.eventId}:`, error);
+      this.logger.debug(`Event data:`, JSON.stringify(event.data, null, 2));
+      return null;
+    }
   }
 
-  async onEvent(room, data: ContractLogData) {
-    const { log, extrinsic } = data;
-    this.logger.log(`onEvent, block id: ${extrinsic?.block?.id}`, log);
+  private async processContractEvent(contractAddress: string, event: ParsedContractEvent) {
+    // Use contractAddress from subscription (more reliable than log data)
+    const addressNormal = contractAddress.toLowerCase();
+    
+    // Verify that log address matches subscription address (optional check)
+    if (event.address && event.address.toLowerCase() !== addressNormal) {
+      this.logger.warn(`Address mismatch: subscription=${addressNormal}, log=${event.address.toLowerCase()}`);
+    }
 
-    const { address } = log;
-    const addressNormal = address.toLowerCase();
-
-    if (!(addressNormal in this.abiByAddress)) {
-      this.logger.error(`Not found abi for contract ${addressNormal}`);
+    // Check if we have ABI for this contract
+    const contractInterface = this.abiByAddress.get(addressNormal);
+    if (!contractInterface) {
+      this.logger.error(`No ABI found for contract ${addressNormal}`);
       return;
     }
 
+    // Get contract entity from database
     const contractEntity = await this.contractService.get(addressNormal);
     if (!contractEntity) {
-      this.logger.error(`Not found ContractEntity ${addressNormal}`);
+      this.logger.error(`ContractEntity not found for ${addressNormal}`);
       return;
     }
 
-    // todo fix this blockId
-    // @ts-ignore
-    const blockId = extrinsic.blockId || extrinsic.block?.id || 0;
-    await this.saveBlockId(addressNormal, blockId);
+    // Save processed block
+    await this.saveBlockId(addressNormal, event.blockNumber);
 
-    const abi = this.abiByAddress[addressNormal];
+    try {
+      // Parse raw log through ethers ABI
+      const logData = {
+        topics: event.topics,
+        data: event.data
+      };
 
-    const contract = new ethers.Interface(abi);
+      const decoded = contractInterface.parseLog(logData);
+      if (!decoded) {
+        this.logger.warn(`Could not decode log for contract ${addressNormal}`);
+        return;
+      }
 
-    const decoded = contract.parseLog(log);
-    this.logger.log('decoded', {
-      name: decoded.name,
-      topic: decoded.topic,
-      args: decoded.args,
-    });
+      this.logger.debug('Decoded event:', {
+        name: decoded.name,
+        address: addressNormal,
+        blockNumber: event.blockNumber,
+        args: decoded.args
+      });
 
-    const { name, args } = decoded;
+      // Handle the decoded event
+      const eventName: MarketEventNames = decoded.name as MarketEventNames;
+      if (eventName in this.eventHandlers) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await this.eventHandlers[eventName](event, contractEntity, decoded.args as any);
+      } else {
+        this.logger.warn(`No handler found for event ${eventName}`);
+      }
 
-    const eventName: MarketEventNames = name as MarketEventNames;
-    if (eventName in this.eventHandlers) {
-      await this.eventHandlers[eventName](extrinsic, contractEntity, args as any);
-    } else {
-      this.logger.warn(`Not found handler for event ${eventName}`);
+    } catch (parseError) {
+      this.logger.error(`Failed to parse contract log:`, parseError);
     }
   }
 
@@ -141,21 +222,19 @@ export class ContractEventsHandler {
   private async createEventData(
     offer: OfferEntity,
     eventType: OfferEventType,
-    extrinsic: Extrinsic,
+    event: ParsedContractEvent,
     amount: number,
     crossAddress: CrossAddressStructOutput,
-  ): Promise<Omit<OfferEventEntity, 'id' | 'createdAt' | 'updatedAt' | 'token_properties'>> {
-    // todo fix this blockId
-    // @ts-ignore
-    const blockId = extrinsic.blockId || extrinsic.block?.id || 0;
+  ): Promise<Omit<OfferEventEntity, 'id' | 'createdAt' | 'updatedAt' | 'token_properties'> | null> {
+    const blockId = event.blockNumber;
 
     const address = crossAddress ? Address.extract.addressNormalized(formatCrossAccount(crossAddress)) : null;
 
-    // todo fix double events error
+    // Check for duplicate events
     const foundEvent = await this.offerEventService.find(offer, eventType, blockId, address);
     if (foundEvent) {
-      console.error('!!!Double offer event', extrinsic.block, `offer: ${offer?.id || undefined}`);
-      return;
+      this.logger.warn(`Duplicate offer event detected for offer ${offer?.id} at block ${blockId}`);
+      return null;
     }
 
     const collection = await this.collectionsService.get(offer.collectionId);
@@ -173,18 +252,18 @@ export class ContractEventsHandler {
   }
 
   private async tokenIsUpForSale(
-    extrinsic: Extrinsic,
+    event: ParsedContractEvent,
     contractEntity: ContractEntity,
     tokenUpArgs: TokenIsUpForSaleEvent.OutputObject,
   ) {
-    const offer = await this.offerService.update(contractEntity, tokenUpArgs.item, OfferStatus.Opened, this.chain);
+    const offer = await this.offerService.update(contractEntity, tokenUpArgs.item, OfferStatus.Opened, undefined);
 
     this.logger.log(`tokenIsUpForSale, offer: ${offer?.id || undefined}`);
     if (offer) {
       const eventData = await this.createEventData(
         offer,
         OfferEventType.Open,
-        extrinsic,
+        event,
         Number(tokenUpArgs.item.amount),
         tokenUpArgs.item.seller,
       );
@@ -196,25 +275,27 @@ export class ContractEventsHandler {
   }
 
   private async tokenPriceChanged(
-    extrinsic: Extrinsic,
+    event: ParsedContractEvent,
     contractEntity: ContractEntity,
     tokenPriceChangedArgs: TokenPriceChangedEvent.OutputObject,
   ) {
-    const offer = await this.offerService.update(contractEntity, tokenPriceChangedArgs.item, OfferStatus.Opened, this.chain);
+    const offer = await this.offerService.update(contractEntity, tokenPriceChangedArgs.item, OfferStatus.Opened, undefined);
 
     this.logger.log(`tokenPriceChanged, offer: ${offer?.id || undefined}`);
   }
 
   private async tokenIsApproved(
-    extrinsic: Extrinsic,
+    event: ParsedContractEvent,
     contractEntity: ContractEntity,
-    tokenRevokeArgs: TokenIsApprovedEvent.OutputObject,
+    tokenApprovalArgs: TokenIsApprovedEvent.OutputObject,
   ) {
-    // todo
+    this.logger.log(`tokenIsApproved for contract ${contractEntity.address} at block ${event.blockNumber}`);
+    // TODO: Implement token approval handling logic
+    this.logger.debug('Approval args:', tokenApprovalArgs);
   }
 
   private async tokenRevoke(
-    extrinsic: Extrinsic,
+    event: ParsedContractEvent,
     contractEntity: ContractEntity,
     tokenRevokeArgs: TokenRevokeEvent.OutputObject,
   ) {
@@ -229,7 +310,7 @@ export class ContractEventsHandler {
       const eventData = await this.createEventData(
         offer,
         eventType,
-        extrinsic,
+        event,
         Number(tokenRevokeArgs.amount),
         tokenRevokeArgs.item.seller,
       );
@@ -240,7 +321,7 @@ export class ContractEventsHandler {
   }
 
   private async tokenIsPurchased(
-    extrinsic: Extrinsic,
+    event: ParsedContractEvent,
     contractEntity: ContractEntity,
     tokenIsPurchasedArgs: TokenIsPurchasedEvent.OutputObject,
   ) {
@@ -253,7 +334,7 @@ export class ContractEventsHandler {
       const eventData = await this.createEventData(
         offer,
         OfferEventType.Buy,
-        extrinsic,
+        event,
         Number(tokenIsPurchasedArgs.salesAmount),
         tokenIsPurchasedArgs.buyer,
       );

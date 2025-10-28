@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { WorkerService } from 'nestjs-graphile-worker';
 import { CollectionEntity, PropertiesEntity } from '@app/common/modules/database';
 import { SdkService } from '../app/sdk.service';
+// TODO: SDK_UPGRADE - Update CollectionData type after @unique-nft/sdk upgrade
 import { CollectionData } from '@unique-nft/sdk/full';
 import { AddressService } from '@app/common/src/lib/address.service';
 import { EventMethod } from '@app/common/modules/types';

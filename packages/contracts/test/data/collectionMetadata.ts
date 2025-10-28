@@ -1,3 +1,4 @@
+// TODO: SDK_UPGRADE - Update CreateCollectionV2ArgsDto type after @unique-nft/sdk upgrade
 import { CreateCollectionV2ArgsDto } from '@unique-nft/sdk';
 
 export const collectionMetadata: Omit<CreateCollectionV2ArgsDto, 'address'> = {

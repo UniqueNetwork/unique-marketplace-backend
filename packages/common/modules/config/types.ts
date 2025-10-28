@@ -31,6 +31,8 @@ export type Config = {
   uniqueSdkRestUrl: string;
   uniqueRpcUrl: string;
 
+  uniqueIndexerV2WsUrl: string;
+
   database: PostgresConnectionOptions;
   logging: boolean;
 
